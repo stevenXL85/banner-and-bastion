@@ -1,0 +1,33 @@
+{
+ "name": "Banner & Bastion",
+ "short_name": "Bastion",
+ "description": "3D medieval real-time strategy",
+ "start_url": "./",
+ "scope": "./",
+ "display": "fullscreen",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "orientation": "any",
+ "background_color": "#1c140d",
+ "theme_color": "#1c140d",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
