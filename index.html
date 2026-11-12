@@ -296,7 +296,14 @@ function ally(a,b){if(a===b)return true;if(a==null||b==null||a<0||b<0||a>=VT0||b
 function foe(a,b){if(a==null||b==null||a<0||b<0||a===b)return false;
   if(a>=VT0||b>=VT0){if(a===BARB||b===BARB)return a<VT0||b<VT0;const v=a>=VT0?a:b,p=a>=VT0?b:a;if(p>=VT0)return false;return!!(HOST[v]&&HOST[v][p])}
   return!!REL[a]&&REL[a][b]===0}
-const AGES=['Dark Age','Feudal Age','Castle Age','Imperial Age'],AGEN=['I','II','III','IV'];
+const ERAS=[
+  {key:'dark',name:'Dark Age',start:{res:{food:200,wood:200,gold:100,stone:200},vils:4}},
+  {key:'feudal',name:'Feudal Age',tech:'feudal',req:{bld:['mill','lumber','mining','barracks'],nb:2,tech:0,nt:2},start:{res:{food:600,wood:600,gold:350,stone:300},vils:8}},
+  {key:'castle',name:'Castle Age',tech:'castle',req:{bld:['range','stable','blacksmith','tower','market','embassy'],nb:3,tech:1,nt:4},start:{res:{food:1100,wood:1000,gold:800,stone:650,iron:30,rope:20,cloth:20},vils:12}},
+  {key:'imperial',name:'Imperial Age',tech:'imperial',req:{bld:['castle','university','siege','monastery'],nb:3,tech:2,nt:6},start:{res:{food:1800,wood:1600,gold:1400,stone:900,iron:80,rope:40,cloth:40,arms:20,tools:20},vils:16}}];
+const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+const AGES=ERAS.map(e=>e.name),AGEN=ERAS.map((e,i)=>ROMAN[i]),AGETECHS=ERAS.map(e=>e.tech).filter(Boolean);
+let AGEMIN=0,AGEMAX=ERAS.length-1;
 const RESNAME={wood:'Wood',food:'Food',gold:'Gold',stone:'Stone',ore:'Iron ore',charcoal:'Charcoal',iron:'Iron',arms:'Arms',tools:'Tools',hemp:'Hemp',rope:'Rope',cloth:'Cloth',grapes:'Grapes',wine:'Wine'};
 const BASERATE={wood:.62,food:.78,gold:.56,stone:.56,farm:.55,hunt:1.0,ore:.6,hemp:.5,grapes:.5,fish:.7};
 const GOODS=['ore','charcoal','iron','arms','tools','hemp','rope','cloth','grapes','wine'];
@@ -389,6 +396,8 @@ const BUILD={
   gate:{name:'Stone Gate',l:'SG',s:1,hp:1800,arm:[8,10],time:12,cost:{stone:30},age:1,h:2.8,gate:1,desc:'Lets your units through. Place on a wall'},
   dock:{name:'Dock',l:'Dk',s:3,hp:1800,arm:[2,8],time:35,cost:{wood:150},trains:['fishboat','transport','galley','cog'],drop:['food'],age:0,h:2.6,water:1,desc:'Built on water by the shore. Boats, fishing and warships'},
   embassy:{name:'Embassy',l:'Em',s:3,hp:1500,arm:[2,8],time:40,cost:{wood:175,stone:75},trains:['envoy'],age:1,h:4.6,diplo:1,desc:'Diplomacy: trains envoys, lets you propose alliances, cheaper tribute'},
+  forester:{name:"Forester's Lodge",l:'FL',s:2,hp:700,arm:[2,8],time:20,cost:{wood:100},drop:['wood'],age:1,h:2.6,desc:'Wood drop site. Villagers can plant saplings that grow into new trees'},
+  sapling:{name:'Saplings',l:'Sa',s:1,hp:40,arm:[0,0],time:4,cost:{wood:5},age:1,h:.7,plant:1,area:1,needs:'forester',desc:'Plant a patch of young trees: tap one corner, then the opposite corner. They grow in about 2–3 minutes'},
   road:{name:'Road',l:'Rd',s:1,hp:300,arm:[5,10],time:2,cost:{wood:2,stone:1},walk:1,road:1,age:0,h:.15,desc:'Units move 30% faster on roads (trade carts 50%), even in snow and rain. Tap the start, then each corner'},
   vhall:{name:'Village Hall',l:'VH',s:3,hp:1600,arm:[3,8],time:1,cost:{},pop:5,gar:10,capture:1,shoot:{atk:5,range:7,rate:2,n:1},drop:['food','wood','gold','stone'],age:9,h:4,desc:'Heart of a village'},
   vhouse:{name:'Cottage',l:'Co',s:2,hp:500,arm:[2,6],time:1,cost:{},age:9,h:2.4,desc:'A villager\'s home'},
@@ -401,7 +410,7 @@ const BUILD={
   tc:{name:'Town Center',l:'TC',s:4,hp:2400,arm:[3,8],time:80,cost:{wood:275,stone:100},pop:5,drop:['wood','food','gold','stone','ore','hemp','grapes'],trains:['villager'],shoot:{atk:5,range:7,rate:2,n:1},gar:15,age:2,h:5.4,desc:'Trains villagers, researches ages',chim:[1.1,3.3,.7]},
 };
 const ECO_B=['house','mill','lumber','mining','farm','dock','market','embassy','university','tc'];
-const IND_B=['road','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress'];
+const IND_B=['road','forester','sapling','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress'];
 const MIL_B=['barracks','range','stable','siege','monastery','tower','castle','palisade','pgate','stonewall','gate'];
 const TECHS={
   feudal:{name:'Feudal Age',at:'tc',age:0,ageUp:1,cost:{food:600},time:70,desc:'Archery range, stable, blacksmith, towers, stone walls'},
@@ -470,6 +479,7 @@ const TECHS={
   oriflamme:{name:'Oriflamme',at:'castle',age:2,civ:'french',cost:{food:300,gold:250},time:35,desc:'Soldiers fighting within 16 tiles of your castles and town centers +2 attack'},
   hanse:{name:'Hanseatic League',at:'castle',age:2,civ:'germans',cost:{food:250,gold:250},time:35,desc:'Trade carts earn 50% more gold, goods sell for 20% more'},
   reconquista:{name:'Reconquista',at:'castle',age:2,civ:'spanish',cost:{food:300,gold:250},time:35,desc:'Castles, towers and town centers fire 1 more arrow and hit +2 harder'},
+  forestry:{name:'Forestry',at:'forester',age:2,cost:{food:200,wood:150},time:30,desc:'Saplings grow 50% faster and become trees with 25% more wood'},
   heraldry:{name:'Heraldry',at:'embassy',age:1,cost:{food:150,gold:100},time:25,desc:'Envoys move 25% faster and win twice the goodwill'},
   courtly:{name:'Courtly Diplomacy',at:'embassy',age:2,cost:{food:250,gold:200},time:35,desc:'Tribute is sent with no fee, and allies grow fonder of you over time'},
   gillnets:{name:'Gillnets',at:'dock',age:1,cost:{food:150,wood:100},time:25,desc:'Fishing boats work 25% faster'},
@@ -478,7 +488,7 @@ const TECHS={
   chieftains:{name:'Chieftains',at:'castle',age:2,civ:'vikings',cost:{food:400,gold:300},time:35,desc:'Infantry +5 attack vs cavalry'},
 };
 for(const k in TECHS)TECHS[k].key=k;
-const AGEREQ=[null,{bld:['mill','lumber','mining','barracks'],nb:2,tech:0,nt:2},{bld:['range','stable','blacksmith','tower','market','embassy'],nb:3,tech:1,nt:4},{bld:['castle','university','siege','monastery'],nb:3,tech:2,nt:6}];
+const AGEREQ=ERAS.map(e=>e.req||null);
 const ANIMALS={deer:{name:'Deer',hp:5,amt:140,speed:2.2,r:.45},boar:{name:'Wild Boar',hp:75,amt:340,speed:3.4,r:.55,atk:4},sheep:{name:'Sheep',hp:7,amt:100,speed:.9,r:.4}};
 const DIFF={
   easy:{mul:.75,vils:18,ageV:[11,17,22],attack0:5,first:1080,maxAtk:14,cap:22,towers:1,think:1.8,gap:300,humanBias:2.2,grow:2,fish:2,navy:2,seek:30},
@@ -1085,6 +1095,12 @@ function bldModel(type,team,st){
   case'stonewall':
     bx(g,0xa49c8e,.98,1.8,.98,0,.9,0);bx(g,0x958d7e,1.0,.15,1.0,0,1.85,0);bx(g,0x8a857a,1.02,.3,1.02,0,.15,0);
     for(const[x,z]of[[-.3,-.3],[.3,-.3],[-.3,.3],[.3,.3]])bx(g,0x9a9284,.3,.32,.3,x,2.08,z);break;
+  case'forester':{
+    bx(g,0x7a5a3a,1.9,.12,1.9,0,.06,0);bx(g,0x6b4a2c,1.4,1.0,1.1,-.15,.6,-.3);logWall(g,1.42,1.0,1.12,.12);roofPrism(g,THATCH,1.7,.8,1.5,-.15,1.1,-.3,Math.PI/2);bx(g,DARK,.34,.55,.05,-.15,.4,.27);
+    for(let i=0;i<4;i++){const x=.45+(i%2)*.4,z=.45+((i/2)|0)*.4;cy(g,0x8a5a32,.12,.22,x,.17,z);cy(g,0x5b3e27,.025,.35,x,.4,z);cn(g,0x3f6a2c,.13,.32,x,.68,z,null,G.cone7)}
+    for(let i=0;i<3;i++){const l=cy(g,0x8a5a32,.11,1.1,.75,.14+i*.2*(i<2?1:0),-.55+i*.24,null,G.cyl7);l.rotation.z=Math.PI/2}
+    {const sp=cy(g,0x7a5a3a,.03,.9,-.85,.5,.55);sp.rotation.z=.25}bx(g,tc,.45,.28,.04,-.15,.95,.27);break}
+  case'sapling':{cy(g,0x5a3a20,.32,.06,0,.03,0);cy(g,0x6b4a2c,.03,.55,0,.3,0);cn(g,0x4f8a2c,.2,.45,0,.62,0,null,G.cone7);sp(g,0x5f9a34,.22,.18,.22,.08,.48,.05);break}
   case'road':{bx(g,0x8f8270,1.0,.16,1.0,0,-.02,0);for(let i=0;i<5;i++)bx(g,i%2?0xa89a84:0x7d725f,.3+R()*.12,.04,.26+R()*.12,(R()-.5)*.6,.075,(R()-.5)*.6);break}
   case'vhall':{
     bx(g,0x8e8a80,3.0,.3,3.0,0,.15,0);bx(g,0x6b4a2c,2.6,1.6,2.2,0,1.1,-.1);logWall(g,2.65,1.6,2.25,.3);
@@ -1135,7 +1151,7 @@ function bldModel(type,team,st){
   return mergeStatic(g);
 }
 const tplCache={};
-const AGED=['lumber','mining','mill','dock','range','stable','blacksmith','university','siege','kiln','smelter','ropewalk','weaver','winepress','market','monastery','embassy'];
+const AGED=['forester','lumber','mining','mill','dock','range','stable','blacksmith','university','siege','kiln','smelter','ropewalk','weaver','winepress','market','monastery','embassy'];
 function styleFor(type,team){if(type==='tc'||type==='house'||type==='barracks')return Math.min(3,age[team]);
   if(type==='tower')return has(team,'keep')?3:has(team,'gtower')?2:age[team]>=2?2:0;if(AGED.includes(type))return Math.min(3,age[team]);return 1}
 const WOODMAP={[0x8e8a80]:0x6e5a42,[0x7d7468]:0x6e5a42,[0x6a5d4c]:0x6e5a42,[PLASTER]:0x9a7a52,[0xb8b0a0]:0x8a6a44,[0xb8b2a2]:0x8a6a44,[0xd2c6aa]:0x9a7a52,[0xd8cdb4]:0x9a7a52,[0xe8dfc8]:0x8a6a44,
@@ -1266,9 +1282,9 @@ function trainsOf(b){if(b.type==='castle')return[CIVS[CIVKEY[b.team]].uu,'trebuc
 function unitAvail(team,type){const u=UNITS[type];return age[team]>=u.age&&(!u.uniq||u.uniq===CIVKEY[team])}
 function techName(team,id){if(id==='elite')return'Elite '+UNITS[CIVS[CIVKEY[team]].uu].name;return TECHS[id].name}
 function techShown(team,id){const t=TECHS[id];if(has(team,id)||PEND[team].has(id))return false;if(t.civ&&t.civ!==CIVKEY[team])return false;
-  if(t.req&&!has(team,t.req))return false;if(t.ageUp)return age[team]===t.age&&!['feudal','castle','imperial'].some(a=>PEND[team].has(a));return true}
+  if(t.req&&!has(team,t.req))return false;if(t.ageUp)return age[team]===t.age&&t.ageUp<=AGEMAX&&!AGETECHS.some(a=>PEND[team].has(a));return true}
 function techReady(team,id){return techShown(team,id)&&age[team]>=TECHS[id].age}
-function ageReq(team){const a=age[team]+1;if(a>3)return null;const q=AGEREQ[a];const have=new Set();for(const b of blds)if(!b.dead&&b.built&&b.team===team)have.add(b.type);
+function ageReq(team){const a=age[team]+1;if(a>AGEMAX||!AGEREQ[a])return null;const q=AGEREQ[a];const have=new Set();for(const b of blds)if(!b.dead&&b.built&&b.team===team)have.add(b.type);
   const nb=q.bld.filter(t=>have.has(t)).length;let nt=0;for(const id of TECH[team]){const t=TECHS[id];if(t&&!t.ageUp&&t.age===q.tech)nt++}
   return{nb,nt,needB:q.nb,needT:q.nt,tech:q.tech,list:q.bld,ok:nb>=q.nb&&nt>=q.nt}}
 function reqHTML(team){const q=ageReq(team);if(!q)return'';const b=(ok,s)=>'<b class="'+(ok?'ok':'no')+'">'+s+'</b>';
@@ -1292,15 +1308,21 @@ function applyTech(team,id){
 const dummy=new T.Object3D();
 const TREEPARTS=[[{k:'trunk',sx:.26,sy:1.1,y:.55},{k:'a',sx:1.9,sy:1.9,y:1.75},{k:'b',sx:1.35,sy:1.5,y:2.75}],
   [{k:'trunk',sx:.3,sy:1.3,y:.65},{k:'a',sx:2.1,sy:1.75,y:2.0},{k:'b',sx:1.3,sy:1.2,y:2.65,ox:.45}]];
+const TREEXTRA=900,TREESETS=[];
+function plantTree(cx,cz,amt,kind){const c=cz*N+cx;if(!inb(cx,cz)||grid[c]||occ[c])return null;kind=kind==null?(Math.random()<.5?0:1):kind;const TS=TREESETS[kind];if(!TS||TS.n>=TS.cap)return null;
+  const sp={x:cx-HALF+.5+(Math.random()-.5)*.3,z:cz-HALF+.5+(Math.random()-.5)*.3,s:.8+Math.random()*.4,rot:Math.random()*TAU,kind,autumn:false,i:TS.n,set:TS.set};treeSpecs.push(sp);
+  const cl=kind===0?col(0x2c5631).lerp(col(0x45743c),Math.random()):col(0x4c7a31).lerp(col(0x78983c),Math.random());TS.set.a.setColorAt(sp.i,cl);TS.set.b.setColorAt(sp.i,cl.clone().multiplyScalar(1.12));
+  TS.n++;for(const k of['trunk','a','b']){TS.set[k].count=TS.n;if(TS.set[k].instanceColor)TS.set[k].instanceColor.needsUpdate=true}setTree(sp,0);
+  const a=amt||100,r={kind:'res',rtype:'wood',amt:a,max:a,cx,cz,x:cx-HALF+.5,z:cz-HALF+.5,tree:sp,id:nid++,planted:true};ress.push(r);grid[c]++;resCell[c]=r;return r}
 function buildTrees(){
   const geos=[[G.cyl7,G.cone7,G.cone7],[G.cyl7,G.ico,G.ico]];
   const whites=[fogify(new T.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true}),{}),fogify(new T.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true}),{leaf:1})];
   for(let kind=0;kind<2;kind++){const list=treeSpecs.filter(s=>s.kind===kind),set={},white=whites[kind];
-    ['trunk','a','b'].forEach((k,i)=>{const im=new T.InstancedMesh(geos[kind][i],k==='trunk'?M(0x5b3e27):white,Math.max(1,list.length));im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;set[k]=im;world.add(im)});
+    ['trunk','a','b'].forEach((k,i)=>{const im=new T.InstancedMesh(geos[kind][i],k==='trunk'?M(0x5b3e27):white,list.length+TREEXTRA);im.count=list.length;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;set[k]=im;world.add(im)});
     list.forEach((s,i)=>{s.i=i;s.set=set;
       const c=s.autumn?col([0xc0782c,0xb8552a,0xd6a23a][i%3]):kind===0?col(0x2c5631).lerp(col(0x45743c),R()):col(0x4c7a31).lerp(col(0x78983c),R());
       set.a.setColorAt(i,c);set.b.setColorAt(i,c.clone().multiplyScalar(1.12));setTree(s,0,true)});
-    ['trunk','a','b'].forEach(k=>{set[k].instanceMatrix.needsUpdate=true;if(set[k].instanceColor)set[k].instanceColor.needsUpdate=true})}
+    ['trunk','a','b'].forEach(k=>{set[k].instanceMatrix.needsUpdate=true;if(set[k].instanceColor)set[k].instanceColor.needsUpdate=true});TREESETS[kind]={set,n:list.length,cap:list.length+TREEXTRA}}
 }
 function setTree(s,st,noFlag){const y0=heightAt(s.x,s.z);
   for(const p of TREEPARTS[s.kind]){let sy=p.sy,y=p.y;const sc=s.s;
@@ -1489,7 +1511,7 @@ function canHitU(a,e){if(!a||!a.def)return true;if(e.def&&e.def.naval&&!a.def.na
 function nearestEnemy(team,x,z,range,unitsOnly,bldOnly,att){let best=null,bd=range;
   if(!bldOnly)for(const e of units){if(e.dead||e.inside||!foe(e.team,team))continue;if(att&&!canHitU(att,e))continue;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;best=e}}
   if(unitsOnly)return best;
-  for(const b of blds){if(b.dead||!foe(b.team,team))continue;if((b.def.wall||b.def.crop||b.def.road)&&!bldOnly)continue;if(b.def.road)continue;if(att&&att.skip===b&&gameT<att.skipT)continue;const d=rectDist(x,z,b)+(bldOnly?0:3);if(d<bd){bd=d;best=b}}return best}
+  for(const b of blds){if(b.dead||!foe(b.team,team))continue;if((b.def.wall||b.def.crop||b.def.road)&&!bldOnly)continue;if(b.def.road||b.def.plant)continue;if(att&&att.skip===b&&gameT<att.skipT)continue;const d=rectDist(x,z,b)+(bldOnly?0:3);if(d<bd){bd=d;best=b}}return best}
 function nearestEnemyBld(team,x,z,range){let best=null,bd=range;for(const b of blds){if(b.dead||!foe(b.team,team))continue;const d=rectDist(x,z,b);if(d<bd){bd=d;best=b}}return best}
 
 /* ================= COMBAT ================= */
@@ -1603,7 +1625,7 @@ function afterBuild(u,b){
   if(b.def.drop&&b.type!=='tc'){for(const rt of b.def.drop){const r=nearestRes(rt,b.x,b.z,12);if(r){orderGather(u,r);return}}}
   let nb=null,bd=16;for(const o of blds){if(o.dead||o.built||o.team!==u.team)continue;const d=rectDist(u.x,u.z,o);if(d<bd){bd=d;nb=o}}
   if(nb)orderBuild(u,nb);else setIdle(u)}
-function completeBld(b){if(b.def.crop==='hemp')b.grow=.2;b.built=true;b.progress=1;b.mesh.scale.y=1;b.hp=Math.max(b.hp,b.maxhp*.9);
+function completeBld(b){if(b.def.crop==='hemp')b.grow=.2;if(b.type==='sapling')b.grow=0;b.built=true;b.progress=1;b.mesh.scale.y=1;b.hp=Math.max(b.hp,b.maxhp*.9);
   for(let i=0;i<4+b.s*2;i++)puff(b.x+(R()-.5)*b.s,b.y+.3,b.z+(R()-.5)*b.s,0xcdbb94,1,.4,.6,.8,1.4);
   if(b.team===0&&!b.def.wall){notify(b.name+' complete.');sfxUI('chime',.8)}
   if(b.team!==0&&b.def.trains&&AIS[b.team]&&!b.def.water)b.rally=AIS[b.team].rally}
@@ -1800,7 +1822,7 @@ function aiNaval(p,AI,D,mb,home,ag,vils,afford){
       if(!tg&&(gameT>D.first||!AI.landReach))for(const b of blds){if(b.dead||b.type!=='dock'||!foe(b.team,p)||ELIM[b.team])continue;const d=Math.hypot(b.x-war[0].x,b.z-war[0].z)*(ally(b.team,0)?D.humanBias:1);if(d<bd){bd=d;tg=b}}
       if(tg)formation(war,{x:tg.x,z:tg.z},true);else{const sh=shoreNear(home.x,home.z,AI.comp,30,wc);if(sh&&Math.hypot(war[0].x-sh.x,war[0].z-sh.z)>18)formation(war,sh,true)}}}}
 function aiTarget(p,AI,D,land){let target=null,bd=1e9;const home=BASES[p];
-  for(const b of blds){if(b.dead||!foe(b.team,p)||ELIM[b.team]||b.def.wall||b.def.road||b.type==='vhouse')continue;const rc=compAt(b.x,b.z)===AI.comp;if(land&&!rc)continue;if(!land&&(rc||b.def.water))continue;
+  for(const b of blds){if(b.dead||!foe(b.team,p)||ELIM[b.team]||b.def.wall||b.def.road||b.def.plant||b.type==='vhouse')continue;const rc=compAt(b.x,b.z)===AI.comp;if(land&&!rc)continue;if(!land&&(rc||b.def.water))continue;
     const d=Math.hypot(b.x-home.x,b.z-home.z)*(ally(b.team,0)?D.humanBias:1);if(d<bd){bd=d;target=b}}
   return target}
 function aiTransport(p,AI,D,army,home,threat){const op=AI.op;
@@ -1833,10 +1855,10 @@ function aiTick(p,dt){const AI=AIS[p];
   {const sc=my.find(u=>u.type==='scout'&&!u.raid);if(sc&&sc.task.t==='idle'&&(AI.scoutI||0)<=NP){const ord=[...Array(NP).keys()].filter(t=>t!==p&&compAt(BASES[t].x,BASES[t].z)===AI.comp).sort((a,b)=>Math.hypot(BASES[a].x-home.x,BASES[a].z-home.z)-Math.hypot(BASES[b].x-home.x,BASES[b].z-home.z));
     AI.scoutI=AI.scoutI||0;if(AI.scoutI<ord.length){const B=BASES[ord[AI.scoutI++]];sc.scouting=true;orderMove(sc,{x:B.x+(home.x-B.x)*.17,z:B.z+(home.z-B.z)*.17})}else{AI.scoutI=NP+1;sc.scouting=false;orderMove(sc,AI.rally)}}}
   const pu=my.length,pc=popCap(p);
-  const next=['feudal','castle','imperial'][ag];
+  const next=ag<AGEMAX?ERAS[ag+1].tech:null;
   const rq=ageReq(p),preq=!!(rq&&rq.ok);
   const aging=next&&PEND[p].has(next);
-  const ageGoal=next&&vils.length>=D.ageV[ag]&&preq&&!aging;
+  const ageGoal=next&&vils.length>=(D.ageV[ag]||D.ageV[D.ageV.length-1]+3)&&preq&&!aging;
   const reserve=ageGoal?TECHS[next].cost:{};
   const afford=c=>{for(const k in c)if(r[k]-(reserve[k]||0)<c[k])return false;return true};
   if(ageGoal&&tc&&tc.queue.length===0&&canAfford(p,TECHS[next].cost))research(tc,next,p);
@@ -1848,11 +1870,11 @@ function aiTick(p,dt){const AI=AIS[p];
   if(ag>=1){if(cnt('blacksmith')<1)want.push('blacksmith');if(cnt('range')<1)want.push('range');if(cnt('stable')<1)want.push('stable');if(cnt('tower')<D.towers)want.push('tower');if(vils.length>=18&&cnt('market')<1)want.push('market');if(DIPLO&&vils.length>=16&&cnt('embassy')<1)want.push('embassy');if(cnt('blacksmith')>0&&vils.length>=16){if(cnt('kiln')<1)want.push('kiln');if(cnt('smelter')<1)want.push('smelter')}}
   if(ag>=2){if(cnt('castle')<1&&r.stone>=650)want.push('castle');if(cnt('university')<1)want.push('university');if(cnt('siege')<1)want.push('siege');if(cnt('monastery')<1)want.push('monastery');for(const t of['hempfarm','ropewalk','vineyard','winepress','weaver'])if(cnt(t)<1)want.push(t);if(cnt('barracks')<2)want.push('barracks')}
   if(ag>=3){if(cnt('range')<2)want.push('range');if(cnt('stable')<2)want.push('stable')}
-  if(!tc&&r.wood>=275&&r.stone>=100&&ag>=2)want.unshift('tc');
+  if(!tc&&r.wood>=275&&r.stone>=100&&ag>=2)want.unshift('tc');if(ag>=1&&AI.lowWood&&cnt('forester')<1)want.unshift('forester');
   for(const t of want){if(mb.some(b=>b.type===t&&!b.built))break;if(afford(bCost(p,t))){aiBuildNear(p,t,home,t==='tower'?8:7,t==='tower'?13:17,t==='castle'?3:2,vils);break}}
   aiEconomy(p,vils,home,ag,mb,afford);
   const ut=CIVS[CIVKEY[p]].ut;
-  const prio=['loom','spears','sledge','picks','wheel','axe','collar','goldm','forging','fletching','maa','scale','bloodlines','padded','barding','stonem','bowsaw','plow','shaft','cart','xbow','pike',ut,'lsw','iron','bodkin','chain','leather','chainb','lcav','masonry','gtower','elite','twoman','rotation','quarry','furnace','bracer','plate','ring','plateb','arb','champ','cavalier','cram','onager','conscription','keep','architecture','sanctity','fervor','guilds','caravan','illumination','bellows','cooper','gillnets','careening','galleon','heraldry','courtly'];
+  const prio=['loom','spears','sledge','picks','wheel','axe','collar','goldm','forging','fletching','maa','scale','bloodlines','padded','barding','stonem','bowsaw','plow','shaft','cart','xbow','pike',ut,'lsw','iron','bodkin','chain','leather','chainb','lcav','masonry','gtower','elite','twoman','rotation','quarry','furnace','bracer','plate','ring','plateb','arb','champ','cavalier','cram','onager','conscription','keep','architecture','sanctity','fervor','guilds','caravan','illumination','bellows','cooper','gillnets','careening','galleon','heraldry','courtly','forestry'];
   let done=0;for(const id of prio){if(done>=2)break;if(!techReady(p,id))continue;const at=mb.find(b=>b.built&&b.type===TECHS[id].at&&b.queue.length===0);if(!at)continue;
     if(afford(TECHS[id].cost)&&research(at,id,p))done++}
   AI.mktT=(AI.mktT||0)-D.think;if(AI.mktT<=0&&mb.some(b=>b.type==='market'&&b.built)){AI.mktT=8;
@@ -1860,7 +1882,7 @@ function aiTick(p,dt){const AI=AIS[p];
   const bsm=mb.find(b=>b.type==='blacksmith'&&b.built);if(bsm){bsm.off=false;if(r.arms<6)bsm.mode='arms';else if(r.tools<12)bsm.mode='tools';else if(r.arms<20&&r.iron>(ag>=2?60:10))bsm.mode='arms';else bsm.off=true}
   for(const b of mb){if(b.type==='kiln')b.off=r.charcoal>40;if(b.type==='weaver')b.off=r.cloth>60;if(b.type==='ropewalk')b.off=r.rope>50}
   RATION[p]=r.wine>=Math.ceil(my.length/10)*2;
-  const techNeed=rq&&rq.nt<rq.needT&&vils.length>=D.ageV[ag]-4;
+  const techNeed=rq&&rq.nt<rq.needT&&vils.length>=(D.ageV[ag]||30)-4;
   if(!techNeed||army.length<5+ag*3)aiMilitary(p,army,mb,afford,ag,D);
   aiNaval(p,AI,D,mb,home,ag,vils,afford);
   aiWar(p,army,home,D,tc);
@@ -1874,7 +1896,7 @@ function aiBuildNear(p,type,home,rmin,rmax,n,vils,at){
   for(let i=0;i<Math.min(n,cand.length);i++)orderBuild(cand[i],b);
   if(b.def.trains)b.rally=AIS[p].rally;return b}
 function aiEconomy(p,vils,home,ag,mb,afford){const AI=AIS[p];
-  const frac=[[.55,.45,0,0,0],[.43,.34,.14,.04,.05],[.37,.27,.21,.08,.07],[.35,.25,.25,.08,.07]][ag];
+  const FR=[[.55,.45,0,0,0],[.43,.34,.14,.04,.05],[.37,.27,.21,.08,.07],[.35,.25,.25,.08,.07]],frac=FR[Math.min(ag,FR.length-1)].slice();
   const types=['food','wood','gold','stone','ore'],cnt={food:0,wood:0,gold:0,stone:0,ore:0};
   for(const v of vils){const t=v.task;let ty=null;if(t.t==='gather')ty=t.rtype;else if(t.t==='return')ty=v.carry;if(ty)cnt[ty]++}
   AI.rebalT-=1;if(AI.rebalT<=0){AI.rebalT=15;
@@ -2113,7 +2135,11 @@ function genVillages(type){VILS=[];HOST={};CAMPS=[];BARBS={nextRaid:0,spawnT:0};
     const cap={easy:4,normal:5,hard:7}[OPTS.diff]||5;CAMPS.push({id:i+1,b,cap});for(let k=0;k<cap;k++){const sp=spawnPoint(b,null);const u=makeUnit('barbarian',BARB,sp.x,sp.z);u.camp=i+1}
     for(let i2=-4;i2<=4;i2++)for(let j2=-4;j2<=4;j2++){const a=cx+i2,b2=cz+j2;if(inb(a,b2))RESV[b2*N+a]=1}}}
 /* --- per-second upkeep --- */
+function saplingRate(t){const S=SEAS.on?[1.4,1.2,.8,.3][SEAS.idx]:1;return S*(has(t,'forestry')?1.5:1)/150}
 function vilTick(dt){vilT-=dt;if(vilT>0)return;vilT=1;const D=DIFF[diffKey];
+  for(const b of blds){if(b.dead||b.type!=='sapling'||!b.built)continue;b.grow=(b.grow||0)+saplingRate(b.team);
+    if(b.grow>=1){const ox=b.ox,oz=b.oz,t=b.team;kill(b,true);plantTree(ox,oz,has(t,'forestry')?125:100);if(t===0&&(!FOGON||visAt(b.x,b.z)))puff(b.x,heightAt(b.x,b.z)+1.4,b.z,0x5f9a34,3,.25,.6,.6,1)}}
+  if(BARBS)for(let p=1;p<NP;p++)if(AIS[p]&&!ELIM[p])aiPlant(p);
   for(const V of VILS){if(V.hall.dead)continue;
     if(V.owner>=0){V.incT-=1;if(V.incT<=0){V.incT=20;const K=VILKIND[V.kind],a=Math.round(K.amt*(HOWMUL[V.how]||1));res[V.owner][K.r]+=a;if(V.owner===0){stats.gathered+=a;puff(V.hall.x,V.hall.y+3.5,V.hall.z,0xffd36a,2,.15,.4,.8,1)}}}
     else for(let t=0;t<NP;t++)if(V.fav[t]>0)V.fav[t]=Math.max(0,V.fav[t]-.02)}
@@ -2126,6 +2152,15 @@ function vilTick(dt){vilT-=dt;if(vilT>0)return;vilT=1;const D=DIFF[diffKey];
       let tg=null,bd=70;for(const b of blds){if(b.dead||b.team>=NP||ELIM[b.team]||b.def.wall||b.def.road)continue;if(compAt(b.x,b.z)!==compAt(C.b.x,C.b.z))continue;const d=Math.hypot(b.x-C.b.x,b.z-C.b.z)*(b.team===0?DIFF[diffKey].humanBias:1);if(d<bd){bd=d;tg=b}}
       const n=diffKey==='hard'?5:3;if(tg&&gs.length>=n){const grp=gs.slice(0,n);for(const u of grp)u.raid=true;formation(grp,{x:tg.x,z:tg.z},true);if(tg.team===0)notify('Barbarian raiders are coming for your '+tg.name+'!',true)}}}
   BARBS.aiT=(BARBS.aiT||0)-1;if(BARBS.aiT<=0){BARBS.aiT=15;for(let p=1;p<NP;p++)if(AIS[p]&&!ELIM[p])aiVillage(p)}}
+function aiPlant(p){const AI=AIS[p];AI.plantT=(AI.plantT||0)-1;if(AI.plantT>0||age[p]<1)return;AI.plantT=20;const home=BASES[p];
+  let trees=0;for(const r of ress)if(!r.dead&&r.tree&&r.amt>0&&Math.abs(r.x-home.x)<24&&Math.abs(r.z-home.z)<24)trees++;AI.lowWood=trees<40;if(trees>=40)return;
+  const mb=blds.filter(b=>!b.dead&&b.team===p);const fl=mb.find(b=>b.type==='forester');const vils=units.filter(u=>!u.dead&&u.team===p&&u.type==='villager');
+  if(!fl){if(res[p].wood>=100&&vils.length>=10)aiBuildNear(p,'forester',home,8,15,1,vils);return}
+  if(!fl.built||res[p].wood<80)return;const pend=mb.filter(b=>b.type==='sapling').length;if(pend>=18)return;
+  for(let k=0;k<12;k++){const a=R()*TAU,d=4+R()*5,cx=cellX(fl.x+Math.cos(a)*d),cz=cellX(fl.z+Math.sin(a)*d);const cells=[];
+    for(let i=0;i<4;i++)for(let j=0;j<3;j++)if(validPlace('sapling',cx+i,cz+j,0,p))cells.push([cx+i,cz+j]);if(cells.length<8)continue;
+    let first=null;for(const[x,z]of cells){if(!canAfford(p,bCost(p,'sapling')))break;pay(p,bCost(p,'sapling'));const b=placeBld('sapling',p,x,z,false);if(!first)first=b}
+    if(first){const c2=vils.filter(v=>v.task.t!=='build').sort((a2,b2)=>Math.hypot(a2.x-first.x,a2.z-first.z)-Math.hypot(b2.x-first.x,b2.z-first.z));for(let i=0;i<Math.min(2,c2.length);i++)orderBuild(c2[i],first)}return}}
 function aiVillage(p){const AI=AIS[p],D=DIFF[diffKey],home=BASES[p];if(age[p]<1)return;let best=null,bd=HALF*1.3;
   for(const V of VILS){if(V.owner>=0||V.hall.dead||compAt(V.x,V.z)!==AI.comp)continue;const d=Math.hypot(V.x-home.x,V.z-home.z);if(d<bd){bd=d;best=V}}
   if(!best)return;const r=res[p],price=vilPrice(best,p);
@@ -2240,6 +2275,7 @@ function animate(dt,t){
     if(b.dead){b.deadT+=dt;b.mesh.position.y=b.y-b.deadT*1.2;b.mesh.rotation.z=Math.sin(b.deadT*7)*.02;continue}
     for(let i=0;i<ud.flags.length;i++)ud.flags[i].rotation.y=Math.sin(t*2.2+b.id+i)*.35;
     if(ud.blades&&b.built)ud.blades.rotation.z+=dt*.9;
+    if(b.type==='sapling'&&b.built){const k=.4+1.4*(b.grow||0);b.mesh.scale.set(k,k,k)}
     if(ud.crop){const gr=b.grow==null?.85:b.grow;ud.crop.scale.set(.55+.45*gr,.1+.9*gr,.55+.45*gr);ud.crop.rotation.z=Math.sin(t*.9+b.id)*.015*gr}
     if(ud.doorL){ud.doorL.rotation.y=-b.door*1.45;ud.doorR.rotation.y=b.door*1.45}
     if(b.def.chim&&b.built&&state==='play'&&(!b.def.recipes||b.working)){b.smokeT-=dt;if(b.smokeT<=0){b.smokeT=(b.def.recipes&&b.type!=='blacksmith'?.6:1.3)+R();if(Math.abs(b.x-cam.x)<cam.dist&&Math.abs(b.z-cam.z)<cam.dist){
@@ -2324,11 +2360,11 @@ const GHOSTOK=new T.MeshBasicMaterial({color:0x9dff9a,transparent:true,opacity:.
 const GHOSTBAD=new T.MeshBasicMaterial({color:0xff6a55,transparent:true,opacity:.45,depthWrite:false});
 function ghostOf(type){const g=getBldMesh(type,0);g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.material=GHOSTOK}});return g}
 function startPlacing(type){
-  const d=BUILD[type];if(d.diplo&&!DIPLO){notify('Embassies are only used in Open diplomacy games.',true);return}if(age[0]<d.age){notify(d.name+' requires the '+AGES[d.age]+'.',true);return}
+  const d=BUILD[type];if(d.diplo&&!DIPLO){notify('Embassies are only used in Open diplomacy games.',true);return}if(age[0]<d.age){notify(d.name+' requires the '+AGES[d.age]+'.',true);return}if(d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)){notify('Build a '+BUILD[d.needs].name+' first.',true);return}
   const c=bCost(0,type);if(!canAfford(0,c)){notify('Not enough '+missing(0,c)+'.',true);return}
-  cancelModes(true);placing={type,ox:0,oz:0,ok:false,line:!!(d.wall||d.road),start:null};ghost=ghostOf(type);scene.add(ghost);
+  cancelModes(true);placing={type,ox:0,oz:0,ok:false,line:!!(d.wall||d.road),area:!!d.area,start:null};ghost=ghostOf(type);scene.add(ghost);
   if(mouse.x!=null)updGhost(mouse.x,mouse.y);
-  notifyOnce('place'+(d.wall?'w':d.gate?'g':''),d.road||d.wall?'Tap where it starts, then tap each corner. Tap the last point again, press Done, or right-click to finish.':d.gate?'Place the gate on one of your walls (or open ground).':'Click to place the '+d.name+'. Hold Shift to place several. Right-click to cancel.');renderPanel(true)}
+  notifyOnce('place'+(d.wall?'w':d.gate?'g':''),d.area?'Tap one corner of the patch, then the opposite corner.':d.road||d.wall?'Tap where it starts, then tap each corner. Tap the last point again, press Done, or right-click to finish.':d.gate?'Place the gate on one of your walls (or open ground).':'Click to place the '+d.name+'. Hold Shift to place several. Right-click to cancel.');renderPanel(true)}
 function lineCells(a,b){const out=[];let x0=a[0],z0=a[1];const x1=b[0],z1=b[1],dx=Math.abs(x1-x0),dz=Math.abs(z1-z0),sx=x0<x1?1:-1,sz=z0<z1?1:-1;let err=dx-dz;
   for(let i=0;i<60;i++){out.push([x0,z0]);if(x0===x1&&z0===z1)break;const e2=2*err;
     if(e2>-dz&&e2<dx){err-=dz;x0+=sx;out.push([x0,z0]);err+=dx;z0+=sz}else if(e2>-dz){err-=dz;x0+=sx}else{err+=dx;z0+=sz}}
@@ -2338,6 +2374,13 @@ function placeHint(txt){const el=$('#placehint');if(!el)return;if(!txt){el.hidde
 function updGhost(sx,sy){if(!placing)return;const g=groundAt(sx,sy);if(!g)return;const s=BUILD[placing.type].s;
   placing.ox=Math.round(g.x+HALF-s/2);placing.oz=Math.round(g.z+HALF-s/2);
   if(placing.line&&placing.start){const e=snapEnd(placing.start,placing.ox,placing.oz);placing.ox=e[0];placing.oz=e[1]}
+  if(placing.area){for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];
+    if(!placing.start){placeHint('Tap one corner of the patch to plant');ghost.visible=true}
+    else{ghost.visible=false;const a=placing.start,x0=Math.min(a[0],placing.ox),x1=Math.max(a[0],placing.ox),z0=Math.min(a[1],placing.oz),z1=Math.max(a[1],placing.oz);
+      const X1=Math.min(x1,x0+9),Z1=Math.min(z1,z0+9),cells=[];for(let x=x0;x<=X1;x++)for(let z=z0;z<=Z1;z++)cells.push([x,z]);placing.cells=cells;let n=0;
+      for(const[x,z]of cells){const ok=validPlace(placing.type,x,z,0,0);if(ok)n++;const gm=ghostOf(placing.type);gm.traverse(o=>{if(o.isMesh)o.material=ok?GHOSTOK:GHOSTBAD});const wx=x-HALF+.5,wz=z-HALF+.5;gm.position.set(wx,heightAt(wx,wz),wz);scene.add(gm);lineGhosts.push(gm)}
+      const c=bCost(0,placing.type),tot={};for(const k in c)tot[k]=c[k]*n;placeHint(n+' sapling'+(n===1?'':'s')+' · '+costHTML(tot)+' · tap the opposite corner to plant (up to 10×10)')}
+    if(placing.start)return}
   if(placing.line&&placing.start){for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];ghost.visible=false;
     const cells=lineCells(placing.start,[placing.ox,placing.oz]);placing.cells=cells;
     for(const[x,z]of cells){const ok=validPlace(placing.type,x,z,0,0);const gm=ghostOf(placing.type);gm.traverse(o=>{if(o.isMesh)o.material=ok?GHOSTOK:GHOSTBAD});
@@ -2352,6 +2395,9 @@ function updGhost(sx,sy){if(!placing)return;const g=groundAt(sx,sy);if(!g)return
 function gateRot(x,z){const isW=(a,b)=>{const w=wallAt(a,b);return w&&(w.def.wall||w.def.gate)};return(isW(x,z-1)||isW(x,z+1))&&!(isW(x-1,z)||isW(x+1,z))?Math.PI/2:0}
 function tryPlace(shiftKey){
   if(!placing)return;const type=placing.type,c=bCost(0,type),vil=ownUnitsSel().filter(u=>u.type==='villager');
+  if(placing.area){if(!placing.start){placing.start=[placing.ox,placing.oz];updGhost(mouse.x!=null?mouse.x:W/2,mouse.y!=null?mouse.y:H/2);renderPanel(true);return}
+    let first=null,n=0;for(const[x,z]of(placing.cells||[placing.start])){if(!validPlace(type,x,z,0,0))continue;if(!canAfford(0,c)){notify('Ran out of '+missing(0,c)+'.',true);break}pay(0,c);const b=placeBld(type,0,x,z,false);n++;if(!first)first=b}
+    if(first){sfxUI('place');vil.forEach(u=>orderBuild(u,first));notify(n+' saplings to plant. Villagers plant them one by one.')}cancelModes();return}
   if(placing.line){
     if(!placing.start){placing.start=[placing.ox,placing.oz];updGhost(mouse.x!=null?mouse.x:W/2,mouse.y!=null?mouse.y:H/2);return}
     if(placing.ox===placing.start[0]&&placing.oz===placing.start[1]){cancelModes();return}
@@ -2495,7 +2541,7 @@ function renderPanel(force){
         '<div class="stats"><span>HP <b id="i-hp"></b></span><span>Attack <b>'+d.atk+'</b></span><span>Armour <b>'+d.arm[0]+'/'+d.arm[1]+'</b></span>'+(d.ranged?'<span>Range <b>'+d.range+'</b></span>':'')+(e.type==='villager'||e.type==='fishboat'?'<span>Carrying <b id="i-carry"></b></span>':'')+(e.gar?'<span>Aboard <b>'+e.gar.length+'/'+d.hold+'</b></span>':'')+(e.type==='monk'?'<span>Faith <b id="i-faith"></b></span>':'')+(bon?'<span>'+bon+'</span>':'')+'</div>';}
     else if(e.kind==='bld'){const d=e.def;
       info='<div class="i-head"><div class="portrait" style="box-shadow:inset 0 -4px 0 '+PCSS[e.team]+'">'+d.l+'</div><div><div class="i-name">'+e.name+'</div><div class="i-sub">'+(e.built?(e.team?teamLabel(e.team):d.desc):'Under construction <b id="i-prog"></b>')+'</div><div class="hpbar"><i id="i-hpb"></i></div></div></div><div class="stats"><span>HP <b id="i-hp"></b></span><span>Armour <b>'+e.arm[0]+'/'+e.arm[1]+'</b></span>'+(e.shoot?'<span>Arrows <b>'+(e.shoot.n+e.gar.length)+'×'+e.shoot.atk+'</b></span><span>Range <b>'+e.shoot.range+'</b></span>':'')+(e.def.gar?'<span>Inside <b>'+e.gar.length+'/'+e.def.gar+'</b></span>':'')+'</div>';
-      if(e.type==='tc'&&e.team===0&&e.built)info+=reqHTML(0);if(e.def.capture)info+=vilInfo(e);if(e.loot&&e.team===BARB)info+='<div class="reqs">Loot: '+Object.entries(e.loot).map(([k,v])=>v+' <i class="ico '+k+'"></i>').join(' ')+'. Destroy the camp to take it.</div>';
+      if(e.type==='tc'&&e.team===0&&e.built)info+=reqHTML(0);if(e.type==='sapling'&&e.built){const left=Math.ceil((1-(e.grow||0))/saplingRate(e.team));info+='<div class="reqs">Growing '+Math.floor((e.grow||0)*100)+'% · a tree in about '+fmt(left)+(SEAS.on&&SEAS.idx===3?' (slow in winter)':'')+'</div>'}if(e.def.capture)info+=vilInfo(e);if(e.loot&&e.team===BARB)info+='<div class="reqs">Loot: '+Object.entries(e.loot).map(([k,v])=>v+' <i class="ico '+k+'"></i>').join(' ')+'. Destroy the camp to take it.</div>';
       if(e.def.recipes&&e.built){const rc=recipeOf(e);info+='<div class="reqs">'+Object.entries(rc.in).map(([a,n])=>n+' <i class="ico '+a+'"></i> '+RESNAME[a].toLowerCase()).join(' + ')+' → '+Object.entries(rc.out).map(([a,n])=>n+' <i class="ico '+a+'"></i> '+GNAME[a].toLowerCase()).join(', ')+' every '+rc.time+'s · <b id="i-wstat"></b></div><div class="pbar"><i id="i-wp"></i></div>'}
       if(e.team===0&&e.queue.length)info+='<div class="queue">'+e.queue.map((q,i)=>'<button class="qi" data-q="'+i+'" title="Cancel '+(q.tech?techName(0,q.tech):UNITS[q.type].name)+'">'+(q.tech?'✦':getDef(0,q.type).l)+(i===0?'<span class="qp" id="q0"></span>':'')+'</button>').join('')+'</div>';
       else if(e.team===0&&e.built&&e.def.trains)info+='<div class="hint">Right-click the ground or a resource to set a gather point.</div>'}
@@ -2507,7 +2553,7 @@ function renderPanel(force){
   const btn=(cls,cmd,name,cost,title,lock,on,key)=>'<button class="cmd '+cls+(lock?' lock':'')+(on?' on':'')+'" data-cmd="'+cmd+'" data-key="'+(key||'')+'" '+(cost&&!lock?'data-cost=\''+JSON.stringify(cost)+'\' ':'')+(lock?'data-lock="'+lock+'" ':'')+'title="'+title.replace(/"/g,'&quot;')+'"><span class="k">'+(key||'').toUpperCase()+'</span><span class="n">'+name+'</span><span class="c">'+(cost&&!lock?costHTML(cost):'')+'</span></button>';
   if(own.length){
     if(own.some(u=>u.type==='villager')){const list=buildPage==='eco'?ECO_B:buildPage==='ind'?IND_B:MIL_B;
-      for(const t of list){const d=BUILD[t],lock=d.diplo&&!DIPLO?'Diplomacy games':age[0]<d.age?'Age '+AGEN[d.age]:'';cmds+=btn('','build:'+t,d.name,bCost(0,t),d.name+': '+d.desc+(lock?' (requires '+AGES[d.age]+')':''),lock,placing&&placing.type===t,nextKey())}
+      for(const t of list){const d=BUILD[t],lock=d.diplo&&!DIPLO?'Diplomacy games':age[0]<d.age?'Age '+AGEN[d.age]:d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)?'Needs '+BUILD[d.needs].name:'';cmds+=btn('','build:'+t,d.name,bCost(0,t),d.name+': '+d.desc+(lock?' (requires '+AGES[d.age]+')':''),lock,placing&&placing.type===t,nextKey())}
       cmds+=btn('page','page',buildPage==='eco'?'Industry ›':buildPage==='ind'?'Military ›':'Economy ›',null,'Switch build menu','','',nextKey())}
     if(own.some(u=>isMil(u.def)||u.type==='monk'))cmds+=btn('','amove','Attack Move',null,'Move and fight anything on the way (G)','',amoveMode,'g');
     if(own.some(u=>u.gar&&u.gar.length))cmds+=btn('','unload','Unload here',null,'Put everyone aboard ashore at the nearest bank. Or right-click land to sail there and unload','','',nextKey());
@@ -2528,9 +2574,9 @@ function renderPanel(force){
     if(b.type==='tc'&&age[0]>=2)cmds+=btn(RATION[0]?'age':'','ration','Wine ration: '+(RATION[0]?'On':'Off'),null,'Share wine with your people to make them merry','',RATION[0],nextKey());
     if(b.type==='tc'){cmds+=btn('','bell','Town Bell',null,'Send nearby villagers into shelter','','',nextKey());cmds+=btn('','clear','All Clear',null,'Villagers leave shelter and go back to work','','',nextKey())}
     if(b.def.gar&&b.gar.length)cmds+=btn('','ungar','Ungarrison ('+b.gar.length+')',null,'Release everyone inside','','',nextKey());
-    if(canDemolish(b)){const ask=demoAsk.id===b.id&&performance.now()-demoAsk.t<4000;cmds+=btn(ask?'warn':'','demolish',ask?'Confirm demolish':'Demolish',null,'Knock it down and get back 25% of its cost (Delete)','','','del');
+    if(canDemolish(b)){const ask=demoAsk.id===b.id&&performance.now()-demoAsk.t<4000;cmds+=btn(ask?'warn':'','demolish',ask?'Confirm demolish':'Demolish',null,'Knock it down and get back 25% of its cost (Delete)','','','');
       if(b.def.road||b.def.wall)cmds+=btn('','demoline','Remove whole line',null,'Remove every connected '+(b.def.road?'road':'wall')+' tile','','','')}
-  }else if(sel.length===1&&sel[0].kind==='bld'&&sel[0].team===0&&!sel[0].built&&canDemolish(sel[0])){cmds+=btn('','demolish','Cancel building',null,'Stop building it and get a full refund (Delete)','','','del')}
+  }else if(sel.length===1&&sel[0].kind==='bld'&&sel[0].team===0&&!sel[0].built&&canDemolish(sel[0])){cmds+=btn('','demolish','Cancel building',null,'Stop building it and get a full refund (Delete)','','','')}
   if(placing&&placing.line&&placing.start){cmds+=btn('age','linedone','Done',null,'Finish the '+(BUILD[placing.type].road?'road':'wall')+' (Esc or right-click)','','','')}
   if(sel.length===1&&sel[0].kind==='bld'&&sel[0].def.capture&&isVilT(sel[0].team)){const V=vilOfHall(sel[0]);if(V&&!(HOST[V.team]&&HOST[V.team][0])){
       cmds+=btn('','vgift','Gift 100 gold',{gold:100},'Raise their favour by 20. At 100 they join you','','',nextKey());const pr=vilPrice(V,0);cmds+=btn('tech','vbuy','Buy village',{gold:pr},'Pay '+pr+' gold and the village is yours now','','',nextKey())}}
@@ -2573,8 +2619,8 @@ function renderGoods(){if(goodsEl.hidden)return;const r=res[0];
 $('#btn-goods').onclick=()=>{goodsEl.hidden=!goodsEl.hidden;if(!goodsEl.hidden)$('#players').hidden=true;renderGoods()};
 function updTop(){const mo=$('#morale');mo.textContent=MERRY[0]?'Merry':'Content';mo.classList.toggle('merry',MERRY[0]);if(frame%3===0&&typeof renderPlayers==='function')renderPlayers();if(frame%3===0)renderGoods();for(const k of['food','wood','gold','stone'])$('#r-'+k+' b').textContent=Math.floor(res[0][k]);
   const pu=popUsed(0),pc=popCap(0);$('#r-pop b').textContent=pu+'/'+pc;$('#r-pop').classList.toggle('warn',pu>=pc);
-  $('#clock').textContent=fmt(gameT);seaChip();$('#age-name').textContent=AGES[age[0]];
-  const ag=['feudal','castle','imperial'].find(a=>PEND[0].has(a));const bar=$('#age-bar');bar.hidden=!ag;
+  $('#clock').textContent=fmt(gameT);seaChip();$('#age-name').textContent=AGES[age[0]]+(age[0]===AGEMAX&&AGEMAX<ERAS.length-1?' (final)':'');
+  const ag=AGETECHS.find(a=>PEND[0].has(a));const bar=$('#age-bar');bar.hidden=!ag;
   if(ag){const tc=blds.find(b=>!b.dead&&b.team===0&&b.queue.length&&b.queue[0].tech===ag);bar.firstChild.style.width=tc?(100*tc.queue[0].t/TECHS[ag].time)+'%':'0%'}}
 $('#btn-idle').onclick=()=>state==='play'&&selectIdle();$('#btn-army').onclick=()=>state==='play'&&selectArmy();
 $('#btn-menu').onclick=()=>state==='play'?pause():(state==='paused'||state==='tree')&&resume();$('#btn-tree').onclick=()=>state==='play'?showTree():state==='tree'&&resume();
@@ -2590,6 +2636,7 @@ function snapshot(){
   const alive=new Set(ress.map(r=>r.id));
   return{v:2,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
     exp:FOGON?rle(EXP):null,seen:blds.filter(b=>b.seen).map(b=>b.id),
+    planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
     sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),
     vil:{vils:VILS.map(V=>({id:V.id,team:V.team,name:V.name,kind:V.kind,x:V.x,z:V.z,owner:V.owner,how:V.how,fav:V.fav,incT:V.incT,env:V.env,hall:V.hall.id})),host:HOST,camps:CAMPS.map(C=>({id:C.id,b:C.b.id,cap:C.cap})),barbs:BARBS},
     dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS},
@@ -2625,6 +2672,7 @@ function loadGame(d){
     if(r.mesh&&r.mesh.userData.berries){const k=r.amt/r.max;r.mesh.userData.berries.forEach((b,i)=>b.visible=i/8<k)}}
   for(const[id,x,z,hp,amt,hx,hz]of d.ani){const r=byId.get(id);if(!r||r.dead)continue;r.x=x;r.z=z;r.hp=hp;r.amt=amt;r.home={x:hx,z:hz};r.cx=cellX(x);r.cz=cellX(z)}
   ress=ress.filter(r=>!r.dead);
+  if(d.planted)for(const[cx,cz,amt,kind,f]of d.planted){const r=plantTree(cx,cz,amt,kind);if(r&&f){r.felled=true;setTree(r.tree,1)}}
   const seen=new Set(d.seen||[]);
   for(const o of d.blds){const b=placeBld(o.type,o.team,o.ox,o.oz,o.built,o.rot);b.id=o.id;b.progress=o.progress;b.hp=o.hp;b.mode=o.mode||undefined;b.vil=o.vil||0;b.loot=o.loot||null;if(o.grow!=null)b.grow=o.grow;b.camp=o.camp||0;b.off=o.off;b.wp=o.wp;b.working=o.working;b.seen=seen.has(o.id);
     b.queue=o.queue.map(q=>Object.assign({},q));if(!b.built)b.mesh.scale.y=.08+.92*b.progress;b._d=o;byId.set(b.id,b)}
@@ -2699,7 +2747,7 @@ const screen=$('#screen');
 const SIZES={small:{half:48,name:'Small'},medium:{half:60,name:'Medium'},large:{half:80,name:'Large'},huge:{half:100,name:'Huge'}};
 const MAPTYPES={lowlands:'Lowlands',highlands:'Highlands',forest:'Great Forest',coast:'Coast',rivers:'Rivers',islands:'Islands',random:'Random'};
 const MAPDESC={lowlands:'Open farmland, lakes and woods',highlands:'Hills and rocky ridges with narrow passes',forest:'Dense woods with clearings',coast:'Land on one side, open sea on the other',rivers:'Rivers cut the land. Shallow fords let people wade across and boats sail through',islands:'Every people on its own island. Allies share land bridges. You need docks and transports',random:'Any of the above'};
-let SETUP={civ:'scots',diff:'normal',map:'lowlands',size:'medium',np:3,mode:'open',seasons:true,fog:true,opp:['random','random','random','random','random','random','random'],team:[1,2,2,2,2,2,2,2]};
+let SETUP={civ:'scots',diff:'normal',map:'lowlands',size:'medium',np:3,mode:'open',seasons:true,startAge:0,endAge:3,fog:true,opp:['random','random','random','random','random','random','random'],team:[1,2,2,2,2,2,2,2]};
 try{const t=localStorage.getItem('banner-bastion-setup');if(t)Object.assign(SETUP,JSON.parse(t))}catch(e){}
 if(!SETUP.v){SETUP.v=2;SETUP.mode='open';try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
 function saveSetup(){try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
@@ -2721,6 +2769,8 @@ function showStart(){state='menu';screen.hidden=false;
    '<label for="s-size">Map size<select id="s-size">'+Object.keys(SIZES).map(k=>'<option value="'+k+'"'+(SETUP.size===k?' selected':'')+'>'+SIZES[k].name+'</option>').join('')+'</select></label>'+
    '<label for="s-np">Players<select id="s-np">'+[2,3,4,5,6,7,8].map(n=>'<option'+(SETUP.np===n?' selected':'')+'>'+n+'</option>').join('')+'</select></label>'+
    '<label for="s-mode">Diplomacy<select id="s-mode"><option value="open"'+(SETUP.mode==='open'?' selected':'')+'>Open diplomacy</option><option value="ffa"'+(SETUP.mode==='ffa'?' selected':'')+'>Free for all (always war)</option><option value="teams"'+(SETUP.mode==='teams'?' selected':'')+'>Locked teams</option></select></label>'+
+   '<label for="s-start">Start age<select id="s-start">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.startAge|0)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
+   '<label for="s-end">Final age<select id="s-end">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.endAge==null?ERAS.length-1:SETUP.endAge)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
    '<label for="s-seas">Seasons &amp; weather<select id="s-seas"><option value="1"'+(SETUP.seasons!==false?' selected':'')+'>On</option><option value="0"'+(SETUP.seasons===false?' selected':'')+'>Off</option></select></label>'+
    '<label for="s-fog">Fog of war<select id="s-fog"><option value="1"'+(SETUP.fog?' selected':'')+'>On</option><option value="0"'+(!SETUP.fog?' selected':'')+'>Off</option></select></label>'+
    '<label>Difficulty<div class="diff" role="radiogroup">'+['easy','normal','hard'].map(d=>'<button role="radio" aria-checked="'+(d===SETUP.diff)+'" data-d="'+d+'">'+d[0].toUpperCase()+d.slice(1)+'</button>').join('')+'</div></label>'+
@@ -2728,7 +2778,7 @@ function showStart(){state='menu';screen.hidden=false;
   '<h3>Sound</h3>'+soundHTML()+'<div class="row"><button class="primary" id="go">Raise the banner</button>'+(readSave('auto')&&readSave('auto').opts?'<button class="secondary" id="cont">Continue last game</button>':'')+'<button class="secondary" id="ld">Load game</button></div>'+
   '<div class="help"><h3>Controls</h3><div><b>Left-click</b> select · <b>drag</b> box-select · <b>double-click</b> select all of a type</div><div><b>Right-click</b> move, gather, build, repair or attack</div>'+
   '<div><b>WASD</b>, arrows or screen edge to pan · <b>wheel</b> zoom · <b>Q/E</b> rotate</div><div><b>1–0</b> command hotkeys · <b>G</b> attack-move · <b>T</b> tech tree</div><div><b>P</b> pause (you can still give orders) · <b>[</b> <b>]</b> game speed ½× to 2× · <b>M</b> sound · <b>F10</b> menu</div>'+
-  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
+  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
   const refresh=()=>{saveSetup();$('#s-players').innerHTML=playersHTML();$('#s-warn').textContent=setupWarn();$('#s-mapdesc').textContent=MAPDESC[SETUP.map];bindRows()};
   const bindRows=()=>{screen.querySelectorAll('[data-opp]').forEach(sl=>sl.onchange=()=>{SETUP.opp[+sl.dataset.opp-1]=sl.value;saveSetup()});
     screen.querySelectorAll('[data-team]').forEach(sl=>sl.onchange=()=>{SETUP.team[+sl.dataset.team]=+sl.value;saveSetup();$('#s-warn').textContent=setupWarn()})};
@@ -2739,11 +2789,13 @@ function showStart(){state='menu';screen.hidden=false;
   $('#s-np').onchange=e=>{SETUP.np=+e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-mode').onchange=e=>{SETUP.mode=e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};
+  $('#s-start').onchange=e=>{SETUP.startAge=+e.target.value;if(SETUP.endAge<SETUP.startAge){SETUP.endAge=SETUP.startAge;$('#s-end').value=SETUP.endAge}saveSetup()};
+  $('#s-end').onchange=e=>{SETUP.endAge=+e.target.value;if(SETUP.startAge>SETUP.endAge){SETUP.startAge=SETUP.endAge;$('#s-start').value=SETUP.startAge}saveSetup()};
   $('#ld').onclick=()=>showSaves('load',showStart);if($('#cont'))$('#cont').onclick=()=>{const d=readSave('auto');if(d)try{loadGame(d)}catch(e){console.error(e);notify('The autosave could not be loaded.',true)}};
   $('#go').onclick=()=>{if(SETUP.mode==='teams'&&setupWarn().startsWith('Everyone'))return;
     const civs=[SETUP.civ];for(let i=1;i<SETUP.np;i++){let c=SETUP.opp[i-1]||'random';if(c==='random'){const pool=CIVKEYS.filter(k=>!civs.includes(k));const src=pool.length?pool:CIVKEYS;c=src[(Math.random()*src.length)|0]}civs.push(c)}
     const teams=[];for(let i=0;i<SETUP.np;i++)teams.push(SETUP.mode==='teams'?SETUP.team[i]:0);
-    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false});screen.hidden=true;state='play';autoT=0;canvas.focus();
+    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false,startAge:SETUP.startAge|0,endAge:SETUP.endAge==null?ERAS.length-1:SETUP.endAge});screen.hidden=true;state='play';autoT=0;canvas.focus();
     const foes=civs.filter((c,i)=>i&&foe(i,0)).length;
     if(SETUP.mode==='open')notify('You lead the '+CIVS[civs[0]].name+'. '+(civs.length-1)+' other '+(civs.length>2?'peoples share':'people shares')+' this land. Find them, then choose friendship or war.');else notify('You lead the '+CIVS[civs[0]].name+' against '+foes+' rival'+(foes>1?'s':'')+(teams[0]&&civs.some((c,i)=>i&&ally(i,0))?', with allies at your side':'')+'. Select your Town Center (H) and train villagers.');
     setTimeout(()=>{if(state==='play')notifyOnce('house','Villagers need Houses: select one, press 1 to build a House.')},10000)}}
@@ -2770,7 +2822,7 @@ function endGame(win){musStop(true);sfxUI(win?'victory':'defeat');state='over';s
   const beaten=[];for(let t=1;t<NP;t++)if(!ally(t,0)&&ELIM[t])beaten.push(CIVS[CIVKEY[t]].name);
   screen.innerHTML='<div class="card"><div class="eyebrow">'+(win?'Victory':'Defeat')+' · '+fmt(gameT)+' · '+OPTS.diff+'</div><h1>'+(win?'Your banner flies over the land':'Your kingdom has fallen')+'</h1>'+
   '<p class="lede">'+(win?'Every rival kingdom has been defeated'+(beaten.length?': '+beaten.join(', '):'')+'.':'Your last stronghold has fallen. Regroup, scout earlier, and wall up sooner.')+'</p>'+
-  '<div class="endstats"><div><b>'+AGES[age[0]].split(' ')[0]+'</b><span>Age reached</span></div><div><b>'+stats.trained+'</b><span>Units trained</span></div><div><b>'+stats.killed+'</b><span>Enemies slain</span></div><div><b>'+stats.lost+'</b><span>Units lost</span></div><div><b>'+Math.floor(stats.gathered)+'</b><span>Resources gathered</span></div><div><b>'+TECH[0].size+'</b><span>Techs</span></div></div>'+
+  '<div class="endstats"><div><b>'+AGES[age[0]].replace(' Age','')+'</b><span>Age reached</span></div><div><b>'+stats.trained+'</b><span>Units trained</span></div><div><b>'+stats.killed+'</b><span>Enemies slain</span></div><div><b>'+stats.lost+'</b><span>Units lost</span></div><div><b>'+Math.floor(stats.gathered)+'</b><span>Resources gathered</span></div><div><b>'+TECH[0].size+'</b><span>Techs</span></div></div>'+
   '<div class="row"><button class="primary" id="again">Play again</button></div></div>';$('#again').onclick=showStart}
 
 /* ================= NEW GAME ================= */
@@ -2804,10 +2856,18 @@ function placeBases(type){const B=[],order=[...Array(NP).keys()].sort((a,b)=>(TE
     else{a=a0+i/NP*TAU;x=Math.cos(a)*rad;z=Math.sin(a)*rad;if(NP===2&&i===1){x=-B[order[0]].x;z=-B[order[0]].z}}
     const lim=HALF-12;B[p]={x:clamp(x,-lim,lim),z:clamp(z,-lim,lim)}});
   return B}
+function applyStartAge(){const k=AGEMIN;if(!k)return;const E=ERAS[k].start,B=ERAS[0].start;
+  for(let t=0;t<NP;t++){age[t]=k;for(const r in E.res)res[t][r]=(res[t][r]||0)+E.res[r]-(B.res[r]||0);
+    if(CIVKEY[t]==='vikings'){if(k>=1)TECH[t].add('wheel');if(k>=2)TECH[t].add('cart')}
+    const tc=blds.find(b=>b.team===t&&b.type==='tc');if(!tc)continue;const to=localPt(BASES[t],6,6);
+    for(let i=B.vils;i<E.vils;i++){const p=spawnPoint(tc,to);makeUnit('villager',t,p.x,p.z)}
+    const need=Math.ceil((E.vils+8-5)/5);let n=0;for(let a=0;a<40&&n<need;a++){const ang=a*2.4+t,d=7+(a%5)*1.6,sp=findSpot('house',BASES[t].x+Math.cos(ang)*d,BASES[t].z+Math.sin(ang)*d);if(sp&&compAt(sp[0]-HALF+1,sp[1]-HALF+1)===compAt(BASES[t].x,BASES[t].z)){placeBld('house',t,sp[0],sp[1],true);n++}}
+    DEFC[t]={}}
+  for(const b of blds)if(b.team<NP)setBldMesh(b)}
 function localPt(b,ox,oz){const l=Math.hypot(b.x,b.z)||1,fx=-b.x/l,fz=-b.z/l,rx=fz,rz=-fx;const fw=(ox+oz)*.7071,rg=(ox-oz)*.7071;return{x:b.x+fx*fw+rx*rg,z:b.z+fz*fw+rz*rg}}
 function freeSpot(minB,tries){for(let k=0;k<(tries||60);k++){const x=(R()*2-1)*(HALF-8),z=(R()*2-1)*(HALF-8);if(!BASES.every(b=>Math.hypot(x-b.x,z-b.z)>minB))continue;const c=cellX(z)*N+cellX(x);if(grid[c]||occ[c]||TER[c])continue;return{x,z}}return null}
 function newWorld(opts,seed){
-  OPTS=Object.assign({},opts);diffKey=OPTS.diff;CIVKEY=OPTS.civs.slice();NP=CIVKEY.length;for(let t=NP;t<NT;t++)CIVKEY[t]=t===BARB?'barbarian':t>=VT0?'village':CIVKEY[0];TEAMS=OPTS.teams.slice();relInit();nid=1;WSEED=seed||((Math.random()*1e9)|0);
+  OPTS=Object.assign({},opts);diffKey=OPTS.diff;CIVKEY=OPTS.civs.slice();NP=CIVKEY.length;for(let t=NP;t<NT;t++)CIVKEY[t]=t===BARB?'barbarian':t>=VT0?'village':CIVKEY[0];TEAMS=OPTS.teams.slice();AGEMIN=clamp(OPTS.startAge|0,0,ERAS.length-1);AGEMAX=clamp(OPTS.endAge==null?ERAS.length-1:OPTS.endAge,AGEMIN,ERAS.length-1);relInit();nid=1;WSEED=seed||((Math.random()*1e9)|0);
   HALF=SIZES[OPTS.size].half;N=HALF*2;allocPath();FOGON=!!OPTS.fog;
   if(world)scene.remove(world);world=new T.Group();scene.add(world);
   units=[];blds=[];ress=[];projs=[];puffs=[];markers=[];sel=[];selSet=new Set();gameT=0;shownRings=[];pings=[];
@@ -2858,7 +2918,7 @@ function newWorld(opts,seed){
   GENRES=ress.map(r=>r.id);
   for(let t=0;t<NP;t++){const b=BASES[t];const tc=placeBld('tc',t,cellX(b.x)-2,cellX(b.z)-2,true);
     const to=localPt(b,6,6);for(let i=0;i<4;i++){const p=spawnPoint(tc,to);makeUnit('villager',t,p.x,p.z)}const p=spawnPoint(tc,to);makeUnit('scout',t,p.x,p.z)}
-  WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
+  applyStartAge();WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
   const b0=BASES[0],l0=Math.hypot(b0.x,b0.z)||1;cam.x=b0.x+b0.x/l0*-1.5;cam.z=b0.z+b0.z/l0*-1.5;cam.dist=36;cam.yaw=Math.atan2(b0.x,b0.z);
   $('#age-emb').src=embURL(CIVKEY[0],0);
   buildMiniBase();lastSig='';renderPanel(true);
@@ -3106,7 +3166,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
 window.__game={get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
-  get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
+  get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
 
