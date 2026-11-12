@@ -88,6 +88,21 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 .gb span{position:absolute;right:-4px;bottom:-4px;min-width:17px;height:17px;border-radius:9px;background:#d6ad5a;color:#20160c;font-size:10px;line-height:17px;padding:0 3px;box-sizing:border-box}
 .gb.on{border-color:#f2d16b;box-shadow:0 0 0 2px rgba(242,209,107,.55)}
 .gb.add{border-style:dashed;color:#d6ad5a;font-size:20px}.gb.add span{background:#5a4227;color:#f0e2c0}
+#guide{position:fixed;z-index:4;left:calc(env(safe-area-inset-left,0px) + 8px);top:52px;width:310px;max-width:calc(100vw - 16px);background:linear-gradient(180deg,rgba(38,27,18,.96),rgba(24,17,11,.97));border:1px solid var(--brass2);border-radius:8px;color:var(--ink);font-size:13px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+#guide .gh{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:8px 10px;cursor:pointer}
+#guide .gn{font-size:11px;color:var(--brass);font-weight:800;white-space:nowrap;border:1px solid var(--brass2);border-radius:10px;padding:1px 7px}
+#guide .gh b{flex:1;font-size:14px}#guide .gx{color:var(--muted);font-size:11px}
+#guide p{margin:0;padding:0 10px 8px;color:#e6dac0}
+#guide .gbar{height:3px;background:#3a2a1c;margin:0 10px;border-radius:2px;overflow:hidden}#guide .gbar i{display:block;height:100%;background:var(--brass);transition:width .4s}
+#guide .gbtn{display:flex;gap:8px;justify-content:flex-end;padding:7px 10px 9px}#guide .gbtn button{background:none;border:1px solid #5a4227;border-radius:5px;color:var(--muted);font:inherit;font-size:12px;padding:5px 9px;cursor:pointer}
+#guide .gbtn button:hover{color:var(--ink);border-color:var(--brass)}
+#guide.done{border-color:var(--ok)}#guide.done .gn{color:var(--ok);border-color:var(--ok)}
+.hleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink);margin:2px 0 10px}.hleg i,.htip i,.htab i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.hchart{margin:0;background:#2a1d13;border:1px solid #4a3622;border-radius:6px;padding:8px 8px 4px}.hchart figcaption{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.hwrap{position:relative}.hchart svg{display:block;width:100%;height:auto;touch-action:pan-y}.hg{stroke:rgba(242,232,210,.12);stroke-width:1}.ht{fill:var(--muted);font-size:9.5px;font-family:system-ui,sans-serif}.hl{fill:var(--ink);font-size:10px;font-weight:700;font-family:system-ui,sans-serif}.hx{stroke:rgba(242,232,210,.5);stroke-width:1}
+.htip{position:absolute;top:4px;background:rgba(20,14,9,.95);border:1px solid var(--brass2);border-radius:5px;padding:5px 7px;font-size:11.5px;color:var(--ink);pointer-events:none;min-width:110px}.htip b{display:block;color:var(--muted);font-weight:600;margin-bottom:2px}.htip div{display:flex;align-items:center}.htip span{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
+.htab{margin-top:10px;font-size:12.5px;color:var(--muted)}.htab summary{cursor:pointer}.htab table{border-collapse:collapse;width:100%;margin-top:6px;color:var(--ink)}.htab th,.htab td{text-align:left;padding:4px 8px 4px 0;border-bottom:1px solid #3a2a1c;font-variant-numeric:tabular-nums}.htab th{color:var(--muted);font-weight:600}
 #mmwrap{width:150px;height:150px;position:relative;flex:none}
 #mini{position:absolute;left:50%;top:50%;width:106px;height:106px;margin:-53px 0 0 -53px;border:2px solid var(--brass2);box-shadow:0 0 0 1px #000,0 4px 14px rgba(0,0,0,.6);image-rendering:pixelated;cursor:pointer;touch-action:none}
 #info{min-width:0;min-height:130px;display:flex;flex-direction:column;gap:6px;position:relative;padding-right:42px}
@@ -284,6 +299,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 <div id="toast"></div>
 <div id="placehint" hidden></div>
 <div id="grpbar" hidden></div>
+<div id="guide" hidden></div>
 <div id="pausebar" hidden>Paused · select units and give orders, then press <b>P</b> or ▶ to resume</div>
 <div id="dip" hidden></div>
 <div id="goods" hidden></div>
@@ -2526,6 +2542,7 @@ function tick(dt){
     const dx=b.x-a.x,dz=b.z-a.z,mn=a.def.r+b.def.r;if(dx>mn||dx<-mn||dz>mn||dz<-mn)continue;const d2=dx*dx+dz*dz;if(d2>=mn*mn)continue;
     const d=Math.sqrt(d2)||.01,p=(mn-d)*.25,nx=d2>0?dx/d:1,nz=d2>0?dz/d:0;const wa=a.working?.3:1,wb=b.working?.3:1;shift(a,-nx*p*wa,-nz*p*wa);shift(b,nx*p*wb,nz*p*wb)}}}
   for(const b of blds)if(!b.dead)updBld(b,dt);
+  guideTick(dt);histTick();
   for(let pl=1;pl<NP;pl++)if(AIS[pl]&&!ELIM[pl])aiTick(pl,dt);
   for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.t+=dt/p.dur;
     if(alive(p.tg)&&!p.splash){p.tx=p.tg.x;p.tz=p.tg.z;p.ty=(p.tg.kind==='bld'?p.tg.y+1.5:uY(p.tg)+1)}
@@ -2937,6 +2954,7 @@ function updTop(){const mo=$('#morale');mo.textContent=MERRY[0]?'Merry':'Content
   for(const ev of['pointerup','pointerleave','pointercancel'])gb.addEventListener(ev,()=>clearTimeout(lp));
   gb.addEventListener('contextmenu',e=>{e.preventDefault();const g=idx(e);clearTimeout(lp);if(g!=null&&g!=='add'&&!sup){sup=true;grpSet(+g)}});
   gb.addEventListener('click',e=>{const g=idx(e);if(g==null||state!=='play')return;if(sup){sup=false;return}if(g==='add')grpSet(freeSlot());else grpSel(+g)})}
+$('#guide').addEventListener('click',e=>{const b=e.target.closest('[data-gd]');if(!b)return;const a=b.dataset.gd;if(a==='min'){GUIDE.min=!GUIDE.min;guideUI()}else if(a==='end')guideEnd(false);else if(a==='next'&&GUIDE.flash<=0){GUIDE.i++;GUIDE.fresh=true;GUIDE.t=0;if(GSTEPS&&GUIDE.i>=GSTEPS.length)guideEnd(true);else guideUI()}});
 $('#btn-idle').onclick=()=>state==='play'&&selectIdle();$('#btn-army').onclick=()=>state==='play'&&selectArmy();
 $('#btn-menu').onclick=()=>state==='play'?pause():(state==='paused'||state==='tree')&&resume();$('#btn-tree').onclick=()=>state==='play'?showTree():state==='tree'&&resume();
 
@@ -2952,7 +2970,7 @@ function snapshot(){
   return{v:4,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
     exp:FOGON?rle(EXP):null,seen:blds.filter(b=>b.seen).map(b=>b.id),
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
-    sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,
+    sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,guide:{on:GUIDE.on,i:GUIDE.i,v0:GUIDE.v0,min:GUIDE.min},hist:HIST,
     vil:{vils:VILS.map(V=>({id:V.id,team:V.team,name:V.name,kind:V.kind,x:V.x,z:V.z,owner:V.owner,how:V.how,fav:V.fav,incT:V.incT,env:V.env,hall:V.hall.id})),host:HOST,camps:CAMPS.map(C=>({id:C.id,b:C.b.id,cap:C.cap})),barbs:BARBS},
     dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS},
     ai:AIS.map(A=>A&&{attackSize:A.attackSize,demandT:A.demandT||0,scoutI:A.scoutI||0,attacks:A.attacks,belled:A.belled||0,lastAtk:A.lastAtk>-1e8?A.lastAtk:-1e9}),cam:{x:cam.x,z:cam.z,dist:cam.dist,yaw:cam.yaw},nid,
@@ -2979,7 +2997,7 @@ function loadGame(d){
   newWorld(d.opts,d.seed);
   for(const u of units){world.remove(u.mesh)}units=[];
   for(const b of blds){removeBldCells(b);world.remove(b.mesh)}blds=[];
-  gameT=d.gameT;stats=d.stats;res=d.res;for(const r of res)for(const k of GOODS)if(r[k]==null)r[k]=0;
+  gameT=d.gameT;stats=d.stats;if(d.hist&&d.hist.pop&&d.hist.pop.length===NP)HIST=d.hist;else{histReset();HIST.next=gameT}GUIDE=Object.assign({on:false,i:0,min:false,fresh:true,flash:0,t:0,v0:7,sig:''},d.guide||{});GSTEPS=null;res=d.res;for(const r of res)for(const k of GOODS)if(r[k]==null)r[k]=0;
   age=d.age.slice();TECH=d.tech.map(a=>new Set(a));PEND=d.pend.map(a=>new Set(a));DEFC=age.map(()=>({}));
   MKT=d.mkt;MERRY=d.merry.slice();RATION=d.ration.slice();rationT=d.rationT.slice();ELIM=d.elim.slice();MET=d.met.slice();
   if(FOGON&&d.exp)EXP=unrle(d.exp,N*N);
@@ -3091,6 +3109,7 @@ function showStart(){state='menu';screen.hidden=false;
    '<label for="s-start">Start age<select id="s-start">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.startAge|0)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
    '<label for="s-end">Final age<select id="s-end">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.endAge==null?ERAS.length-1:SETUP.endAge)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
    '<label for="s-seas">Seasons &amp; weather<select id="s-seas"><option value="1"'+(SETUP.seasons!==false?' selected':'')+'>On</option><option value="0"'+(SETUP.seasons===false?' selected':'')+'>Off</option></select></label>'+
+   '<label for="s-guide">Guided start<select id="s-guide"><option value="1"'+(SETUP.guide!==false?' selected':'')+'>On: show me what to do</option><option value="0"'+(SETUP.guide===false?' selected':'')+'>Off</option></select></label>'+
    '<label for="s-fog">Fog of war<select id="s-fog"><option value="1"'+(SETUP.fog?' selected':'')+'>On</option><option value="0"'+(!SETUP.fog?' selected':'')+'>Off</option></select></label>'+
    '<label>Difficulty<div class="diff" role="radiogroup">'+['easy','normal','hard'].map(d=>'<button role="radio" aria-checked="'+(d===SETUP.diff)+'" data-d="'+d+'">'+d[0].toUpperCase()+d.slice(1)+'</button>').join('')+'</div></label>'+
   '</div><p class="hint" id="s-mapdesc" style="margin:0">'+MAPDESC[SETUP.map]+'</p><div class="plist" id="s-players">'+playersHTML()+'</div><p class="hint" id="s-warn" style="margin:0">'+setupWarn()+'</p>'+
@@ -3107,21 +3126,21 @@ function showStart(){state='menu';screen.hidden=false;
   $('#s-map').onchange=e=>{SETUP.map=e.target.value;refresh()};$('#s-size').onchange=e=>{SETUP.size=e.target.value;refresh()};
   $('#s-np').onchange=e=>{SETUP.np=+e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-mode').onchange=e=>{SETUP.mode=e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
-  $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};
+  $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-guide').onchange=e=>{SETUP.guide=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};
   $('#s-start').onchange=e=>{SETUP.startAge=+e.target.value;if(SETUP.endAge<SETUP.startAge){SETUP.endAge=SETUP.startAge;$('#s-end').value=SETUP.endAge}saveSetup();$('#s-warn').textContent=setupWarn()};
   $('#s-end').onchange=e=>{SETUP.endAge=+e.target.value;if(SETUP.startAge>SETUP.endAge){SETUP.startAge=SETUP.endAge;$('#s-start').value=SETUP.startAge}saveSetup();$('#s-warn').textContent=setupWarn()};
   $('#ld').onclick=()=>showSaves('load',showStart);if($('#cont'))$('#cont').onclick=()=>{const d=readSave('auto');if(d)try{loadGame(d)}catch(e){console.error(e);notify('The autosave could not be loaded.',true)}};
   $('#go').onclick=()=>{if(SETUP.mode==='teams'&&setupWarn().startsWith('Everyone'))return;
     const civs=[SETUP.civ];for(let i=1;i<SETUP.np;i++){let c=SETUP.opp[i-1]||'random';if(c==='random'){const pool=CIVKEYS.filter(k=>!civs.includes(k));const src=pool.length?pool:CIVKEYS;c=src[(Math.random()*src.length)|0]}civs.push(c)}
     const teams=[];for(let i=0;i<SETUP.np;i++)teams.push(SETUP.mode==='teams'?SETUP.team[i]:0);
-    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false,startAge:SETUP.startAge|0,endAge:SETUP.endAge==null?ERAS.length-1:SETUP.endAge});screen.hidden=true;state='play';autoT=0;canvas.focus();
+    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false,guide:SETUP.guide!==false,startAge:SETUP.startAge|0,endAge:SETUP.endAge==null?ERAS.length-1:SETUP.endAge});screen.hidden=true;state='play';autoT=0;canvas.focus();
     const foes=civs.filter((c,i)=>i&&foe(i,0)).length;
     if(ANCIENT)setTimeout(()=>{if(state==='play')notify(AGEMIN===0?'Stone Age: hunt and forage, then research Farming at the Granary. Dig clay and flint (see Goods).':'Check the Goods panel for your flint, clay, pottery and metals.')},7000);
     if(SETUP.mode==='open')notify('You lead the '+CIVS[civs[0]].name+'. '+(civs.length-1)+' other '+(civs.length>2?'peoples share':'people shares')+' this land. Find them, then choose friendship or war.');else notify('You lead the '+CIVS[civs[0]].name+' against '+foes+' rival'+(foes>1?'s':'')+(teams[0]&&civs.some((c,i)=>i&&ally(i,0))?', with allies at your side':'')+'. Select your Town Center (H) and train villagers.');
     setTimeout(()=>{if(state==='play')notifyOnce('house','Villagers need Houses: select one, press 1 to build a House.')},10000)}}
 function pause(){state='paused';screen.hidden=false;const pb=$('#pausebar');if(pb)pb.hidden=true;
-  screen.innerHTML='<div class="card"><div class="eyebrow">Paused · '+fmt(gameT)+'</div><h2>The war council waits</h2><div class="row"><button class="primary" id="res">Resume</button><button class="secondary" id="sv">Save game</button><button class="secondary" id="ldg">Load game</button><button class="secondary" id="tt">Tech tree</button><button class="secondary" id="rst">New game</button></div><h3>Sound</h3>'+soundHTML()+'</div>';
-  bindSound();$('#res').onclick=resume;$('#rst').onclick=()=>{saveGame('auto',true);showStart()};$('#tt').onclick=showTree;$('#sv').onclick=()=>showSaves('save',pause);$('#ldg').onclick=()=>showSaves('load',pause)}
+  screen.innerHTML='<div class="card"><div class="eyebrow">Paused · '+fmt(gameT)+'</div><h2>The war council waits</h2><div class="row"><button class="primary" id="res">Resume</button><button class="secondary" id="sv">Save game</button><button class="secondary" id="ldg">Load game</button><button class="secondary" id="tt">Tech tree</button><button class="secondary" id="gd">'+(GUIDE.on?'Hide guide':'Show guide')+'</button><button class="secondary" id="rst">New game</button></div><h3>Sound</h3>'+soundHTML()+'</div>';
+  bindSound();$('#res').onclick=resume;$('#gd').onclick=()=>{if(GUIDE.on){GUIDE.on=false}else{GUIDE.on=true;GUIDE.fresh=true;GUIDE.flash=0;GUIDE.t=0;GUIDE.min=false;if(GSTEPS&&GUIDE.i>=GSTEPS.length)GUIDE.i=0}resume();guideUI()};$('#rst').onclick=()=>{saveGame('auto',true);showStart()};$('#tt').onclick=showTree;$('#sv').onclick=()=>showSaves('save',pause);$('#ldg').onclick=()=>showSaves('load',pause)}
 function resume(){state='play';screen.hidden=true;canvas.focus();spdUI()}
 function showTree(){state='tree';screen.hidden=false;const civ=CIVKEY[0],C=CIVS[civ];
   const rows=[['Town Center','tc'],['Mill','mill'],['Lumber Camp','lumber'],['Mining Camp','mining'],['Pottery Kiln','potter'],['Blacksmith','blacksmith'],['Barracks','barracks'],['Chariot Works','chariotry'],['Bloomery','bloom'],['Siege Yard','engyard'],['Temple','temple'],['Archery Range','range'],['Stable','stable'],['Market','market'],['Dock','dock'],['Smelter','smelter'],['Winepress','winepress'],["Forester's Lodge",'forester'],['Embassy','embassy'],['Monastery','monastery'],['Siege Workshop','siege'],['University','university'],['Castle','castle']].filter(r=>ANCIENT||!BUILD[r[1]].anc);
@@ -3140,12 +3159,71 @@ function showTree(){state='tree';screen.hidden=false;const civ=CIVKEY[0],C=CIVS[
     '<div class="hint" style="max-width:none">'+(ANCIENT?'Early ages: dig clay and fire it into pottery; knap flint for tools; smelt copper ore in a Smelting Furnace; cast bronze from copper and tin. Each age-up needs some buildings and techs from your current age: select your Town Center to see exactly what. ':'')+'Advancing an age needs buildings and techs from your current age. Feudal: 2 of Mill, Lumber Camp, Mining Camp, Barracks + 2 Dark Age techs. Castle: 3 of Archery Range, Stable, Blacksmith, Watch Tower, Market + 4 Feudal techs. Imperial: 3 of Castle, University, Siege Workshop, Monastery + 6 Castle techs, plus 50 iron and 20 cloth. Industry: iron ore + charcoal → Smelter → iron → Blacksmith → arms and tools. Hemp → Ropewalk (rope) or Weaver (cloth). Grapes → Winepress → wine for the market or a wine ration.</div>'+
     '<div class="row" style="gap:8px;font-size:12px;color:var(--muted)"><span class="chip done">Researched</span><span class="chip on">Available now</span><span class="chip">Later age</span><span class="chip u on">Unit</span><span class="chip uq">Unique to your people</span></div>'+
     '<div class="treewrap"><div class="tree" style="--tcols:'+cols.length+'">'+h+'</div></div></div>';$('#res').onclick=resume}
-function endGame(win){musStop(true);sfxUI(win?'victory':'defeat');state='over';screen.hidden=false;deleteSave('auto');
+/* ================= GUIDED START ================= */
+let GUIDE={on:false,i:0,min:false,fresh:true,flash:0,t:0,v0:6,sig:''};
+function guideSteps(){const S=[],my=()=>units.filter(u=>!u.dead&&u.team===0),vil=()=>my().filter(u=>u.type==='villager'),gath=f=>vil().some(u=>u.task.t==='gather'&&f(u.task)),
+    has0=t=>blds.some(b=>!b.dead&&b.team===0&&b.built&&b.type===t),stone=ANCIENT&&AGEMIN===0,nextName=AGEMIN<ERAS.length-1?AGES[AGEMIN+1]:'';
+  S.push({t:'Gather food',d:()=>'Tap a villager to select them, then tap a berry bush or a sheep. Villagers carry what they collect back to the Town Center.',ok:()=>gath(t=>t.rtype==='food'||(t.target&&(t.target.animal||(t.target.def&&t.target.def.crop==='food'))))});
+  S.push({t:'Build a House',d:()=>'Each house gives room for 5 more people. Select a villager, press House in the build menu, then tap a clear spot nearby.',ok:()=>has0('house')});
+  S.push({t:'Train more villagers',d:()=>'Select your Town Center and press Villager a few times. More villagers means everything else goes faster. Aim for '+GUIDE.v0+'.',ok:()=>vil().length>=GUIDE.v0});
+  S.push({t:'Chop wood',d:()=>'Send a villager or two to a tree. Almost every building costs wood.',ok:()=>gath(t=>t.rtype==='wood')||has0('lumber')});
+  if(stone){
+    S.push({t:'Build a Granary',d:()=>'The Granary is in the build menu. Food can be dropped off there, and it is where farming is learned.',ok:()=>has0('mill')});
+    S.push({t:'Research Farming',d:()=>'Select the Granary and press Farming. Berries and sheep run out; farms never do.',ok:()=>has(0,'agriculture')});
+    S.push({t:'Build a Farm',d:()=>'Select a villager, press Farm and place it near the Granary. The villager will work it without being told.',ok:()=>blds.some(b=>!b.dead&&b.team===0&&b.type==='farm')});
+    S.push({t:'Dig clay and knap flint',d:()=>'Send one villager to a clay pit (reddish mounds) and one to a flint deposit (dark grey stones). You need both to reach the next age.',ok:()=>(res[0].clay>=3||gath(t=>t.rtype==='clay'))&&(res[0].flint>=3||gath(t=>t.rtype==='flint'))});
+    S.push({t:'Build a Pottery Kiln',d:()=>'Press “Industry ›” in the build menu to find the Pottery Kiln. It turns clay and a little wood into pottery on its own.',ok:()=>has0('potter')})}
+  if(AGEMIN<AGEMAX){const tech=ERAS[AGEMIN+1].tech,past=()=>age[0]>AGEMIN||PEND[0].has(tech);
+    S.push({t:'Buildings for the '+nextName,d:()=>{const n=ageNeed(0);if(!n||age[0]>AGEMIN)return'';const miss=n.bl.filter(b=>!b.ok).map(b=>b.name);return'The next age needs '+n.q.needB+' of these buildings and you have '+n.q.nb+'. Build '+(n.q.needB-n.q.nb)+' more from: '+miss.join(', ')+'.'},ok:()=>{if(past())return true;const q=ageReq(0);return!q||q.nb>=q.needB}});
+    S.push({t:'Techs for the '+nextName,d:()=>{const n=ageNeed(0);if(!n||age[0]>AGEMIN)return'';return'Research '+(n.q.needT-n.q.nt)+' more '+AGES[n.q.tech]+' techs. Select a building to see what it offers'+(n.tl.length?': '+n.tl.slice(0,3).map(t=>t.name+' at the '+t.at).join(', '):'')+'.'},ok:()=>{if(past())return true;const q=ageReq(0);return!q||q.nt>=q.needT}});
+    S.push({t:'Advance to the '+nextName,d:()=>{const n=ageNeed(0);if(!n||age[0]>AGEMIN)return'';const ms=Object.keys(n.cost).filter(k=>res[0][k]<n.cost[k]).map(k=>n.cost[k]+' '+RESNAME[k].toLowerCase()+' (you have '+Math.floor(res[0][k])+')');return(ms.length?'Gather '+ms.join(', ')+'. Then select':'You have everything. Select')+' the Town Center and press '+nextName+'. The Town Center always lists what the next age needs.'},ok:past})}
+  S.push({t:'Raise some soldiers',d:()=>'Build a '+bName(0,'barracks')+' (press “Military ›” in the build menu) and train 3 soldiers. The other peoples will not stay friendly for ever.',ok:()=>my().filter(u=>isMil(u.def)&&u.type!=='runner'&&u.type!=='scout').length>=3});
+  S.push({t:'Save them as a group',d:()=>'Select your soldiers (hold a finger down and drag a box, or drag with the mouse), then press the round + on the left edge. Tap the number later to select them again.',ok:()=>GROUPS.some(g=>g&&g.some(u=>!u.dead))});
+  return S}
+let GSTEPS=null;
+function guideStart(on){GUIDE={on:!!on,i:0,min:false,fresh:true,flash:0,t:0,v0:units.filter(u=>!u.dead&&u.team===0&&u.type==='villager').length+3,sig:''};GSTEPS=null;guideUI()}
+function guideEnd(done){GUIDE.on=false;guideUI();if(SETUP.guide!==false){SETUP.guide=false;saveSetup()}
+  notify(done?'Guide complete. Select the Town Center at any time to see what the next age needs. The other peoples will leave you in peace for a few more minutes.':'Guide closed. You can bring it back from the Menu.')}
+function guideTick(dt){if(!GUIDE.on||state!=='play')return;GUIDE.t-=dt;if(GUIDE.flash>0){GUIDE.flash-=dt;if(GUIDE.flash<=0){GUIDE.i++;GUIDE.fresh=true;GUIDE.t=0}else return}
+  if(GUIDE.t>0)return;GUIDE.t=.5;if(!GSTEPS)GSTEPS=guideSteps();
+  if(gameT<1500)for(const k in DIFF)DIFF[k].first=Math.max(DIFF[k].first,gameT+240);
+  for(let n=0;n<GSTEPS.length&&GUIDE.i<GSTEPS.length;n++){const st=GSTEPS[GUIDE.i];let ok=false;try{ok=!!st.ok()}catch(e){}if(!ok){GUIDE.fresh=false;break}
+    if(GUIDE.fresh){GUIDE.i++;continue}GUIDE.flash=1.4;sfxUI('chime',.5);break}
+  if(GUIDE.i>=GSTEPS.length){guideEnd(true);return}guideUI()}
+function guideUI(){const el=document.getElementById('guide');if(!el)return;const tEl=document.getElementById('toast');if(!GUIDE.on||(state!=='play'&&state!=='paused')){if(!el.hidden){el.hidden=true;GUIDE.sig='';if(tEl)tEl.style.top=''}return}
+  if(!GSTEPS)GSTEPS=guideSteps();const st=GSTEPS[Math.min(GUIDE.i,GSTEPS.length-1)];let d='';try{d=st.d()}catch(e){}const fl=GUIDE.flash>0,sig=GUIDE.i+'|'+GUIDE.min+'|'+fl+'|'+d;
+  const tb=document.getElementById('topbar');el.style.top=(tb?tb.getBoundingClientRect().bottom+6:52)+'px';if(sig===GUIDE.sig&&!el.hidden)return;GUIDE.sig=sig;el.hidden=false;el.className=(GUIDE.min?'min ':'')+(fl?'done':'');
+  el.innerHTML='<button class="gh" data-gd="min" aria-expanded="'+!GUIDE.min+'"><span class="gn">'+(fl?'✓':'Guide '+(GUIDE.i+1)+'/'+GSTEPS.length)+'</span><b>'+st.t+'</b><span class="gx">'+(GUIDE.min?'▾':'▴')+'</span></button>'+
+    (GUIDE.min?'':'<p>'+(fl?'Done.':d)+'</p><div class="gbar"><i style="width:'+Math.round(100*(GUIDE.i+(fl?1:0))/GSTEPS.length)+'%"></i></div><div class="gbtn"><button data-gd="next">Skip this step</button><button data-gd="end">End guide</button></div>');
+  if(tEl)tEl.style.top=innerWidth<=760?(el.getBoundingClientRect().bottom+6)+'px':''}
+/* ================= END-OF-GAME GRAPHS ================= */
+let HIST={dt:30,next:0,pop:[],mil:[],vil:[]};
+function histReset(){HIST={dt:30,next:0,pop:[],mil:[],vil:[]};for(let t=0;t<NP;t++){HIST.pop.push([]);HIST.mil.push([]);HIST.vil.push([])}}
+function histTick(){if(gameT<HIST.next||!HIST.pop.length)return;HIST.next=gameT+HIST.dt;const pop=new Array(NP).fill(0),vil=new Array(NP).fill(0),mil=new Array(NP).fill(0);
+  for(const u of units){if(u.dead||u.team>=NP)continue;pop[u.team]++;if(u.type==='villager')vil[u.team]++;else if(isMil(u.def))mil[u.team]+=u.hp/60+u.def.atk/10}
+  for(let t=0;t<NP;t++){HIST.pop[t].push(pop[t]);HIST.vil[t].push(vil[t]);HIST.mil[t].push(Math.round(mil[t]))}
+  if(HIST.pop[0].length>200){for(const k of['pop','mil','vil'])HIST[k]=HIST[k].map(a=>a.filter((v,i)=>i%2===0));HIST.dt*=2;HIST.next=gameT+HIST.dt}}
+function histChart(key,title){const S=HIST[key];if(!S||!S.length||S[0].length<2)return'';const n=S[0].length,W=340,H=170,L=30,Rm=34,Tm=8,B=22,pw=W-L-Rm,ph=H-Tm-B;let mx=1;for(const a of S)for(const v of a)if(v>mx)mx=v;
+  const step=[1,2,5,10,20,25,50,100,200,250,500,1000].find(x=>mx/x<=4)||Math.ceil(mx/4);mx=Math.ceil(mx/step)*step;const X=i=>L+pw*i/(n-1),Y=v=>Tm+ph*(1-v/mx),mins=(n-1)*HIST.dt/60;
+  let g='';for(let v=0;v<=mx;v+=step)g+='<line x1="'+L+'" x2="'+(L+pw)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" class="hg"/><text x="'+(L-5)+'" y="'+(Y(v)+3.5).toFixed(1)+'" text-anchor="end" class="ht">'+v+'</text>';
+  for(const f of[0,.5,1])g+='<text x="'+(L+pw*f).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(f===0?'start':f===1?'end':'middle')+'" class="ht">'+Math.round(mins*f)+' min</text>';
+  let ln='';for(let t=NP-1;t>=0;t--)ln+='<polyline fill="none" stroke="'+PCSS[t]+'" stroke-width="'+(t===0?3:2)+'" stroke-linejoin="round" stroke-linecap="round" points="'+S[t].map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ')+'"/>';
+  ln+='<text x="'+(L+pw+5)+'" y="'+(Y(S[0][n-1])+3.5).toFixed(1)+'" class="hl">You</text>';
+  return'<figure class="hchart" data-key="'+key+'"><figcaption>'+title+'</figcaption><div class="hwrap"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+title+' over time for each player">'+g+ln+'<line class="hx" x1="0" x2="0" y1="'+Tm+'" y2="'+(Tm+ph)+'" visibility="hidden"/><rect x="'+L+'" y="'+Tm+'" width="'+pw+'" height="'+ph+'" fill="transparent" class="hhit"/></svg><div class="htip" hidden></div></div></figure>'}
+function histHTML(){if(!HIST.pop.length||HIST.pop[0].length<2)return'';const nm=t=>t===0?'You ('+CIVS[CIVKEY[0]].name+')':CIVS[CIVKEY[t]].name+(ELIM[t]?' · defeated':'');
+  let h='<h3>How the game went</h3><div class="hleg">';for(let t=0;t<NP;t++)h+='<span><i style="background:'+PCSS[t]+'"></i>'+nm(t)+'</span>';h+='</div><div class="hgrid">'+histChart('pop','Population')+histChart('mil','Army strength')+histChart('vil','Villagers')+'</div>';
+  const pk=a=>Math.max(...a);h+='<details class="htab"><summary>Show as a table</summary><table><tr><th>Player</th><th>Peak population</th><th>Peak army</th><th>Peak villagers</th><th>Age reached</th></tr>';
+  for(let t=0;t<NP;t++)h+='<tr><td><i style="background:'+PCSS[t]+'"></i>'+nm(t)+'</td><td>'+pk(HIST.pop[t])+'</td><td>'+pk(HIST.mil[t])+'</td><td>'+pk(HIST.vil[t])+'</td><td>'+AGES[age[t]].replace(' Age','')+'</td></tr>';return h+'</table></details>'}
+function histBind(root){for(const f of root.querySelectorAll('.hchart')){const key=f.dataset.key,S=HIST[key],n=S[0].length,svg=f.querySelector('svg'),hx=f.querySelector('.hx'),tip=f.querySelector('.htip'),hit=f.querySelector('.hhit');
+    const mv=e=>{const r=hit.getBoundingClientRect(),fr=clamp((e.clientX-r.left)/r.width,0,1),i=Math.round(fr*(n-1)),sr=svg.getBoundingClientRect(),vx=(r.left-sr.left+r.width*i/(n-1))*340/sr.width;hx.setAttribute('x1',vx);hx.setAttribute('x2',vx);hx.setAttribute('visibility','visible');
+      const rows=[];for(let t=0;t<NP;t++)rows.push([S[t][i],t]);rows.sort((a,b)=>b[0]-a[0]);tip.innerHTML='<b>'+fmt(i*HIST.dt)+'</b>'+rows.map(([v,t])=>'<div><i style="background:'+PCSS[t]+'"></i>'+(t===0?'You':CIVS[CIVKEY[t]].name)+'<span>'+v+'</span></div>').join('');tip.hidden=false;tip.style.left=(fr>.55?'6px':'auto');tip.style.right=(fr>.55?'auto':'6px')};
+    hit.addEventListener('pointermove',mv);hit.addEventListener('pointerdown',mv);hit.addEventListener('pointerleave',()=>{tip.hidden=true;hx.setAttribute('visibility','hidden')})}}
+function endGame(win){histTick(HIST.next=0);musStop(true);sfxUI(win?'victory':'defeat');state='over';screen.hidden=false;deleteSave('auto');
   const beaten=[];for(let t=1;t<NP;t++)if(!ally(t,0)&&ELIM[t])beaten.push(CIVS[CIVKEY[t]].name);
   screen.innerHTML='<div class="card"><div class="eyebrow">'+(win?'Victory':'Defeat')+' · '+fmt(gameT)+' · '+OPTS.diff+'</div><h1>'+(win?'Your banner flies over the land':'Your kingdom has fallen')+'</h1>'+
   '<p class="lede">'+(win?'Every rival kingdom has been defeated'+(beaten.length?': '+beaten.join(', '):'')+'.':'Your last stronghold has fallen. Regroup, scout earlier, and wall up sooner.')+'</p>'+
   '<div class="endstats"><div><b>'+AGES[age[0]].replace(' Age','')+'</b><span>Age reached</span></div><div><b>'+stats.trained+'</b><span>Units trained</span></div><div><b>'+stats.killed+'</b><span>Enemies slain</span></div><div><b>'+stats.lost+'</b><span>Units lost</span></div><div><b>'+Math.floor(stats.gathered)+'</b><span>Resources gathered</span></div><div><b>'+TECH[0].size+'</b><span>Techs</span></div></div>'+
-  '<div class="row"><button class="primary" id="again">Play again</button></div></div>';$('#again').onclick=showStart}
+  histHTML()+'<div class="row"><button class="primary" id="again">Play again</button></div></div>';$('#again').onclick=showStart;histBind(screen);guideUI()}
 
 /* ================= NEW GAME ================= */
 let OPTS=null;
@@ -3244,7 +3322,7 @@ function newWorld(opts,seed){
   GENRES=ress.map(r=>r.id);
   for(let t=0;t<NP;t++){const b=BASES[t];const tc=placeBld('tc',t,cellX(b.x)-2,cellX(b.z)-2,true);
     const to=localPt(b,6,6);for(let i=0;i<4;i++){const p=spawnPoint(tc,to);makeUnit('villager',t,p.x,p.z)}const p=spawnPoint(tc,to);makeUnit(AGEMIN<=MED&&ANCIENT?'runner':'scout',t,p.x,p.z)}
-  applyStartAge();WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
+  applyStartAge();histReset();guideStart(OPTS.guide);WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
   const b0=BASES[0],l0=Math.hypot(b0.x,b0.z)||1;cam.x=b0.x+b0.x/l0*-1.5;cam.z=b0.z+b0.z/l0*-1.5;cam.dist=36;cam.yaw=Math.atan2(b0.x,b0.z);
   $('#age-emb').src=embURL(CIVKEY[0],0);
   buildMiniBase();lastSig='';renderPanel(true);
@@ -3491,7 +3569,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
