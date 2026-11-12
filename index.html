@@ -2937,7 +2937,7 @@ elInfo.addEventListener('click',e=>{if(e.target.closest('[data-desel]')){if(plac
 const goodsEl=$('#goods');
 function renderGoods(){if(goodsEl.hidden)return;const r=res[0];
   const GL=!ANCIENT?GOODS.filter(k=>!ANCG.includes(k)):age[0]<MED?ANCG.concat(age[0]>=3?['ore','iron','gold']:age[0]>=1?['gold']:[]):GOODS;
-  let h='<h4>Goods</h4><div class="ggrid">'+GL.map(k=>'<div><i class="ico '+k+'"></i>'+GNAME[k]+'<b>'+Math.floor(r[k])+'</b></div>').join('')+'</div>';
+  let h='<h4>Goods</h4><div class="ggrid">'+GL.map(k=>'<div><i class="ico '+k+'"></i>'+(GNAME[k]||RESNAME[k]||k)+'<b>'+Math.floor(r[k])+'</b></div>').join('')+'</div>';
   const ws=blds.filter(b=>!b.dead&&b.team===0&&b.built&&b.def.recipes);
   h+='<h4>Workshops</h4><div class="wlist">'+(ws.length?ws.map(b=>'<div>'+b.name+(b.def.recipes&&Object.keys(b.def.recipes).length>1?' ('+GNAME[b.mode||'arms'].toLowerCase()+')':'')+': <span class="'+(b.wstat==='Working'?'on':'no')+'">'+(b.wstat||'Starting')+'</span></div>').join(''):'<div>'+(ANCIENT&&age[0]<MED?'None yet. Build a Pottery Kiln (Industry menu) and dig clay'+(age[0]>=1?', and a Smelting Furnace for copper ore.':'.'):'None yet. In the Feudal Age, build a Charcoal Kiln and a Smelter (Industry menu) and mine iron ore.')+'</div>')+'</div>';
   h+='<div class="wlist"><div>Morale: '+(MERRY[0]?'<span class="on">Merry</span> (+10% gathering, +1 soldier attack)':'Content')+'. Wine ration '+(RATION[0]?'on':'off')+' (Town Center, Castle Age).</div></div>';
