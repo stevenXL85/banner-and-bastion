@@ -128,6 +128,9 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 .cmd.poor{opacity:.5}
 .cmd.lock{opacity:.4;filter:grayscale(.8)}
 .cmd.lock .c::after{content:attr(data-lock);color:var(--ink)}
+.cmd.age{height:auto;min-height:62px;gap:3px}
+.cmd.age.lock{opacity:1;filter:none;border-style:dashed}.cmd.age.lock .c::after{content:''}.cmd.age.lock .n{opacity:.75}
+.agereq{margin-top:4px;padding:6px 8px;border:1px solid #5a4227;border-radius:6px;background:rgba(0,0,0,.22)}.agereq .hd{display:block;color:var(--brass);font-size:13px;margin-bottom:2px}.agereq span.ok{color:var(--ok)}.agereq i{font-style:normal;opacity:.8}.agereq .ico{margin:0 2px 0 1px;opacity:1}
 .cmd.on{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
 .cmd.warn{background:linear-gradient(180deg,#8a2a1a,#5a1a10);border-color:#e2573f;color:#fff}
 .cmd.page{background:linear-gradient(180deg,#2a2a33,#1c1c22);border-color:#4a4a5a}
@@ -229,6 +232,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 @media (max-width:760px){
   #panel{grid-template-columns:96px minmax(0,1fr);gap:10px}
   #mmwrap{width:96px;height:96px}
+  .cmd .k{display:none}.cmd .n{padding-right:0}
   #mini{width:68px;height:68px;margin:-34px 0 0 -34px}
   #info{min-height:96px}
   #cmds{grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(54px,1fr))}
@@ -309,12 +313,14 @@ function ally(a,b){if(a===b)return true;if(a==null||b==null||a<0||b<0||a>=VT0||b
 function foe(a,b){if(a==null||b==null||a<0||b<0||a===b)return false;
   if(a>=VT0||b>=VT0){if(a===BARB||b===BARB)return a<VT0||b<VT0;const v=a>=VT0?a:b,p=a>=VT0?b:a;if(p>=VT0)return false;return!!(HOST[v]&&HOST[v][p])}
   return!!REL[a]&&REL[a][b]===0}
-const MED=3;
+const MED=5;
 const ERAS=[
   {key:'stone',name:'Stone Age',start:{res:{food:200,wood:200,gold:0,stone:100},vils:4}},
   {key:'copper',name:'Copper Age',tech:'copperage',req:{bld:['mill','lumber','mining','barracks','potter'],nb:3,tech:0,nt:3},start:{res:{food:400,wood:400,gold:0,stone:200,flint:40,clay:20,pottery:20},vils:6}},
   {key:'bronze',name:'Bronze Age',tech:'bronzeage',req:{bld:['cfurnace','lookout','potter','pen','barracks','dock'],nb:3,tech:1,nt:4},start:{res:{food:600,wood:600,gold:0,stone:300,flint:40,clay:30,pottery:40,cuore:30,copper:40},vils:8}},
-  {key:'dark',name:'Dark Age',tech:'darkage',req:{bld:['cfurnace','chariotry','lookout','potter','pen','dock'],nb:4,tech:2,nt:5},start:{res:{food:200,wood:200,gold:100,stone:200},vils:4}},
+  {key:'iron',name:'Iron Age',tech:'ironage',req:{bld:['cfurnace','chariotry','lookout','potter','pen','dock'],nb:4,tech:2,nt:5},start:{res:{food:800,wood:800,gold:0,stone:400,flint:20,clay:30,pottery:50,copper:40,bronze:40,ore:20},vils:10}},
+  {key:'classical',name:'Classical Age',tech:'classicalage',req:{bld:['bloom','hillfort','chariotry','lookout','cfurnace','dock'],nb:3,tech:3,nt:4},start:{res:{food:1000,wood:1000,gold:100,stone:500,clay:30,pottery:60,bronze:30,ore:20,iron:60},vils:12}},
+  {key:'dark',name:'Dark Age',tech:'darkage',req:{bld:['bloom','hillfort','engyard','temple','market','chariotry'],nb:3,tech:4,nt:4},start:{res:{food:200,wood:200,gold:100,stone:200},vils:4}},
   {key:'feudal',name:'Feudal Age',tech:'feudal',req:{bld:['mill','lumber','mining','barracks'],nb:2,tech:MED,nt:2},start:{res:{food:600,wood:600,gold:350,stone:300},vils:8}},
   {key:'castle',name:'Castle Age',tech:'castle',req:{bld:['range','stable','blacksmith','tower','market','embassy'],nb:3,tech:MED+1,nt:4},start:{res:{food:1100,wood:1000,gold:800,stone:650,iron:30,rope:20,cloth:20},vils:12}},
   {key:'imperial',name:'Imperial Age',tech:'imperial',req:{bld:['castle','university','siege','monastery'],nb:3,tech:MED+2,nt:6},start:{res:{food:1800,wood:1600,gold:1400,stone:900,iron:80,rope:40,cloth:40,arms:20,tools:20},vils:16}}];
@@ -428,9 +434,9 @@ const BUILD={
   castle:{name:'Castle',l:'Ca',s:4,hp:4800,arm:[8,11],time:110,cost:{stone:650},trains:['UU','trebuchet'],shoot:{atk:11,range:10,rate:2,n:3},gar:20,age:2,h:6.2,desc:'Unique unit and tech, fires arrows'},
   tc:{name:'Town Center',l:'TC',s:4,hp:2400,arm:[3,8],time:80,cost:{wood:275,stone:100},pop:5,drop:['wood','food','gold','stone','ore','hemp','grapes','flint','clay','cuore','tin'],trains:['villager'],shoot:{atk:5,range:7,rate:2,n:1},gar:15,age:2,h:5.4,desc:'Trains villagers, researches ages',chim:[1.1,3.3,.7]},
 };
-const ECO_B=['house','mill','lumber','mining','farm','pen','dock','market','embassy','university','tc'];
-const IND_B=['potter','cfurnace','road','forester','sapling','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress'];
-const MIL_B=['barracks','chariotry','lookout','range','stable','siege','monastery','tower','castle','palisade','pgate','stonewall','gate'];
+const ECO_B=['house','mill','lumber','mining','farm','pen','dock','market','temple','embassy','university','tc'];
+const IND_B=['potter','cfurnace','bloom','road','forester','sapling','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress'];
+const MIL_B=['barracks','chariotry','lookout','hillfort','engyard','range','stable','siege','monastery','tower','castle','palisade','pgate','stonewall','gate'];
 const TECHS={
   feudal:{name:'Feudal Age',at:'tc',age:0,ageUp:1,cost:{food:600},time:70,desc:'Archery range, stable, blacksmith, towers, stone walls'},
   castle:{name:'Castle Age',at:'tc',age:1,ageUp:2,cost:{food:900,gold:300},time:95,desc:'Castles, knights, siege, university'},
@@ -509,12 +515,14 @@ const TECHS={
 for(const k in UNITS)if(k!=='villager'&&k!=='fishboat')UNITS[k].age+=MED;for(const k in BUILD)if(BUILD[k].age>0)BUILD[k].age+=MED;for(const k in TECHS){TECHS[k].age+=MED;if(TECHS[k].ageUp)TECHS[k].ageUp+=MED}
 Object.assign(UNITS,{
   runner:{name:'Scout Runner',l:'Ru',cls:'inf',hp:28,atk:2,range:.6,rate:1.6,speed:5.4,cost:{food:40},time:10,r:.36,arm:[0,0],sight:10,age:0,anc:1,noTrain:1,becomes:['scout',MED+1],desc:'Swift scout on foot'},
-  clubman:{name:'Clubman',l:'Cl',cls:'inf',hp:30,atk:3,range:.6,rate:1.5,speed:3.9,cost:{food:40},time:10,r:.4,arm:[0,0],sight:6,age:0,anc:1,until:MED,becomes:['militia',MED],bonus:{bld:2},desc:'Tribal warrior. Upgrades to Axeman, then Bronze Swordsman',
-    line:[['coppaxe',{name:'Axeman',l:'Ax',hp:38,atk:5,bonus:{bld:4}}],['bronzesw',{name:'Bronze Swordsman',l:'BS',hp:48,atk:7,arm:[1,0],bonus:{bld:7}}]]},
+  clubman:{name:'Clubman',l:'Cl',cls:'inf',hp:30,atk:3,range:.6,rate:1.5,speed:3.9,cost:{food:40},time:10,r:.4,arm:[0,0],sight:6,age:0,anc:1,until:MED,becomes:['militia',MED],bonus:{bld:2},desc:'Tribal warrior. Upgrades to Axeman, Bronze and Iron Swordsman, then Legionary',
+    line:[['coppaxe',{name:'Axeman',l:'Ax',hp:38,atk:5,bonus:{bld:4}}],['bronzesw',{name:'Bronze Swordsman',l:'BS',hp:48,atk:7,arm:[1,0],bonus:{bld:7}}],['ironsw',{name:'Iron Swordsman',l:'IS',hp:52,atk:8,arm:[1,1],bonus:{bld:8}}],['legion',{name:'Legionary',l:'Lg',hp:58,atk:9,arm:[1,2],bonus:{bld:9}}]]},
   slinger:{name:'Slinger',l:'Sl',cls:'arch',hp:22,atk:2,range:5,rate:1.8,speed:4.0,cost:{food:40},time:11,r:.36,arm:[0,0],sight:7,age:0,anc:1,ranged:1,proj:'pebble',until:MED+1,becomes:['archer',MED+1],desc:'Hurls stones. Upgrades to Bowman, then Composite Bowman',
     line:[['bowmaking',{name:'Bowman',l:'Bw',hp:26,atk:3,range:6,proj:'arrow'}],['compbow',{name:'Composite Bowman',l:'CB',hp:30,atk:4,range:7,proj:'arrow'}]]},
-  bspear:{name:'Bronze Spearman',l:'Sp',cls:'inf',hp:42,atk:3,range:.8,rate:1.6,speed:4.0,cost:{food:35,wood:20,bronze:1},time:11,r:.4,arm:[0,0],sight:6,age:2,anc:1,spear:1,bonus:{cav:10},until:MED+1,becomes:['spearman',MED+1],desc:'Cheap spearman, counters chariots'},
+  bspear:{name:'Bronze Spearman',l:'Sp',cls:'inf',hp:42,atk:3,range:.8,rate:1.6,speed:4.0,cost:{food:35,wood:20,bronze:1},time:11,r:.4,arm:[0,0],sight:6,age:2,anc:1,spear:1,bonus:{cav:10},until:MED+1,becomes:['spearman',MED+1],desc:'Cheap spearman, counters chariots and horsemen. Becomes a Hoplite with the Phalanx',line:[['phalanx',{name:'Hoplite',l:'Ho',hp:56,atk:5,arm:[1,2],bonus:{cav:14}}]]},
   chariot:{name:'War Chariot',l:'Ch',cls:'cav',hp:75,atk:5,range:4.5,rate:1.9,speed:5.8,cost:{food:70,wood:60,bronze:3},time:18,r:.75,arm:[0,1],sight:8,age:2,anc:1,ranged:1,until:MED+1,becomes:['scout',MED+1],needsTech:'thewheel',desc:'Fast cart carrying an archer. Needs The Wheel'},
+  horseman:{name:'Horseman',l:'Hm',cls:'cav',hp:68,atk:6,range:.7,rate:1.6,speed:6.3,cost:{food:70,iron:3},time:18,r:.7,arm:[0,1],sight:8,age:3,anc:1,until:MED+1,becomes:['scout',MED+1],needsTech:'riding',desc:'Fast rider with spear. Needs Horse Riding'},
+  ballista:{name:'Ballista',l:'Bl',cls:'siege',hp:55,atk:14,range:8,rate:3.4,speed:2.6,cost:{wood:110,iron:8},time:24,r:.6,arm:[0,5],sight:9,age:4,anc:1,ranged:1,proj:'bolt',until:MED+2,becomes:['mangonel',MED+2],needsTech:'engineering',bonus:{bld:6},desc:'Bolt thrower that outranges archers. Needs Engineering'},
 });
 Object.assign(BUILD,{
   potter:{name:'Pottery Kiln',l:'Po',s:2,hp:500,arm:[1,6],time:18,cost:{wood:80,stone:20},age:0,anc:1,h:2,desc:'Fires clay into pottery, needed to advance and for storage',chim:[0,1.7,0],recipes:{pottery:{in:{clay:3,wood:1},out:{pottery:2},time:6}}},
@@ -522,12 +530,32 @@ Object.assign(BUILD,{
   cfurnace:{name:'Smelting Furnace',l:'SF',s:2,hp:650,arm:[2,7],time:22,cost:{wood:100,stone:60},age:1,anc:1,h:2.6,desc:'Smelts copper ore. From the Bronze Age it can cast bronze from copper and tin',chim:[0,2.4,0],
     recipes:{copper:{in:{cuore:3,wood:2},out:{copper:2},time:6},bronze:{in:{copper:2,tin:1},out:{bronze:2},time:6,age:2}}},
   lookout:{name:'Lookout Post',l:'LP',s:1,hp:380,arm:[1,5],time:14,cost:{wood:70},shoot:{atk:3,range:6,rate:2.2,n:1},gar:2,age:1,anc:1,h:3.6,desc:'Wooden watch post that throws javelins at enemies'},
-  chariotry:{name:'Chariot Works',l:'CW',s:3,hp:1000,arm:[2,7],time:28,cost:{wood:160,bronze:5},trains:['chariot'],age:2,anc:1,becomes:['stable',MED+1],h:2.8,desc:'Builds war chariots. Becomes a Stable in the Feudal Age'},
+  chariotry:{name:'Chariot Works',l:'CW',s:3,hp:1000,arm:[2,7],time:28,cost:{wood:160,bronze:5},trains:['chariot','horseman'],age:2,anc:1,becomes:['stable',MED+1],h:2.8,desc:'Builds war chariots and, from the Iron Age, trains horsemen. Becomes a Stable in the Feudal Age'},
+  bloom:{name:'Bloomery',l:'Bm',s:2,hp:700,arm:[2,7],time:24,cost:{wood:120,stone:80},age:3,anc:1,becomes:['smelter',MED+1],h:2.8,desc:'Smelts iron ore into iron bars',chim:[-.2,2.5,-.2],recipes:{iron:{in:{ore:3,wood:2},out:{iron:2},time:7}}},
+  hillfort:{name:'Hill Fort',l:'HF',s:3,hp:1800,arm:[3,8],time:40,cost:{stone:220,wood:120},shoot:{atk:5,range:7,rate:2,n:2},gar:10,age:3,anc:1,h:3.4,desc:'Ramparts and a stone tower. Shelters 10 and throws javelins'},
+  engyard:{name:'Siege Yard',l:'SY',s:3,hp:1100,arm:[2,7],time:32,cost:{wood:200,iron:5},trains:['ballista'],age:4,anc:1,becomes:['siege',MED+2],h:2.8,desc:'Builds ballistas. Becomes a Siege Workshop in the Castle Age'},
+  temple:{name:'Temple',l:'Te',s:3,hp:1300,arm:[2,8],time:36,cost:{wood:120,stone:180},age:4,anc:1,becomes:['monastery',MED+2],h:3.4,desc:'Philosophy and medicine are studied here. Becomes a Monastery in the Castle Age'},
 });
 Object.assign(TECHS,{
   copperage:{name:'Copper Age',at:'tc',age:0,ageUp:1,anc:1,cost:{food:500,flint:60,pottery:30},time:60,desc:'Copper smelting, axemen, bowmen and lookout posts'},
   bronzeage:{name:'Bronze Age',at:'tc',age:1,ageUp:2,anc:1,cost:{food:800,copper:60,pottery:40},time:75,desc:'Bronze casting, the wheel, writing, chariots'},
-  darkage:{name:'Dark Age',at:'tc',age:2,ageUp:MED,anc:1,cost:{food:1000,bronze:80,pottery:50},time:90,desc:'Iron and the medieval world: militia, mills and the road to feudalism'},
+  ironage:{name:'Iron Age',at:'tc',age:2,ageUp:3,anc:1,cost:{food:1000,bronze:80,pottery:50},time:90,desc:'Bloomeries, iron swords, horsemen and hill forts'},
+  classicalage:{name:'Classical Age',at:'tc',age:3,ageUp:4,anc:1,cost:{food:1200,iron:60,pottery:60},time:100,desc:'Legions, the phalanx, ballistas, temples and the forum'},
+  darkage:{name:'Dark Age',at:'tc',age:4,ageUp:MED,anc:1,cost:{food:1400,iron:100,pottery:70},time:110,desc:'The old world falls and the medieval one begins: militia, mills and the road to feudalism'},
+  ironsw:{name:'Iron Swords',at:'barracks',age:3,anc:1,req:'bronzesw',until:MED,cost:{food:200,iron:15},time:30,desc:'Bronze Swordsmen become Iron Swordsmen'},
+  riding:{name:'Horse Riding',at:'chariotry',age:3,anc:1,cost:{food:150,wood:80},time:30,desc:'Lets you train Horsemen'},
+  irontools:{name:'Iron Tools',at:'mining',age:3,anc:1,req:'bronzetools',cost:{food:120,iron:15},time:30,desc:'Wood and all mining +10%'},
+  ironplough:{name:'Iron Ploughshare',at:'mill',age:3,anc:1,req:'oxplough',cost:{food:150,iron:10},time:30,desc:'Farms +10%'},
+  ironheads:{name:'Iron Arrowheads',at:'barracks',age:3,anc:1,until:MED+1,cost:{food:120,iron:10},time:28,desc:'Slingers and bowmen +1 attack'},
+  ironarm:{name:'Iron Scale Armour',at:'barracks',age:3,anc:1,req:'bronzearm',cost:{food:180,iron:20},time:30,desc:'Infantry +1/+1 armour'},
+  ramparts:{name:'Ramparts',at:'tc',age:3,anc:1,cost:{wood:100,stone:150},time:30,desc:'Buildings +10% HP'},
+  legion:{name:'The Legion',at:'barracks',age:4,anc:1,req:'ironsw',until:MED,cost:{food:250,iron:25},time:34,desc:'Iron Swordsmen become Legionaries'},
+  phalanx:{name:'Phalanx',at:'barracks',age:4,anc:1,until:MED+1,cost:{food:200,bronze:10},time:32,desc:'Bronze Spearmen become Hoplites'},
+  engineering:{name:'Engineering',at:'engyard',age:4,anc:1,cost:{food:200,wood:150},time:34,desc:'Lets you build Ballistas. Hill forts and lookout posts +1 range'},
+  coinage:{name:'Coinage',at:'market',age:4,anc:1,cost:{food:150,copper:20},time:30,desc:'Gold mining +15%'},
+  philosophy:{name:'Philosophy',at:'temple',age:4,anc:1,cost:{food:200,pottery:20},time:34,desc:'All research is 15% faster'},
+  medicine:{name:'Medicine',at:'temple',age:4,anc:1,cost:{food:200,pottery:20},time:34,desc:'Soldiers slowly heal their wounds'},
+  croprot:{name:'Fallow Fields',at:'mill',age:4,anc:1,req:'ironplough',cost:{food:200,wood:100},time:32,desc:'Farms +10%'},
   agriculture:{name:'Farming',at:'mill',age:0,anc:1,cost:{food:60,wood:40},time:16,desc:'Lets you build Farms'},
   domestic:{name:'Domestication',at:'mill',age:0,anc:1,cost:{food:90},time:20,desc:'Lets you build Animal Pens. Hunting +15%'},
   flintaxe:{name:'Flint Axes',at:'lumber',age:0,anc:1,cost:{food:50,flint:10},time:15,desc:'Wood +15%'},
@@ -553,9 +581,9 @@ for(const k in TECHS)TECHS[k].key=k;
 const AGEREQ=ERAS.map(e=>e.req||null);
 const ANIMALS={deer:{name:'Deer',hp:5,amt:140,speed:2.2,r:.45},boar:{name:'Wild Boar',hp:75,amt:340,speed:3.4,r:.55,atk:4},sheep:{name:'Sheep',hp:7,amt:100,speed:.9,r:.4}};
 const DIFF={
-  easy:{mul:.75,vils:18,ancV:[9,12,15],ageV:[11,17,22],attack0:5,first:1080,maxAtk:14,cap:22,towers:1,think:1.8,gap:300,humanBias:2.2,grow:2,fish:2,navy:2,seek:30},
-  normal:{mul:.92,vils:26,ancV:[10,14,18],ageV:[13,20,25],attack0:7,first:840,maxAtk:24,cap:40,towers:2,think:1.1,gap:220,humanBias:1.5,grow:3,fish:4,navy:4,seek:45},
-  hard:{mul:1.2,vils:34,ancV:[10,15,20],ageV:[14,22,28],attack0:10,first:450,maxAtk:46,cap:80,towers:3,think:.8,gap:100,humanBias:1,grow:4,fish:6,navy:6,seek:999},
+  easy:{mul:.75,vils:18,ancV:[9,12,15,17,18],ageV:[11,17,22],attack0:5,first:1080,maxAtk:14,cap:22,towers:1,think:1.8,gap:300,humanBias:2.2,grow:2,fish:2,navy:2,seek:30},
+  normal:{mul:.92,vils:26,ancV:[10,14,18,21,23],ageV:[13,20,25],attack0:7,first:840,maxAtk:24,cap:40,towers:2,think:1.1,gap:220,humanBias:1.5,grow:3,fish:4,navy:4,seek:45},
+  hard:{mul:1.2,vils:34,ancV:[10,15,20,24,27],ageV:[14,22,28],attack0:10,first:450,maxAtk:46,cap:80,towers:3,think:.8,gap:100,humanBias:1,grow:4,fish:6,navy:6,seek:999},
 };
 
 /* ================= UTILS ================= */
@@ -774,19 +802,19 @@ function unitModel(type,team,v){
     {const f=bx(g,0xf0ead8,.04,.3,.08,-.1,1.5,-.1);f.rotation.z=.3}const[aR]=arms2(g,skin,null,skin);
     const s2=mk(G.cyl,0x7a5a3a);s2.scale.set(.04,1.7,.04);s2.rotation.x=Math.PI/2;s2.position.set(0,-.44,.4);aR.add(s2);const t2=mk(G.cone,0x35404c);t2.scale.set(.08,.22,.08);t2.rotation.x=Math.PI/2;t2.position.set(0,-.44,1.33);aR.add(t2);
     h=1.78;break;}
-  case'clubman':{const sg=v|0,BR=0xd8a850,CU=0xc87533;
+  case'clubman':{const sg=v|0,BR=0xd8a850,CU=0xc87533,MT=sg>=3?0x9aa0a8:0xc9963c;
     legs2(g,sg?0x5b4630:skin,sg?null:0x3a2a1c);
     if(sg===0){cy(g,skin,.23,.5,0,.82,0);cy(g,0x7a5a3a,.27,.3,0,.6,0);{const st2=bx(g,0x8a7a62,.12,.62,.5,.02,.9,0);st2.rotation.z=.55}cy(g,tc,.275,.06,0,.74,0)}
     else if(sg===1){cy(g,0x9a7a4e,.24,.56,0,.78,0);cy(g,tc,.252,.12,0,.62,0)}
-    else{cy(g,0xc9963c,.245,.4,0,.9,0,METAL);cy(g,tc,.255,.3,0,.6,0)}
+    else{cy(g,MT,.245,.4,0,.9,0,METAL);cy(g,sg===4?0xb5332a:tc,.255,.3,0,.6,0)}
     sp(g,skin,.3,.3,.3,0,1.22,0);
-    if(sg===2){sp(g,0xc9963c,.34,.28,.34,0,1.3,0,METAL);bx(g,tc,.05,.16,.3,0,1.48,0)}else{sp(g,0x3b2414,.32,.22,.32,0,1.3,-.03);if(sg===1)cy(g,0x8a6a4a,.165,.06,0,1.3,0)}
+    if(sg>=2){sp(g,MT,.34,.28,.34,0,1.3,0,METAL);bx(g,sg===4?0xb5332a:tc,.05,sg===4?.24:.16,.3,0,sg===4?1.52:1.48,0)}else{sp(g,0x3b2414,.32,.22,.32,0,1.3,-.03);if(sg===1)cy(g,0x8a6a4a,.165,.06,0,1.3,0)}
     const[aR,aL]=arms2(g,sg===1?0x9a7a4e:skin,null,skin);
     if(sg===0){const c2=mk(G.cyl,0x6b4a2c);c2.scale.set(.07,.7,.07);c2.rotation.x=Math.PI/2;c2.position.set(0,-.44,.3);aR.add(c2);const k2=mk(G.sph,0x5a3e26);k2.scale.set(.2,.2,.3);k2.position.set(0,-.44,.66);aR.add(k2)}
     else if(sg===1){const hd=mk(G.cyl,0x6a4a2a);hd.scale.set(.05,.75,.05);hd.rotation.x=Math.PI/2;hd.position.set(0,-.44,.3);aR.add(hd);const ax=mk(G.box,CU,METAL);ax.scale.set(.05,.28,.2);ax.position.set(0,-.38,.62);aR.add(ax);
       const sh=mk(G.cyl16,0x8a6a4a);sh.scale.set(.5,.05,.5);sh.rotation.z=Math.PI/2;sh.position.set(-.06,-.3,.06);aL.add(sh)}
-    else{const bl=mk(G.box,BR,METAL);bl.scale.set(.06,.1,.62);bl.position.set(0,-.44,.4);aR.add(bl);const gu=mk(G.box,0x6b5130);gu.scale.set(.22,.05,.05);gu.position.set(0,-.44,.1);aR.add(gu);
-      const sh=shieldMesh(team,.3,.05);sh.rotation.z=Math.PI/2;sh.position.set(-.06,-.3,.06);aL.add(sh)}
+    else{const bl=mk(G.box,sg>=3?0xc8ccd2:BR,METAL);bl.scale.set(.06,.1,sg===4?.5:.62);bl.position.set(0,-.44,.4);aR.add(bl);const gu=mk(G.box,0x6b5130);gu.scale.set(.22,.05,.05);gu.position.set(0,-.44,.1);aR.add(gu);
+      const sh=sg===4?mk(G.box,tc):shieldMesh(team,.3,.05);if(sg===4)sh.scale.set(.07,.66,.44);else sh.rotation.z=Math.PI/2;sh.position.set(-.06,-.3,.06);aL.add(sh)}
     h=1.8;break;}
   case'slinger':{const sg=v|0;
     legs2(g,sg?0x463c34:skin,sg?null:0x3a2a1c);cy(g,sg?0x6f7a4a:0x8a7a5a,.24,.56,0,.78,0);cy(g,tc,.252,.14,0,.66,0);sp(g,skin,.3,.3,.3,0,1.22,0);sp(g,0x5a3a1a,.31,.2,.31,0,1.3,-.03);cy(g,tc,.165,.05,0,1.3,0);
@@ -795,10 +823,10 @@ function unitModel(type,team,v){
     else{const bw=new T.Mesh(G.torus,M(sg===2?0x3a2a1c:0x6b4a2c));bw.castShadow=true;bw.rotation.set(0,Math.PI/2,Math.PI/2);bw.position.set(0,-.42,.12);if(sg===2)bw.scale.set(1,1.3,1);aL.add(bw);
       const q=cy(g,0x6b4a2c,.07,.5,.1,1.0,-.26);q.rotation.x=.35;for(let i=0;i<3;i++)bx(g,0xe8e0c8,.05,.08,.02,.08+i*.04,1.28,-.32);if(sg===2)cy(g,0xd8a850,.17,.06,0,1.3,0,METAL)}
     h=1.8;break;}
-  case'bspear':{
-    legs2(g,0x463c34);cy(g,0x9a7a4e,.24,.56,0,.78,0);cy(g,tc,.252,.3,0,.68,0);sp(g,skin,.3,.3,.3,0,1.22,0);sp(g,0xc9963c,.34,.28,.34,0,1.3,0,METAL);cn(g,0xc9963c,.06,.16,0,1.5,0,METAL);
+  case'bspear':{const sg=v|0;
+    legs2(g,0x463c34);if(sg)bx(g,0xb5332a,.06,.22,.36,0,1.52,0);cy(g,0x9a7a4e,.24,.56,0,.78,0);cy(g,tc,.252,.3,0,.68,0);sp(g,skin,.3,.3,.3,0,1.22,0);sp(g,0xc9963c,.34,.28,.34,0,1.3,0,METAL);cn(g,0xc9963c,.06,.16,0,1.5,0,METAL);
     const[aR,aL]=arms2(g,0x9a7a4e,null,skin);const s2=mk(G.cyl,0x7a5a3a);s2.scale.set(.05,2.0,.05);s2.rotation.x=Math.PI/2;s2.position.set(0,-.44,.5);aR.add(s2);
-    const t2=mk(G.cone,0xd8a850,METAL);t2.scale.set(.1,.26,.1);t2.rotation.x=Math.PI/2;t2.position.set(0,-.44,1.62);aR.add(t2);const sh=shieldMesh(team,.36,.05);sh.rotation.z=Math.PI/2;sh.position.set(-.07,-.3,.06);aL.add(sh);
+    const t2=mk(G.cone,0xd8a850,METAL);t2.scale.set(.1,.26,.1);t2.rotation.x=Math.PI/2;t2.position.set(0,-.44,1.62);aR.add(t2);const sh=shieldMesh(team,sg?.46:.36,.05);sh.rotation.z=Math.PI/2;sh.position.set(-.07,-.3,.06);aL.add(sh);
     h=1.8;break;}
   case'chariot':{
     horse(g,team,true);bx(g,0x7a5a3a,.84,.1,.74,0,.62,-1.5);bx(g,tc,.84,.46,.06,0,.88,-1.14);for(const sx of[-1,1]){bx(g,0x8a6a44,.06,.4,.72,sx*.41,.85,-1.5);const w=cy(g,0x5a3e26,.44,.07,sx*.5,.44,-1.5);w.rotation.z=Math.PI/2;const hb=cy(g,0xc9963c,.1,.1,sx*.52,.44,-1.5,METAL);hb.rotation.z=Math.PI/2}
@@ -911,9 +939,9 @@ function unitModel(type,team,v){
     for(const sx of[-1,1])for(const z of[-.4,.4])cy(g,0x2a2a2a,.07,.4,sx*.75,.75,z,METAL).rotation.z=Math.PI/2;
     flag(g,team,0,4.3,.15,.8);
     h=4.8;break;}
-  case'scout':case'knight':case'chevalier':{
-    horse(g,team,type==='scout');
-    const kn=type!=='scout',ch=type==='chevalier';
+  case'horseman':case'scout':case'knight':case'chevalier':{
+    horse(g,team,type==='scout'||type==='horseman');
+    const kn=type!=='scout'&&type!=='horseman',ch=type==='chevalier';
     if(ch){bx(g,tc,.6,.5,1.15,0,.78,0);for(const sx of[-1,1]){const pnl=new T.Mesh(G.box,embMat(team));pnl.scale.set(.02,.42,.5);pnl.position.set(sx*.31,.85,0);pnl.castShadow=true;g.add(pnl)}
       cy(g,0xb8bec4,.17,.38,0,2.08,0,METAL);bx(g,0x2a2a2a,.26,.04,.02,0,2.1,.17);bx(g,tc,.06,.4,.34,0,2.42,0);bx(g,0xf0cf6a,.07,.06,.36,0,2.25,0)}
     cy(g,kn?0x80868c:0x8a6a44,.2,.55,0,1.55,0,kn?METAL:undefined);cy(g,tc,.215,.3,0,1.48,0);
@@ -983,6 +1011,11 @@ function unitModel(type,team,v){
     const lg=mk(G.cyl,0x5a3e26);lg.scale.set(.22,2.1,.22);lg.rotation.x=Math.PI/2;lg.position.z=.35;ram.add(lg);
     const hd=mk(G.cyl,0x8a8f94,METAL);hd.scale.set(.3,.3,.3);hd.rotation.x=Math.PI/2;hd.position.z=1.4;ram.add(hd);
     h=1.6;break;}
+  case'ballista':{
+    bx(g,0x6b4a2c,.8,.16,1.5,0,.5,0);for(const s2 of[-1,1]){const w=cy(g,0x3a2a1c,.3,.1,s2*.5,.3,-.35);w.rotation.z=Math.PI/2}bx(g,0x5a3e26,.1,.5,.1,0,.25,.6);
+    bx(g,0x7a5a3a,.14,.12,1.7,0,.75,.05);for(const s2 of[-1,1]){const a=bx(g,0x5a3e26,.75,.08,.08,s2*.42,.82,.72);a.rotation.y=-s2*.45;cy(g,0xc8ccd2,.05,.3,s2*.12,.82,.8,METAL)}
+    {const arm=new T.Group();arm.name='armR';arm.position.set(0,.86,.1);g.add(arm);const bolt=mk(G.cyl,0x8a8e96,METAL);bolt.scale.set(.05,1.1,.05);bolt.rotation.x=Math.PI/2;bolt.position.z=.3;arm.add(bolt)}
+    bx(g,tc,.3,.2,.04,0,.62,-.74);h=1.3;break;}
   case'mangonel':case'trebuchet':{
     const tr=type==='trebuchet',L=tr?2.4:1.4;
     bx(g,0x6b4a2c,tr?1.3:.9,.2,L,0,.35,0);
@@ -1007,21 +1040,25 @@ const PLASTER=0xe0d2b0,TIMBER=0x4a3322,THATCH=0xa98450,TILE=0x8a3f2c,STONE=0x9c9
 function logWall(g,w,h,d,y0){for(let i=0;i<Math.round(h/.22);i++){const yy=y0+.11+i*.22;
   for(const s of[-1,1]){const a=cy(g,i%2?LOG:0x6b4a2c,.11,w,0,yy,s*d/2,null,G.cyl7);a.rotation.z=Math.PI/2;const b=cy(g,i%2?0x6b4a2c:LOG,.11,d,s*w/2,yy,0,null,G.cyl7);b.rotation.x=Math.PI/2}}}
 function windows(g,list){for(const[x,y,z,ry]of list){const w=bx(g,DARK,.26,.3,.05,x,y,z);w.rotation.y=ry||0;const s=bx(g,TIMBER,.34,.05,.07,x,y-.17,z);s.rotation.y=ry||0}}
-function ancModel(g,type,team,st,tc){const mud=st===-1,wall=st===-3?0x8a6a4a:st===-2?0xb89a6a:0xc9a26a,roof=mud?0xa8895a:THATCH,pole=0x5a3e26;
+function ancModel(g,type,team,st,tc){const late=st<=-4,cls=st===-5,mud=st===-1||late,wall=st===-3?0x8a6a4a:st===-2?0xb89a6a:st===-4?0xa39680:cls?0xe6e0d0:0xc9a26a,roof=cls?0xb5533a:late?THATCH:mud?0xa8895a:THATCH,pole=0x5a3e26,COLM=0xf2eee2;
   const hut=(x,z,r,h)=>{cy(g,wall,r,h,x,h/2+.05,z,null,G.cyl7);cn(g,roof,r*1.38,h*1.15,x,h+.05+h*.55,z,null,G.cone7);bx(g,DARK,r*.55,h*.7,.06,x,h*.4,z+r*.93)};
-  const brick=(x,z,w,h,d,y0)=>{y0=y0||0;bx(g,wall,w,h,d,x,y0+h/2,z);bx(g,roof,w+.1,.08,d+.1,x,y0+h+.04,z);for(const sx of[-1,1])bx(g,wall,.12,.18,d+.12,x+sx*w/2,y0+h+.15,z);for(const sz of[-1,1])bx(g,wall,w+.12,.18,.12,x,y0+h+.15,z+sz*d/2)};
+  const brick=(x,z,w,h,d,y0)=>{y0=y0||0;bx(g,wall,w,h,d,x,y0+h/2,z);if(late){roofPrism(g,roof,d+.3,Math.min(.75,d*.36),w+.3,x,y0+h,z,Math.PI/2);return}bx(g,roof,w+.1,.08,d+.1,x,y0+h+.04,z);for(const sx of[-1,1])bx(g,wall,.12,.18,d+.12,x+sx*w/2,y0+h+.15,z);for(const sz of[-1,1])bx(g,wall,w+.12,.18,.12,x,y0+h+.15,z+sz*d/2)};
   const stakes=(r,n,skip)=>{for(let i=0;i<n;i++){if(skip&&skip(i))continue;const a=i/n*TAU;cn(g,0x6a4a2a,.09,.95,Math.cos(a)*r,.47,Math.sin(a)*r,null,G.cone7)}};
   const fire=(x,z)=>{cy(g,0x3a3330,.3,.08,x,.09,z);cn(g,0xff8a2a,.17,.38,x,.3,z,{emissive:col(0xff5a10),emissiveIntensity:1.3})};
   const ladder=(x,z,hh)=>{for(const sx of[-1,1]){const r=bx(g,pole,.04,hh,.04,x+sx*.12,hh/2,z);r.rotation.x=.3}for(let i=1;i<4;i++)bx(g,pole,.28,.03,.03,x,i*hh/4.3,z-.3*(i/4-.5)*hh*.45)};
   switch(type){
   case'house':
     if(!mud){hut(0,0,.64,.78);bx(g,tc,.36,.16,.04,0,.82,.62);if(st===-3)for(let i=0;i<3;i++){const p2=cy(g,pole,.022,.5,(i-1)*.1,1.95,0);p2.rotation.z=(i-1)*.3}else cy(g,0x7a7468,.75,.06,0,.03,0)}
-    else{brick(0,0,1.5,1.0,1.3);bx(g,DARK,.34,.62,.05,-.3,.33,.66);brick(.35,-.25,.7,.5,.6,1.12);ladder(-.35,.75,1.15);bx(g,tc,.5,.14,.04,.3,.8,.66)}
+    else{brick(0,0,1.5,1.0,1.3);bx(g,DARK,.34,.62,.05,-.3,.33,.66);if(!late){brick(.35,-.25,.7,.5,.6,1.12);ladder(-.35,.75,1.15)}else if(cls)for(const sx of[-1,1])cy(g,COLM,.07,.95,sx*.62,.5,.75);bx(g,tc,.5,.14,.04,.3,.8,.66)}
     return true;
   case'tc':
     if(st===-3){cy(g,0x7a6a52,1.95,.1,0,.05,0);hut(0,-.35,1.25,1.2);hut(-1.25,.95,.55,.65);hut(1.25,.95,.55,.65);fire(0,1.25);stakes(1.9,18,i=>i>=3&&i<=6);flag(g,team,0,2.6,-.35,1.1);cy(g,pole,.07,1.6,-.6,.8,1.5);sp(g,0xe8dcc0,.24,.24,.24,-.6,1.7,1.5)}
     else if(st===-2){bx(g,0x7a6a52,3.9,.14,3.9,0,.07,0);bx(g,wall,3.0,1.2,1.8,0,.72,-.45);for(const sx of[-1,1])for(const sz of[-1,1])bx(g,pole,.14,1.3,.14,sx*1.5,.75,-.45+sz*.9);
       roofPrism(g,THATCH,2.3,1.15,3.4,0,1.32,-.45,Math.PI/2);bx(g,DARK,.6,.85,.06,0,.55,.46);hut(-1.3,1.15,.52,.62);hut(1.3,1.15,.52,.62);fire(0,1.3);stakes(1.95,20,i=>i>=3&&i<=7);flag(g,team,0,2.45,-.45,1.2)}
+    else if(st===-4){bx(g,0x8e8a80,3.9,.3,3.9,0,.15,0);bx(g,wall,3.2,1.5,2.2,0,1.05,-.4);roofPrism(g,THATCH,2.7,1.3,3.6,0,1.8,-.4,Math.PI/2);bx(g,DARK,.6,.95,.06,0,.78,.71);for(const sx of[-1,1]){bx(g,pole,.14,1.6,.14,sx*.5,1.1,.75);cy(g,wall,.5,1.9,sx*1.45,1.25,1.2,null,G.cyl7);cn(g,THATCH,.68,.7,sx*1.45,2.55,1.2,null,G.cone7)}
+      bx(g,wall,2.4,.7,.25,0,.65,1.3);stakes(1.95,22,i=>i>=3&&i<=8);fire(0,1.65);flag(g,team,0,3.1,-.4,1.2)}
+    else if(cls){bx(g,0xcfc8b8,3.9,.2,3.9,0,.1,0);bx(g,0xd8d2c2,3.6,.2,3.6,0,.3,0);bx(g,wall,2.5,1.5,2.4,0,1.15,-.4);for(let i=0;i<6;i++)cy(g,COLM,.12,1.5,-1.5+i*.6,1.15,1.45);for(const sx of[-1,1])for(let i=0;i<4;i++)cy(g,COLM,.12,1.5,sx*1.5,1.15,.85-i*.75);
+      bx(g,wall,3.4,.2,3.4,0,2.0,0);roofPrism(g,roof,3.5,.85,3.5,0,2.1,0,0);bx(g,DARK,.6,1.0,.06,0,.9,.81);bx(g,tc,1.0,.3,.05,0,2.4,1.72);flag(g,team,0,2.95,0,1.0)}
     else{bx(g,0xb09a72,3.9,.3,3.9,0,.15,0);brick(0,0,3.2,1.0,3.2,.3);brick(0,-.25,2.2,.85,2.0,1.42);brick(0,-.35,1.2,.7,1.0,2.4);
       for(let i=0;i<6;i++)bx(g,0xb09a72,.9,.18,.3,0,.39+i*.17,1.95-i*.2);bx(g,DARK,.5,.6,.06,0,1.75,.76);for(const sx of[-1,1])bx(g,tc,.4,.85,.05,sx*1.05,.9,1.63);flag(g,team,0,3.2,-.35,1.3)}
     return true;
@@ -1029,7 +1066,7 @@ function ancModel(g,type,team,st,tc){const mud=st===-1,wall=st===-3?0x8a6a4a:st=
     if(!mud){bx(g,0x7a6a52,2.95,.1,2.75,0,.05,0);for(let i=0;i<9;i++){const t=-1.3+i*.325;cn(g,0x6a4a2a,.09,1.05,t,.52,-1.3,null,G.cone7);cn(g,0x6a4a2a,.09,1.05,-1.35,.52,t,null,G.cone7);cn(g,0x6a4a2a,.09,1.05,1.35,.52,t,null,G.cone7)}
       hut(-.45,-.45,.74,.85);bx(g,pole,1.0,.06,.06,.75,.8,.2);for(const x of[.4,1.1])bx(g,pole,.06,.8,.06,x,.4,.2);for(let i=0;i<4;i++){const sp2=cy(g,0x8a6a44,.02,1.2,.45+i*.2,.6,.3);sp2.rotation.x=-.25}
       cy(g,pole,.07,1.0,.75,.5,1.0);sp(g,0xd8c27a,.34,.34,.14,.75,.95,1.0);bx(g,tc,.36,.6,.04,-.45,1.0,.26);flag(g,team,-1.2,.1,1.15,1.8)}
-    else{bx(g,0xb09a72,2.95,.2,2.75,0,.1,0);brick(0,-.2,2.6,1.25,2.0,.2);bx(g,DARK,.7,.9,.06,0,.65,.81);for(const sx of[-1,1])bx(g,tc,.36,.85,.04,sx*.85,.95,.82);
+    else{bx(g,late?0x8e8a80:0xb09a72,2.95,.2,2.75,0,.1,0);brick(0,-.2,2.6,1.25,2.0,.2);if(cls)for(let i=0;i<5;i++)cy(g,COLM,.09,1.25,-1.1+i*.55,.82,.95);bx(g,DARK,.7,.9,.06,0,.65,.81);for(const sx of[-1,1])bx(g,tc,.36,.85,.04,sx*.85,.95,.82);
       bx(g,pole,1.0,.06,.06,.6,.75,1.15);for(const x of[.15,1.05])bx(g,pole,.06,.75,.06,x,.38,1.15);for(let i=0;i<4;i++){const sp2=cy(g,0x8a6a44,.02,1.2,.3+i*.2,.6,1.25);sp2.rotation.x=-.25}flag(g,team,-1.1,1.55,-.9,1.1)}
     return true;
   case'mill':
@@ -1258,6 +1295,24 @@ function bldModel(type,team,st){
     for(const[x,z,rz]of[[-.9,.2,.2],[-.55,.35,-.15],[1.15,.9,.3]]){const w=cy(g,0x5a3e26,.42,.07,x,.5,z);w.rotation.x=Math.PI/2;w.rotation.z=rz;const hb=cy(g,0xc9963c,.1,.1,x,.5,z,METAL);hb.rotation.x=Math.PI/2}
     bx(g,0x7a5a3a,.8,.1,.7,.45,.5,-.35);bx(g,tc,.8,.4,.06,.45,.75,-.03);for(const sx of[-1,1]){const w=cy(g,0x5a3e26,.4,.07,.45+sx*.47,.42,-.35);w.rotation.z=Math.PI/2}
     {const pl=bx(g,0x6b4a2c,.06,.06,1.2,.45,.5,.55);pl.rotation.x=.1}flag(g,team,1.25,.1,1.2,1.8);break}
+  case'bloom':{
+    bx(g,0x7d7468,1.8,.15,1.8,0,.07,0);cy(g,0x7a6a5e,.5,1.9,-.2,1.05,-.2,null,G.cyl7);cy(g,0x5a4e46,.56,.2,-.2,.25,-.2,null,G.cyl7);cy(g,0x3a2a20,.3,.12,-.2,2.05,-.2);
+    bx(g,DARK,.3,.34,.08,-.2,.42,.3);cy(g,0xffa040,.13,.05,-.2,.42,.34,{emissive:col(0xff7a18),emissiveIntensity:1.8}).rotation.x=Math.PI/2;
+    bx(g,0x6a4a2e,.55,.24,.4,.55,.27,.2);{const nz=cn(g,0x3a2a1c,.07,.45,.18,.27,.2);nz.rotation.z=Math.PI/2}bx(g,0x5a3e26,.06,.5,.06,.82,.5,.2);
+    for(let i=0;i<4;i++)bx(g,0x8a8e96,.34,.07,.12,.58,.2+i*.08,-.55,METAL);for(let i=0;i<4;i++){const o=mk(G.dod,0x8a4a3a);o.scale.setScalar(.25);o.position.set(-.68,.2+(i%2)*.12,.6-i*.2);g.add(o)}
+    bx(g,tc,.36,.26,.03,-.2,1.3,.3);break}
+  case'hillfort':{
+    cy(g,0x6f7a4a,1.48,.5,0,.25,0,null,G.cyl7);cy(g,0x8a7a5a,1.2,.52,0,.27,0,null,G.cyl7);for(let i=0;i<20;i++){if(i===4||i===5||i===6)continue;const a=i/20*TAU;cn(g,0x6a4a2a,.1,1.0,Math.cos(a)*1.3,1.0,Math.sin(a)*1.3,null,G.cone7)}
+    cy(g,0x9c968a,.6,2.3,0,1.65,-.15,null,G.cyl7);cy(g,0x8e8a80,.7,.25,0,2.9,-.15,null,G.cyl7);cn(g,THATCH,.8,.7,0,3.35,-.15,null,G.cone7);bx(g,DARK,.26,.5,.06,0,.8,.44);
+    for(const sx of[-1,1])bx(g,0x5a3e26,.14,1.2,.14,sx*.42,.9,1.3);bx(g,0x5a3e26,1.0,.12,.14,0,1.45,1.3);flag(g,team,.75,.5,-.75,2.2);break}
+  case'engyard':{
+    bx(g,0x7a6a52,2.95,.12,2.8,0,.06,0);for(const sx of[-1,1])for(const sz of[-1,1])bx(g,TIMBER,.15,1.7,.15,sx*1.25,.9,sz*1.0-.2);roofPrism(g,THATCH,2.6,.9,2.9,0,1.75,-.2,Math.PI/2);bx(g,0x8a6a44,2.5,1.1,.14,0,.65,-1.25);
+    bx(g,0x6b4a2c,.6,.14,1.2,-.5,.4,.1);bx(g,0x7a5a3a,.1,.1,1.4,-.5,.62,.15);for(const sx of[-1,1]){const a=bx(g,0x5a3e26,.6,.07,.07,-.5+sx*.32,.68,.7);a.rotation.y=-sx*.45}
+    for(let i=0;i<4;i++){const l=cy(g,0x8a5a32,.1,1.3,.75,.16+((i/2)|0)*.2,.2+(i%2)*.22,null,G.cyl7);l.rotation.x=Math.PI/2}bx(g,0x5a5550,.3,.3,.3,.9,.2,-.6);flag(g,team,1.25,.1,1.2,1.8);break}
+  case'temple':{
+    bx(g,0x8e8a80,2.95,.2,2.8,0,.1,0);bx(g,0x9c968a,2.6,.2,2.5,0,.3,0);bx(g,PLASTER,1.9,1.5,1.7,0,1.15,-.3);for(let i=0;i<4;i++)cy(g,0xe8e2d2,.11,1.5,-1.05+i*.7,1.15,.95);
+    bx(g,PLASTER,2.5,.18,2.4,0,1.99,0);roofPrism(g,TILE,2.6,.75,2.5,0,2.08,0,0);bx(g,DARK,.5,.9,.06,0,.85,.56);
+    cy(g,0x9c968a,.2,.4,0,.6,1.25);cn(g,0xff8a2a,.14,.32,0,.95,1.25,{emissive:col(0xff5a10),emissiveIntensity:1.3});bx(g,tc,.6,.24,.05,0,2.3,1.22);break}
   case'road':{bx(g,0x8f8270,1.0,.16,1.0,0,-.02,0);for(let i=0;i<5;i++)bx(g,i%2?0xa89a84:0x7d725f,.3+R()*.12,.04,.26+R()*.12,(R()-.5)*.6,.075,(R()-.5)*.6);break}
   case'vhall':{
     bx(g,0x8e8a80,3.0,.3,3.0,0,.15,0);bx(g,0x6b4a2c,2.6,1.6,2.2,0,1.1,-.1);logWall(g,2.65,1.6,2.25,.3);
@@ -1308,15 +1363,16 @@ function bldModel(type,team,st){
   return mergeStatic(g);
 }
 const tplCache={};
-const AGED=['potter','pen','cfurnace','lookout','chariotry','forester','lumber','mining','mill','dock','range','stable','blacksmith','university','siege','kiln','smelter','ropewalk','weaver','winepress','market','monastery','embassy'];
-function styleFor(type,team){const a=clamp((team<NP?age[team]:Math.max(AGEMIN,WAGE))-MED,-3,3);if(type==='tc'||type==='house'||type==='barracks')return a;
+const AGED=['potter','pen','cfurnace','lookout','chariotry','bloom','hillfort','engyard','temple','forester','lumber','mining','mill','dock','range','stable','blacksmith','university','siege','kiln','smelter','ropewalk','weaver','winepress','market','monastery','embassy'];
+function styleFor(type,team){const ag0=team<NP?age[team]:Math.max(AGEMIN,WAGE),a=ag0>=MED?Math.min(3,ag0-MED):[-3,-2,-1,-4,-5][ag0];if(type==='tc'||type==='house'||type==='barracks')return a;
   if(type==='tower')return has(team,'keep')?3:has(team,'gtower')?2:a>=2?2:0;if(AGED.includes(type))return a;if(type==='vhall'||type==='vhouse')return a<0?0:1;return 1}
 const WOODMAP={[0x8e8a80]:0x6e5a42,[0x7d7468]:0x6e5a42,[0x6a5d4c]:0x6e5a42,[PLASTER]:0x9a7a52,[0xb8b0a0]:0x8a6a44,[0xb8b2a2]:0x8a6a44,[0xd2c6aa]:0x9a7a52,[0xd8cdb4]:0x9a7a52,[0xe8dfc8]:0x8a6a44,
   [STONE]:0x7a5a3a,[0x8f897d]:0x6b4a2c,[0x8a8075]:0x7a6a5a,[TILE]:THATCH,[SLATE]:THATCH,[0xb8a888]:0x8a7a5a};
+const CLASSMAP={[PLASTER]:0xe6e0d0,[0xb8b0a0]:0xe6e0d0,[0xb8b2a2]:0xe6e0d0,[0x8a6a44]:0xe6e0d0,[0x6b4a2c]:0xd8d0bc,[THATCH]:0xb5533a,[TILE]:0xb5533a,[SLATE]:0xb5533a,[0x8e8a80]:0xcfc8b8,[0x7d7468]:0xcfc8b8,[0x7a5a3a]:0xcfc8b8,[0x6a5d4c]:0xcfc8b8,[STONE]:0xe6e0d0,[0xb8a888]:0xcfc8b8};
 const MUDMAP={[PLASTER]:0xc9a26a,[0xb8b0a0]:0xc9a26a,[0xb8b2a2]:0xc9a26a,[0x8a6a44]:0xc9a26a,[0x6b4a2c]:0xb8935e,[THATCH]:0xa8895a,[TILE]:0xa8895a,[SLATE]:0xa8895a,[0x8e8a80]:0xb09a72,[0x7d7468]:0xb09a72,[0x7a5a3a]:0xb09a72,[0x6a5d4c]:0xb09a72,[STONE]:0xc9a26a,[0xb8a888]:0xb09a72};
 const STONEMAP={[0x7a5a3a]:0x8e8a80,[0x8a6a44]:0xb3aa98,[0x8b4a32]:0xa39b8c,[THATCH]:TILE,[0x6b4a2c]:TILE,[0x5b3a26]:SLATE,[PLASTER]:0xd6ccb6,[0x8e8a80]:0x9c968a,[0x7d7468]:0x9c968a,[0xb8a888]:0xc2b8a2};
 const IMPMAP=Object.assign({},STONEMAP,{[THATCH]:SLATE,[TILE]:SLATE,[0x6b4a2c]:SLATE,[PLASTER]:0xe0d8c4,[0xb8b0a0]:0xd0c8b4,[0xb8b2a2]:0xd0c8b4,[0x8a6a44]:0xc9c0aa});
-function ageDress(g,type,team,st){const map=st===-1?MUDMAP:st<=0?WOODMAP:st===2?STONEMAP:st===3?IMPMAP:null;
+function ageDress(g,type,team,st){const map=st===-1?MUDMAP:st===-5?CLASSMAP:st<=0?WOODMAP:st===2?STONEMAP:st===3?IMPMAP:null;
   if(map&&!(st<0&&(type==='tc'||type==='house'||type==='barracks'||type==='mill'))&&(st<0||(type!=='tc'&&type!=='house'&&type!=='barracks')))g.traverse(o=>{if(!o.isMesh||Array.isArray(o.material)||!o.material.userData)return;const h=o.material.userData.hex;if(h!=null&&map[h]!=null)o.material=M(map[h],o.material.userData.o)});
   if(st===3){const bb=new T.Box3().setFromObject(g),y0=.15;for(const sx of[-1,1]){const x=sx>0?bb.max.x-.12:bb.min.x+.12,z=bb.max.z-.12;cy(g,0x5a4632,.035,1.6,x,y0+.8,z);cn(g,0xd6ad5a,.06,.14,x,y0+1.65,z,METAL);
       const p=new T.Group();p.name='flag';p.position.set(x,y0+1.32,z);const b2=new T.Mesh(G.box,embMat(team));b2.castShadow=true;b2.scale.set(.5,.36,.03);b2.position.x=sx*-.26;p.add(b2);g.add(p)}}
@@ -1409,10 +1465,11 @@ function computeDef(team,type){
   if(c==='inf'){d.arm[0]+=H('scale')+H('chain')+H('plate');d.arm[1]+=H('scale')+H('chain')+2*H('plate')}
   if(c==='cav'){d.arm[0]+=H('barding')+H('chainb')+H('plateb');d.arm[1]+=H('barding')+H('chainb')+2*H('plateb');if(H('bloodlines'))d.hp+=20}
   if(type==='villager'){if(H('loom')){d.hp+=15;d.arm=[1,2]}if(H('wheel')){d.speed*=1.1;d.cap+=3}if(H('cart')){d.speed*=1.1;d.cap+=5}if(H('spears'))d.atk+=1}
-  if(c==='inf'){const n=H('hides')+H('bronzearm');d.arm[0]+=n;d.arm[1]+=n}
-  if(type==='slinger'&&H('slingstones'))d.atk+=1;
+  if(c==='inf'){const n=H('hides')+H('bronzearm')+H('ironarm');d.arm[0]+=n;d.arm[1]+=n}
+  if(type==='slinger')d.atk+=H('slingstones')+H('ironheads');
+  if(H('medicine')&&isMil(d)&&c!=='siege'&&!d.naval)d.regen=(d.regen||0)+.3;
   if(type==='villager'&&H('thewheel')){d.speed*=1.1;d.cap+=2}
-  if(type==='barbarian'&&ANCIENT){const lv=clamp(WAGE,0,MED);d.hp=[30,38,46,55][lv];d.atk=[3,4,6,7][lv]}
+  if(type==='barbarian'&&ANCIENT){const lv=clamp(WAGE,0,MED);d.hp=[30,38,46,52,56,55][lv];d.atk=[3,4,6,7,7,7][lv]}
   if(type==='monk'){if(H('sanctity'))d.hp+=15;if(H('fervor'))d.speed*=1.15}
   if(type==='envoy'&&H('heraldry'))d.speed*=1.25;
   if(type==='tradecart'&&H('caravan'))d.speed*=1.5;
@@ -1431,9 +1488,9 @@ function getDef(team,type){return DEFC[team][type]||(DEFC[team][type]=computeDef
 function gatherRate(team,rt,farm,hunt,fish){
   const H=k=>has(team,k),civ=CIVKEY[team];let m=farm?BASERATE.farm:hunt?BASERATE.hunt:fish?BASERATE.fish:BASERATE[rt];if(fish){if(H('gillnets'))m*=1.25;if(MERRY[team])m*=1.1;if(team!==0)m*=DIFF[diffKey].mul;return m}
   if(hunt&&H('spears'))m*=1.25;if(hunt&&H('domestic'))m*=1.15;
-  if(farm){if(H('irrigation'))m*=1.15;if(H('oxplough'))m*=1.15}if((farm||(rt==='food'&&!hunt))&&H('storage'))m*=1.1;
-  if(rt==='wood'){if(H('flintaxe'))m*=1.15;if(H('coppertools'))m*=1.1}
-  if(MINERALS.includes(rt)){if(H('coppertools'))m*=1.1;if(H('bronzetools'))m*=1.15;if(H('flintpick')&&(rt==='stone'||rt==='flint'||rt==='clay'))m*=1.15}
+  if(farm){if(H('irrigation'))m*=1.15;if(H('oxplough'))m*=1.15;if(H('ironplough'))m*=1.1;if(H('croprot'))m*=1.1}if((farm||(rt==='food'&&!hunt))&&H('storage'))m*=1.1;
+  if(rt==='wood'){if(H('flintaxe'))m*=1.15;if(H('coppertools'))m*=1.1;if(H('irontools'))m*=1.1}if(rt==='gold'&&H('coinage'))m*=1.15;
+  if(MINERALS.includes(rt)){if(H('irontools'))m*=1.1;if(H('coppertools'))m*=1.1;if(H('bronzetools'))m*=1.15;if(H('flintpick')&&(rt==='stone'||rt==='flint'||rt==='clay'))m*=1.15}
   if(farm){if(H('collar'))m*=1.15;if(H('plow'))m*=1.15;if(H('rotation'))m*=1.15;if(civ==='english')m*=1.15}
   else if(rt==='wood'){if(H('sledge'))m*=1.1;if(H('axe'))m*=1.2;if(H('bowsaw'))m*=1.2;if(H('twoman'))m*=1.1}
   else if(rt==='gold'){if(H('picks'))m*=1.1;if(H('goldm'))m*=1.15;if(H('shaft'))m*=1.15;if(civ==='welsh')m*=1.1}
@@ -1444,13 +1501,13 @@ function gatherRate(team,rt,farm,hunt,fish){
 }
 function bStats(team,type){
   const d=BUILD[type],H=k=>has(team,k),civ=CIVKEY[team];let hp=d.hp,arm=d.arm.slice(),name=d.name;
-  if(d.aname&&team<NP&&age[team]<MED)name=d.aname;if(H('bricks'))hp*=1.15;
+  if(d.aname&&team<NP&&age[team]<MED)name=d.aname;if(H('bricks'))hp*=1.15;if(H('ramparts'))hp*=1.1;
   if(H('masonry')){hp*=1.1;arm[0]++;arm[1]++}if(H('architecture')){hp*=1.1;arm[0]++;arm[1]++}
   if(civ==='picts'&&H('stones'))hp*=1.15;
   if(type==='tower'){if(H('gtower')){hp*=1.5;name='Guard Tower'}if(H('keep')){hp*=1.5;name='Keep'}}
   if(civ==='welsh'&&(type==='tower'||type==='castle'))hp*=1.25;
   const recq=civ==='spanish'&&H('reconquista')&&(type==='tower'||type==='castle'||type==='tc');
-  let shoot=null;if(d.shoot){shoot=Object.assign({},d.shoot);const n=H('fletching')+H('bodkin')+H('bracer');shoot.atk+=n;shoot.range+=n;
+  let shoot=null;if(d.shoot){shoot=Object.assign({},d.shoot);if(d.anc&&H('engineering'))shoot.range+=1;const n=H('fletching')+H('bodkin')+H('bracer');shoot.atk+=n;shoot.range+=n;
     if(type==='tower'){shoot.atk+=3*H('gtower')+3*H('keep');shoot.range+=H('keep');if(civ==='english'&&H('yeomen'))shoot.atk+=2}if(recq){shoot.n+=1;shoot.atk+=2}}
   return{hp:Math.round(hp),arm,name,shoot};
 }
@@ -1470,8 +1527,24 @@ function techReady(team,id){return techShown(team,id)&&age[team]>=TECHS[id].age}
 function ageReq(team){const a=age[team]+1;if(a>AGEMAX||!AGEREQ[a])return null;const q=AGEREQ[a];const have=new Set();for(const b of blds)if(!b.dead&&b.built&&b.team===team)have.add(b.type);
   const nb=q.bld.filter(t=>have.has(t)).length;let nt=0;for(const id of TECH[team]){const t=TECHS[id];if(t&&!t.ageUp&&t.age===q.tech)nt++}
   return{nb,nt,needB:q.nb,needT:q.nt,tech:q.tech,list:q.bld,ok:nb>=q.nb&&nt>=q.nt}}
-function reqHTML(team){const q=ageReq(team);if(!q)return'';const b=(ok,s)=>'<b class="'+(ok?'ok':'no')+'">'+s+'</b>';
-  return'<div class="reqs">To reach the '+AGES[age[team]+1]+': '+b(q.nb>=q.needB,q.nb+'/'+q.needB)+' of '+q.list.map(k=>BUILD[k].name).join(', ')+' · '+b(q.nt>=q.needT,q.nt+'/'+q.needT)+' '+AGES[q.tech]+' techs</div>'}
+function ageNeed(team){const q=ageReq(team);if(!q)return null;const have=new Set();for(const b of blds)if(!b.dead&&b.built&&b.team===team)have.add(b.type);
+  const bl=q.list.filter(k=>!bldHidden(team,k)||have.has(k)).map(k=>({k,name:bName(team,k),ok:have.has(k)}));const tl=[];
+  for(const id in TECHS){const t=TECHS[id];if(t.ageUp||t.age!==q.tech||!t.at||!techShown(team,id))continue;tl.push({id,name:techName(team,id),at:bName(team,t.at),has:have.has(t.at)})}
+  tl.sort((a,b)=>(b.has?1:0)-(a.has?1:0));const tech=AGETECHS.find(a=>TECHS[a].ageUp===age[team]+1),cost=tech?TECHS[tech].cost:{};
+  return{q,bl,tl,cost,name:AGES[age[team]+1]}}
+function ageNeedText(team){const n=ageNeed(team);if(!n)return'';const q=n.q,p=[];
+  if(q.nb<q.needB)p.push('build '+(q.needB-q.nb)+' more of: '+n.bl.filter(b=>!b.ok).map(b=>b.name).join(', '));
+  if(q.nt<q.needT)p.push('research '+(q.needT-q.nt)+' more '+AGES[q.tech]+' tech'+(q.needT-q.nt>1?'s':'')+(n.tl.length?' ('+n.tl.slice(0,4).map(t=>t.name+' at the '+t.at).join(', ')+')':''));
+  const ms=Object.keys(n.cost).filter(k=>res[team][k]<n.cost[k]).map(k=>n.cost[k]+' '+RESNAME[k].toLowerCase()+' (you have '+Math.floor(res[team][k])+')');if(ms.length)p.push('gather '+ms.join(', '));
+  return p.length?'For the '+n.name+': '+p.join('; ')+'.':''}
+function reqHTML(team){const n=ageNeed(team);
+  if(!n){if(age[team]<ERAS.length-1&&age[team]>=AGEMAX)return'<div class="reqs agereq"><b class="hd">The '+AGES[age[team]]+' is the final age for this game</b><div>That was chosen as “Final age” on the setup screen. Press <b>Lift age limit</b> below to carry on to later ages in this game.</div></div>';return''}
+  const q=n.q,tick=ok=>'<b class="'+(ok?'ok':'no')+'">'+(ok?'✓':'✗')+'</b> ';
+  let h='<div class="reqs agereq"><b class="hd">To reach the '+n.name+'</b>';
+  h+='<div>'+tick(q.nb>=q.needB)+'Buildings '+q.nb+'/'+q.needB+': '+n.bl.map(b=>'<span class="'+(b.ok?'ok':'')+'">'+b.name+(b.ok?' ✓':'')+'</span>').join(', ')+'</div>';
+  h+='<div>'+tick(q.nt>=q.needT)+AGES[q.tech]+' techs '+q.nt+'/'+q.needT+(q.nt<q.needT&&n.tl.length?': '+n.tl.slice(0,5).map(t=>t.name+' <i>('+t.at+')</i>').join(', '):'')+'</div>';
+  const ck=Object.keys(n.cost);if(ck.length)h+='<div>'+tick(ck.every(k=>res[team][k]>=n.cost[k]))+'Cost: '+ck.map(k=>{const ok=res[team][k]>=n.cost[k];return'<span class="'+(ok?'ok':'')+'">'+n.cost[k]+' <i class="ico '+k+'"></i>'+RESNAME[k].toLowerCase()+(ok?'':' (have '+Math.floor(res[team][k])+')')+'</span>'}).join(', ')+'</div>';
+  return h+'<div>Then press <b>'+n.name+'</b> below.</div></div>'}
 function recompute(team){
   DEFC[team]={};
   for(const u of units){if(u.dead||u.team!==team)continue;const nd=getDef(team,u.type);if(nd.hp>u.maxhp)u.hp+=nd.hp-u.maxhp;u.maxhp=nd.hp;u.hp=Math.min(u.hp,u.maxhp);u.def=nd}
@@ -1483,7 +1556,7 @@ function applyTech(team,id){
     if(CIVKEY[team]==='vikings'){if(age[team]>=MED+1)TECH[team].add('wheel');if(age[team]>=MED+2)TECH[team].add('cart')}
     if(team<NP){const w=Math.max(...age.slice(0,NP));if(w!==WAGE){WAGE=w;for(let t=NP;t<NT;t++){DEFC[t]={};recompute(t)}}}
     restyle(team);
-    if(team===0){notify('Your people have advanced to the '+AGES[age[team]]+'!');const tip={1:'New: Smelting Furnace (Industry menu) and Lookout Post. Mine copper ore to smelt copper.',2:'New: Chariot Works. Mine tin, then switch a furnace to bronze. Research The Wheel and Writing at the Town Center.',[MED]:'The medieval world begins. Your warriors take up iron: clubmen become militia. Gold matters now.',[MED+1]:'New in the Industry menu: Charcoal Kiln and Smelter. Mine iron ore to make iron.'}[age[0]];if(tip&&(ANCIENT||age[0]>MED))setTimeout(()=>notify(tip),3800);if(age[0]===MED+2)setTimeout(()=>notify('New: Hemp Fields, Ropewalk, Weaver, Vineyard and Winepress. Wine ration is on the Town Center.'),3800)}else if(seenP(team))notify('The '+CIVS[CIVKEY[team]].name+' ('+PNAME[team]+') have advanced to the '+AGES[age[team]]+'.',foe(team,0));
+    if(team===0){notify('Your people have advanced to the '+AGES[age[team]]+'!');const tip={1:'New: Smelting Furnace (Industry menu) and Lookout Post. Mine copper ore to smelt copper.',2:'New: Chariot Works. Mine tin, then switch a furnace to bronze. Research The Wheel and Writing at the Town Center.',3:'New: Bloomery (Industry menu) and Hill Fort. Mine iron ore for iron bars. Research Horse Riding at the Chariot Works.',4:'New: Temple, Forum, and the Siege Yard. Research The Legion and Phalanx at the War Camp, Engineering for ballistas.',[MED]:'The old world falls and the medieval one begins: your swordsmen become militia. Gold matters now.',[MED+1]:'New in the Industry menu: Charcoal Kiln and Smelter. Mine iron ore to make iron.'}[age[0]];if(tip&&(ANCIENT||age[0]>MED))setTimeout(()=>notify(tip),3800);if(age[0]===MED+2)setTimeout(()=>notify('New: Hemp Fields, Ropewalk, Weaver, Vineyard and Winepress. Wine ration is on the Town Center.'),3800)}else if(seenP(team))notify('The '+CIVS[CIVKEY[team]].name+' ('+PNAME[team]+') have advanced to the '+AGES[age[team]]+'.',foe(team,0));
   }else if(team===0)notify(techName(0,id)+' researched.');
   morphAll(team);recompute(team);renderPanel(true);
 }
@@ -1703,7 +1776,7 @@ function oriBoost(u){if(CIVKEY[u.team]!=='french'||!has(u.team,'oriflamme')||!is
 function calcDmg(tg,atk,ranged,melee,bonus){let a=atk;
   if(bonus){if(tg.kind==='unit'){if(tg.def.cls==='cav')a+=bonus.cav||0;if(tg.def.cls==='arch')a+=bonus.arch||0;if(tg.def.cls==='inf')a+=bonus.inf||0;if(tg.def.spear)a+=bonus.spear||0;if(tg.def.naval)a+=bonus.ship||0}else if(tg.kind==='bld')a+=bonus.bld||0}
   const ai=ranged&&!melee?1:0;const armor=tg.kind==='bld'?tg.arm[ai]:tg.def.arm[ai];return Math.max(1,a-armor)}
-const PROJ={pebble:[G.dod,M(0x8a8680),.12],arrow:[G.arrow,M(0x3a2a1a),1],jav:[G.jav,M(0x7a5a3a),1],stone:[G.dod,M(0x7a7670),.35],boulder:[G.dod,M(0x6a6660),.6]};
+const PROJ={bolt:[G.jav,M(0x4a3a2a),1.35],pebble:[G.dod,M(0x8a8680),.12],arrow:[G.arrow,M(0x3a2a1a),1],jav:[G.jav,M(0x7a5a3a),1],stone:[G.dod,M(0x7a7670),.35],boulder:[G.dod,M(0x6a6660),.6]};
 function shoot(src,sx,sy,sz,tg,dmg,kind,splash){sfxAt(kind==='stone'||kind==='boulder'?'catapult':kind==='jav'||kind==='pebble'?'jav':'bow',sx,sz,src.kind==='bld'?.8:1);const p=PROJ[kind||'arrow'];const m=new T.Mesh(p[0],p[1]);if(p[2]!==1)m.scale.setScalar(p[2]);m.castShadow=true;world.add(m);
   const d=Math.hypot(tg.x-sx,tg.z-sz),slow=kind==='stone'||kind==='boulder';
   projs.push({m,src,sx,sy,sz,tx:tg.x,tz:tg.z,ty:uY(tg)+1,tg,dmg,t:0,dur:Math.max(.25,d/(slow?13:20)),arc:Math.min(slow?5:2.2,d*(slow?.3:.12)),splash,spin:slow,team:src.team})}
@@ -1941,7 +2014,7 @@ const GOODLOT={cloth:10,rope:10,wine:10,iron:10,pottery:10,copper:10,bronze:10};
 /* ================= BUILDINGS ================= */
 function popUsed(team){let n=0;for(const u of units)if(!u.dead&&u.team===team)n++;return n}
 function popCap(team){let n=0;for(const b of blds)if(!b.dead&&b.built&&b.team===team&&b.def.pop)n+=b.def.pop;return Math.min(200,n)}
-function qTime(team,q){if(q.tech)return TECHS[q.tech].time*(has(team,'writing')&&!TECHS[q.tech].ageUp?.75:1);const u=UNITS[q.type];return u.time*(has(team,'conscription')&&u.cls!=='vil'?.67:1)}
+function qTime(team,q){if(q.tech)return TECHS[q.tech].time*(has(team,'writing')&&!TECHS[q.tech].ageUp?.75:1)*(has(team,'philosophy')&&!TECHS[q.tech].ageUp?.85:1);const u=UNITS[q.type];return u.time*(has(team,'conscription')&&u.cls!=='vil'?.67:1)}
 function updBld(b,dt){
   if(!b.built){b.mesh.scale.y=.08+.92*b.progress;return}
   if(b.type==='pen'){b.penT=(b.penT==null?25:b.penT)-dt;if(b.penT<=0){b.penT=70;let n=0;for(const r of ress)if(r.animal==='sheep'&&!r.dead&&r.pen===b.id)n++;if(n<3){const a=R()*TAU,sh=spawnAnimal('sheep',b.x+Math.cos(a)*2.4,b.z+Math.sin(a)*2.4);if(sh){sh.pen=b.id;sh.home={x:b.x,z:b.z}}}}}
@@ -1972,9 +2045,9 @@ function train(b,type,team){team=team||0;const c=UNITS[type].cost;
 function research(b,id,team){team=team||0;const t=TECHS[id];
   if(!techShown(team,id))return false;
   if(age[team]<t.age){if(team===0)notify('Requires the '+AGES[t.age]+'.',true);return false}
-  if(t.ageUp){const q=ageReq(team);if(!q.ok){if(team===0)notify('To reach the '+AGES[t.ageUp]+' you need '+q.needB+' of: '+q.list.map(k=>BUILD[k].name).join(', ')+' ('+q.nb+' built), and '+q.needT+' '+AGES[q.tech]+' techs ('+q.nt+' done).',true);return false}}
+  if(t.ageUp){const q=ageReq(team);if(!q.ok){if(team===0)notify(ageNeedText(team),true);return false}}
   if(b.queue.length>=5){if(team===0)notify('Queue is full.');return false}
-  if(!canAfford(team,t.cost)){if(team===0)notify('Not enough '+missing(team,t.cost)+'.',true);return false}
+  if(!canAfford(team,t.cost)){if(team===0)notify(t.ageUp?ageNeedText(team):'Not enough '+missing(team,t.cost)+'.',true);return false}
   pay(team,t.cost);PEND[team].add(id);b.queue.push({tech:id,t:0});if(team===0)renderPanel(true);return true}
 
 /* ================= AI ================= */
@@ -2057,7 +2130,9 @@ function aiTick(p,dt){const AI=AIS[p];
   if(ANCIENT&&A<MED){if(cnt('mill')<1)want.push('mill');if(vils.length>=6&&cnt('potter')<1)want.push('potter');if(vils.length>=7&&cnt('mining')<1)want.push('mining');if(vils.length>=7&&cnt('lumber')<1)want.push('lumber');
     if(vils.length>=8&&cnt('barracks')<1)want.push('barracks');if(has(p,'domestic')&&cnt('pen')<1)want.push('pen');
     if(A>=1){if(cnt('cfurnace')<1)want.push('cfurnace');if(cnt('lookout')<D.towers)want.push('lookout');if(has(p,'domestic')&&cnt('pen')<2)want.push('pen')}
-    if(A>=2){if(cnt('chariotry')<1&&r.bronze>=5)want.push('chariotry');if(cnt('cfurnace')<2)want.push('cfurnace')}}
+    if(A>=2){if(cnt('chariotry')<1&&r.bronze>=5)want.push('chariotry');if(cnt('cfurnace')<2)want.push('cfurnace')}
+    if(A>=3){if(cnt('bloom')<1)want.push('bloom');if(cnt('hillfort')<1&&r.stone>=220)want.push('hillfort');if(vils.length>=20&&cnt('bloom')<2)want.push('bloom')}
+    if(A>=4){if(cnt('market')<1)want.push('market');if(cnt('temple')<1)want.push('temple');if(cnt('engyard')<1&&r.iron>=5)want.push('engyard')}}
   if(vils.length>=8&&cnt('barracks')<1)want.push('barracks');
   if(vils.length>=10&&cnt('mill')<1)want.push('mill');if(vils.length>=12&&cnt('mining')<1)want.push('mining');
   if(ag>=1){if(cnt('blacksmith')<1)want.push('blacksmith');if(cnt('range')<1)want.push('range');if(cnt('stable')<1)want.push('stable');if(cnt('tower')<D.towers)want.push('tower');if(vils.length>=18&&cnt('market')<1)want.push('market');if(DIPLO&&vils.length>=16&&cnt('embassy')<1)want.push('embassy');if(cnt('blacksmith')>0&&vils.length>=16){if(cnt('kiln')<1)want.push('kiln');if(cnt('smelter')<1)want.push('smelter')}}
@@ -2067,14 +2142,14 @@ function aiTick(p,dt){const AI=AIS[p];
   for(const t of want){if(mb.some(b=>b.type===t&&!b.built))break;if(afford(bCost(p,t))){aiBuildNear(p,t,home,t==='tower'?8:7,t==='tower'?13:17,t==='castle'?3:2,vils);break}}
   aiEconomy(p,vils,home,A,mb,afford);
   const ut=CIVS[CIVKEY[p]].ut;
-  const prio=['agriculture','flintaxe','flintpick','domestic','storage','slingstones','coppaxe','bowmaking','coppertools','irrigation','hides','bricks','thewheel','bronzesw','compbow','bronzetools','oxplough','bronzearm','writing','loom','spears','sledge','picks','wheel','axe','collar','goldm','forging','fletching','maa','scale','bloodlines','padded','barding','stonem','bowsaw','plow','shaft','cart','xbow','pike',ut,'lsw','iron','bodkin','chain','leather','chainb','lcav','masonry','gtower','elite','twoman','rotation','quarry','furnace','bracer','plate','ring','plateb','arb','champ','cavalier','cram','onager','conscription','keep','architecture','sanctity','fervor','guilds','caravan','illumination','bellows','cooper','gillnets','careening','galleon','heraldry','courtly','forestry'];
+  const prio=['agriculture','flintaxe','flintpick','domestic','storage','slingstones','coppaxe','bowmaking','coppertools','irrigation','hides','bricks','thewheel','bronzesw','compbow','bronzetools','oxplough','bronzearm','writing','ironsw','irontools','ironplough','riding','ironheads','ironarm','ramparts','legion','phalanx','croprot','engineering','coinage','philosophy','medicine','loom','spears','sledge','picks','wheel','axe','collar','goldm','forging','fletching','maa','scale','bloodlines','padded','barding','stonem','bowsaw','plow','shaft','cart','xbow','pike',ut,'lsw','iron','bodkin','chain','leather','chainb','lcav','masonry','gtower','elite','twoman','rotation','quarry','furnace','bracer','plate','ring','plateb','arb','champ','cavalier','cram','onager','conscription','keep','architecture','sanctity','fervor','guilds','caravan','illumination','bellows','cooper','gillnets','careening','galleon','heraldry','courtly','forestry'];
   let done=0;for(const id of prio){if(done>=2)break;if(!techReady(p,id))continue;const at=mb.find(b=>b.built&&b.type===TECHS[id].at&&b.queue.length===0);if(!at)continue;
     if(afford(TECHS[id].cost)&&research(at,id,p))done++}
   AI.mktT=(AI.mktT||0)-D.think;if(AI.mktT<=0&&mb.some(b=>b.type==='market'&&b.built)){AI.mktT=8;
-    for(const k of['food','wood','stone'])if(r[k]>1100)marketSell(p,k);for(const k of['wine','rope','cloth'])if(r[k]>(k==='cloth'?60:40))marketSell(p,k);const low=['food','wood'].find(k=>r[k]<120);if(low&&r.gold>500)marketBuy(p,low);if(ag>=2&&r.gold>1000&&r.stone<650&&!mb.some(b=>b.type==='castle'))marketBuy(p,'stone')}
+    for(const k of['food','wood','stone'])if(r[k]>1100+(next?(TECHS[next].cost[k]||0):0)&&(A>=MED||r.gold<600))marketSell(p,k);for(const k of['wine','rope','cloth'])if(r[k]>(k==='cloth'?60:40))marketSell(p,k);const low=['food','wood'].find(k=>r[k]<120);if(low&&r.gold>500)marketBuy(p,low);if(ag>=2&&r.gold>1000&&r.stone<650&&!mb.some(b=>b.type==='castle'))marketBuy(p,'stone')}
   const bsm=mb.find(b=>b.type==='blacksmith'&&b.built);if(bsm){bsm.off=false;if(r.arms<6)bsm.mode='arms';else if(r.tools<12)bsm.mode='tools';else if(r.arms<20&&r.iron>(ag>=2?60:10))bsm.mode='arms';else bsm.off=true}
-  {const fs=mb.filter(b=>b.type==='cfurnace'&&b.built);fs.forEach((f,i)=>{const wantB=A>=2&&r.tin>=1&&r.copper>=2&&r.bronze<(A>=MED?20:130)&&(i===0||r.copper>30);f.mode=wantB?'bronze':'copper';f.off=!wantB&&r.copper>(A>=MED?10:95)})}
-  for(const b of mb){if(b.type==='potter')b.off=r.pottery>(A>=MED?20:75);if(b.type==='kiln')b.off=r.charcoal>40;if(b.type==='weaver')b.off=r.cloth>60;if(b.type==='ropewalk')b.off=r.rope>50}
+  {const fs=mb.filter(b=>b.type==='cfurnace'&&b.built);fs.forEach((f,i)=>{const wantB=A>=2&&r.tin>=1&&r.copper>=2&&r.bronze<(A>=3?25:130)&&(i===0||r.copper>30);f.mode=wantB?'bronze':'copper';f.off=!wantB&&r.copper>(A>=3?25:95)})}
+  for(const b of mb){if(b.type==='potter')b.off=r.pottery>(A>=MED?20:85);if(b.type==='bloom')b.off=r.iron>(A>=MED?60:150);if(b.type==='kiln')b.off=r.charcoal>40;if(b.type==='weaver')b.off=r.cloth>60;if(b.type==='ropewalk')b.off=r.rope>50}
   RATION[p]=r.wine>=Math.ceil(my.length/10)*2;
   const techNeed=rq&&rq.nt<rq.needT&&vils.length>=ageVil(D,A)-4;
   if(!techNeed||army.length<4+ag*3)aiMilitary(p,army,mb,afford,ag,D);
@@ -2091,10 +2166,10 @@ function aiBuildNear(p,type,home,rmin,rmax,n,vils,at){
   if(b.def.trains)b.rally=AIS[p].rally;return b}
 function aiEconomy(p,vils,home,ag,mb,afford){const AI=AIS[p];
   const types=['food','wood','gold','stone','ore','flint','clay','cuore','tin'];
-  const FRM=[[.55,.45,0,0,0],[.43,.34,.14,.04,.05],[.37,.27,.21,.08,.07],[.35,.25,.25,.08,.07]],FRA=[[.5,.28,0,.04,0,.09,.09,0,0],[.44,.26,0,.05,0,.03,.07,.15,0],[.42,.25,0,.05,0,0,.06,.12,.1]];
+  const FRM=[[.55,.45,0,0,0],[.43,.34,.14,.04,.05],[.37,.27,.21,.08,.07],[.35,.25,.25,.08,.07]],FRA=[[.5,.28,0,.04,0,.09,.09,0,0],[.44,.26,0,.05,0,.03,.07,.15,0],[.42,.25,0,.05,0,0,.06,.12,.1],[.42,.26,0,.08,.13,0,.05,.03,.03],[.4,.25,.06,.08,.13,0,.05,.02,.01]];
   const frac=(ag<MED?FRA[ag]:FRM[Math.min(ag-MED,3)]).slice();while(frac.length<types.length)frac.push(0);
   if(ANCIENT&&ag===MED){frac[0]=.5;frac[1]=.4;frac[2]=.1}
-  if(ag<MED){const R0=res[p];if(R0.flint>120)frac[5]=0;if(R0.clay>90||!mb.some(b=>b.type==='potter'))frac[6]*=R0.clay>90?0:.5;if(R0.cuore>100)frac[7]=0;if(R0.tin>60)frac[8]=0;if(ag>=1&&!mb.some(b=>b.type==='cfurnace'))frac[7]*=.4}
+  if(ag<MED){const R0=res[p];if(R0.flint>120)frac[5]=0;if(R0.clay>90||!mb.some(b=>b.type==='potter'))frac[6]*=R0.clay>90?0:.5;if(R0.cuore>100)frac[7]=0;if(R0.tin>60)frac[8]=0;if(ag>=1&&!mb.some(b=>b.type==='cfurnace'))frac[7]*=.4;if(R0.ore>110)frac[4]=0;else if(!mb.some(b=>b.type==='bloom'))frac[4]*=.4}
   const cnt={};for(const ty of types)cnt[ty]=0;
   for(const v of vils){const t=v.task;let ty=null;if(t.t==='gather')ty=t.rtype;else if(t.t==='return')ty=v.carry;if(ty)cnt[ty]++}
   AI.rebalT-=1;if(AI.rebalT<=0){AI.rebalT=15;
@@ -2131,6 +2206,7 @@ function aiMilitary(p,army,mb,afford,ag,D){
       if(t==='monk'){s=(mine.monk||0)<2?1.6:-9;if(s>bs){bs=s;best=t}continue}
       if((t==='spearman'||t==='bspear')&&pc.cav>=3)s+=2.5;if(u.cls==='inf'&&!u.spear&&u.anc&&(pc.arch>=4||playerFort))s+=1.3;if(u.anc&&(mine[t]||0)>army.length*.55)s-=1.4;if(t==='bspear'&&pc.cav<2)s-=.6;if((u.cls==='cav'||t==='kern')&&pc.arch>=4)s+=2;if(u.cls==='arch'&&pc.inf>=4)s+=1.5;if(u.uniq)s+=1.8;
       if(t==='scout'&&ag>=2)s-=1.5;
+      if(t==='ballista')s=(mine.ballista||0)<2?1.3:-9;
       if(t==='ram')s=(mine.ram||0)<(playerFort?3:1)?2.5:-9;
       if(t==='mangonel')s=(mine.mangonel||0)<2&&pc.arch+pc.inf>=8?1.5:-9;
       if(t==='trebuchet')s=(mine.trebuchet||0)<1&&playerFort?2:-9;
@@ -2747,7 +2823,7 @@ function notify(msg,alert){toastEl.textContent=msg;toastEl.className='show'+(ale
 function notifyOnce(key,msg){if(onceSeen.has(key))return;onceSeen.add(key);notify(msg)}
 const costHTML=c=>Object.entries(c).map(([k,v])=>'<span>'+v+'<i class="ico '+k+'"></i></span>').join('');
 let lastSig='';
-function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+buildPage+age[0]+TECH[0].size+PEND[0].size}
+function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+buildPage+age[0]+TECH[0].size+PEND[0].size+AGEMAX+(sel.length===1&&sel[0].type==='tc'&&sel[0].team===0?'t'+Math.floor(gameT/3):'')}
 const TASKLBL=u=>{const t=u.task;switch(t.t){case'idle':return'Idle';case'move':return'Moving';case'amove':return'Attack-moving';case'attack':return u.type==='monk'?'Converting':'Fighting';case'garrison':return'Taking shelter';case'heal':return'Healing';case'trade':return'Trading';case'board':return'Boarding';case'envoy':return'On a diplomatic visit';case'unload':return'Sailing to unload';case'inside':return'Aboard';
   case'build':return(t.target&&t.target.built?'Repairing ':'Building ')+(t.target?t.target.name:'');case'return':return'Carrying '+(u.carry||'')+' home';
   case'gather':{const r=t.target;if(r&&r.kind==='bld')return({food:'Farming',hemp:'Harvesting hemp',grapes:'Tending vines'})[r.def.crop];if(r&&r.animal)return r.hp>0?'Hunting':'Butchering';if(r&&r.fish)return'Fishing';return({flint:'Knapping flint',clay:'Digging clay',cuore:'Mining copper ore',tin:'Mining tin',wood:'Chopping wood',food:'Foraging berries',ore:'Mining iron ore',gold:'Mining gold',stone:'Mining stone'})[t.rtype]||'Gathering'}}return''};
@@ -2772,7 +2848,7 @@ function renderPanel(force){
     info='<div class="i-name">'+sel.length+' selected</div><div class="i-sub">'+Object.entries(counts).map(([n,c])=>c+' × '+n).join(' · ')+'</div><div class="multi">'+
       sel.slice(0,60).map(e=>'<div class="mt" data-id="'+e.id+'" title="'+(e.kind==='unit'?e.def.name:e.name)+'">'+(e.def?(e.def.l||''):'')+'<i style="width:'+Math.round(100*e.hp/e.maxhp)+'%"></i></div>').join('')+'</div>'}
   let ki=0;const nextKey=()=>KEYS[ki++]||'';
-  const btn=(cls,cmd,name,cost,title,lock,on,key)=>'<button class="cmd '+cls+(lock?' lock':'')+(on?' on':'')+'" data-cmd="'+cmd+'" data-key="'+(key||'')+'" '+(cost&&!lock?'data-cost=\''+JSON.stringify(cost)+'\' ':'')+(lock?'data-lock="'+lock+'" ':'')+'title="'+title.replace(/"/g,'&quot;')+'"><span class="k">'+(key||'').toUpperCase()+'</span><span class="n">'+name+'</span><span class="c">'+(cost&&!lock?costHTML(cost):'')+'</span></button>';
+  const btn=(cls,cmd,name,cost,title,lock,on,key)=>'<button class="cmd '+cls+(lock?' lock':'')+(on?' on':'')+'" data-cmd="'+cmd+'" data-key="'+(key||'')+'" '+(cost&&(!lock||cls==='age')?'data-cost=\''+JSON.stringify(cost)+'\' ':'')+(lock?'data-lock="'+lock+'" ':'')+'title="'+title.replace(/"/g,'&quot;')+'"><span class="k">'+(key||'').toUpperCase()+'</span><span class="n">'+name+'</span><span class="c">'+(cost&&(!lock||cls==='age')?costHTML(cost):'')+'</span></button>';
   if(own.length){
     if(own.some(u=>u.type==='villager')){const list=buildPage==='eco'?ECO_B:buildPage==='ind'?IND_B:MIL_B;
       for(const t of list){if(bldHidden(0,t))continue;const d=BUILD[t],nm=bName(0,t),lock=d.diplo&&!DIPLO?'Diplomacy games':age[0]<d.age?'Age '+AGEN[d.age]:d.needsTech&&ANCIENT&&!has(0,d.needsTech)?'Needs '+TECHS[d.needsTech].name:d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)?'Needs '+BUILD[d.needs].name:'';cmds+=btn('','build:'+t,nm,bCost(0,t),nm+': '+d.desc+(age[0]<d.age?' (requires '+AGES[d.age]+')':''),lock,placing&&placing.type===t,nextKey())}
@@ -2793,10 +2869,11 @@ function renderPanel(force){
       cmds+=btn('','sell:'+r,'Sell 100 '+RESNAME[r]+' · '+sg+'g',{[r]:100},'Sell 100 '+r+' for '+sg+' gold','','',nextKey())}
     for(const id in TECHS){const t=TECHS[id];if(t.at!==b.type||!techShown(0,id))continue;let lock=age[0]<t.age?'Age '+AGEN[t.age]:'';if(t.ageUp&&!lock){const q=ageReq(0);if(q&&!q.ok)lock='Not ready'}
       cmds+=btn(t.ageUp?'age':'tech','tech:'+id,techName(0,id),t.cost,techName(0,id)+': '+t.desc,lock,'',nextKey())}
+    if(b.type==='tc'&&age[0]>=AGEMAX&&age[0]<ERAS.length-1)cmds+=btn('age','unlimit','Lift age limit',null,'The '+AGES[age[0]]+' was set as the final age for this game. Lift the limit so every player can advance to the '+AGES[ERAS.length-1],'','',nextKey());
     if(b.def.recipes){const R2=b.def.recipes,keys2=Object.keys(R2);recipeOf(b);
       if(keys2.length>1)for(const k of keys2)cmds+=btn('tech','mode:'+k,'Make '+GNAME[k],null,'Switch to '+GNAME[k].toLowerCase()+': '+Object.entries(R2[k].in).map(([a,n])=>n+' '+RESNAME[a].toLowerCase()).join(' + '),(R2[k].age||0)>age[0]?'Age '+AGEN[R2[k].age]:'',b.mode===k,nextKey());
       cmds+=btn('','work',b.off?'Resume work':'Pause work',null,b.off?'Start production again':'Stop using materials','','',nextKey())}
-    if(b.type==='market')for(const r of(ANCIENT?['pottery','copper','bronze','iron','rope','cloth','wine']:['iron','rope','cloth','wine'])){const sg=sellGain(0,r);cmds+=btn('','sell:'+r,'Sell 10 '+RESNAME[r]+' · '+sg+'g',{[r]:10},'Sell 10 '+RESNAME[r].toLowerCase()+' for '+sg+' gold','','',nextKey())}
+    if(b.type==='market')for(const r of(ANCIENT&&age[0]<MED?['pottery','copper','bronze','iron']:ANCIENT?['pottery','copper','bronze','iron','rope','cloth','wine']:['iron','rope','cloth','wine'])){const sg=sellGain(0,r);cmds+=btn('','sell:'+r,'Sell 10 '+RESNAME[r]+' · '+sg+'g',{[r]:10},'Sell 10 '+RESNAME[r].toLowerCase()+' for '+sg+' gold','','',nextKey())}
     if(b.type==='tc'&&age[0]>=MED+2)cmds+=btn(RATION[0]?'age':'','ration','Wine ration: '+(RATION[0]?'On':'Off'),null,'Share wine with your people to make them merry','',RATION[0],nextKey());
     if(b.type==='tc'){cmds+=btn('','bell','Town Bell',null,'Send nearby villagers into shelter','','',nextKey());cmds+=btn('','clear','All Clear',null,'Villagers leave shelter and go back to work','','',nextKey())}
     if(b.def.gar&&b.gar.length)cmds+=btn('','ungar','Ungarrison ('+b.gar.length+')',null,'Release everyone inside','','',nextKey());
@@ -2826,6 +2903,7 @@ elCmds.addEventListener('click',e=>{const b=e.target.closest('.cmd');if(!b||stat
   else if(cmd==='mode'){const s=sel[0];if(s&&s.def.recipes[arg]&&(s.def.recipes[arg].age||0)<=age[0]){s.mode=arg;renderPanel(true)}}
   else if(cmd==='ration'){RATION[0]=!RATION[0];rationT[0]=0;notify(RATION[0]?'Wine ration on: 1 wine per 10 people every 20 seconds.':'Wine ration off.');renderPanel(true)}
   else if(cmd==='stop'){ownUnitsSel().forEach(setIdle)}
+  else if(cmd==='unlimit'){AGEMAX=ERAS.length-1;OPTS.endAge=AGEMAX;sfxUI('chime');notify('Age limit lifted: every player can now advance as far as the '+AGES[AGEMAX]+'.');lastSig='';renderPanel(true)}
   else if(cmd==='stance'){const ms=ownUnitsSel().filter(u=>isMil(u.def)&&u.type!=='monk'&&!u.def.naval);if(ms.length){const n=((ms[0].stance||0)+1)%3;ms.forEach(u=>{u.stance=n;if(u.task.t==='attack'&&u.task.org&&!n)u.task.org=null});
     notify(n===0?'Aggressive: they chase any enemy they see.':n===1?'Defensive: they fight enemies that come near, then return to their post.':'Hold Ground: they stay exactly where they are and fight only what is in reach.');renderPanel(true)}}
   else if(cmd==='form'){FORMK=(FORMK+1)%4;notify(FORMS[FORMK]+' formation: '+FORMTIP[FORMK]+'.');renderPanel(true)}
@@ -2841,14 +2919,14 @@ elInfo.addEventListener('click',e=>{if(e.target.closest('[data-desel]')){if(plac
   const m=e.target.closest('.mt');if(m){const u=sel.find(s=>s.id===+m.dataset.id);if(u)setSel([u],false)}});
 const goodsEl=$('#goods');
 function renderGoods(){if(goodsEl.hidden)return;const r=res[0];
-  const GL=!ANCIENT?GOODS.filter(k=>!ANCG.includes(k)):age[0]<MED?ANCG.concat(age[0]<1?[]:['gold']):GOODS;
+  const GL=!ANCIENT?GOODS.filter(k=>!ANCG.includes(k)):age[0]<MED?ANCG.concat(age[0]>=3?['ore','iron','gold']:age[0]>=1?['gold']:[]):GOODS;
   let h='<h4>Goods</h4><div class="ggrid">'+GL.map(k=>'<div><i class="ico '+k+'"></i>'+GNAME[k]+'<b>'+Math.floor(r[k])+'</b></div>').join('')+'</div>';
   const ws=blds.filter(b=>!b.dead&&b.team===0&&b.built&&b.def.recipes);
   h+='<h4>Workshops</h4><div class="wlist">'+(ws.length?ws.map(b=>'<div>'+b.name+(b.def.recipes&&Object.keys(b.def.recipes).length>1?' ('+GNAME[b.mode||'arms'].toLowerCase()+')':'')+': <span class="'+(b.wstat==='Working'?'on':'no')+'">'+(b.wstat||'Starting')+'</span></div>').join(''):'<div>'+(ANCIENT&&age[0]<MED?'None yet. Build a Pottery Kiln (Industry menu) and dig clay'+(age[0]>=1?', and a Smelting Furnace for copper ore.':'.'):'None yet. In the Feudal Age, build a Charcoal Kiln and a Smelter (Industry menu) and mine iron ore.')+'</div>')+'</div>';
   h+='<div class="wlist"><div>Morale: '+(MERRY[0]?'<span class="on">Merry</span> (+10% gathering, +1 soldier attack)':'Content')+'. Wine ration '+(RATION[0]?'on':'off')+' (Town Center, Castle Age).</div></div>';
   goodsEl.innerHTML=h}
 $('#btn-goods').onclick=()=>{goodsEl.hidden=!goodsEl.hidden;if(!goodsEl.hidden)$('#players').hidden=true;renderGoods()};
-function updTop(){const mo=$('#morale');mo.textContent=MERRY[0]?'Merry':'Content';mo.classList.toggle('merry',MERRY[0]);if(frame%3===0&&typeof renderPlayers==='function')renderPlayers();if(frame%3===0)renderGoods();for(const k of['food','wood','stone'])$('#r-'+k+' b').textContent=Math.floor(res[0][k]);{const k4=ANCIENT&&age[0]<MED?['flint','copper','bronze'][age[0]]:'gold',el=$('#r-gold');if(el.dataset.k!==k4){el.dataset.k=k4;el.title=RESNAME[k4];el.firstElementChild.className='ico '+k4}el.lastElementChild.textContent=Math.floor(res[0][k4])}
+function updTop(){const mo=$('#morale');mo.textContent=MERRY[0]?'Merry':'Content';mo.classList.toggle('merry',MERRY[0]);if(frame%3===0&&typeof renderPlayers==='function')renderPlayers();if(frame%3===0)renderGoods();for(const k of['food','wood','stone'])$('#r-'+k+' b').textContent=Math.floor(res[0][k]);{const k4=ANCIENT&&age[0]<MED?['flint','copper','bronze','iron','iron'][age[0]]:'gold',el=$('#r-gold');if(el.dataset.k!==k4){el.dataset.k=k4;el.title=RESNAME[k4];el.firstElementChild.className='ico '+k4}el.lastElementChild.textContent=Math.floor(res[0][k4])}
   const pu=popUsed(0),pc=popCap(0);$('#r-pop b').textContent=pu+'/'+pc;$('#r-pop').classList.toggle('warn',pu>=pc);
   $('#clock').textContent=fmt(gameT);seaChip();$('#age-name').textContent=AGES[age[0]]+(age[0]===AGEMAX&&AGEMAX<ERAS.length-1?' (final)':'');
   const ag=AGETECHS.find(a=>PEND[0].has(a));const bar=$('#age-bar');bar.hidden=!ag;
@@ -2871,7 +2949,7 @@ function rle(a){const out=[];let cur=0,n=0;for(let i=0;i<a.length;i++){if(a[i]==
 function unrle(r,len){const a=new Uint8Array(len);let i=0,cur=0;for(const n of r){if(cur)a.fill(1,i,i+n);i+=n;cur^=1}return a}
 function snapshot(){
   const alive=new Set(ress.map(r=>r.id));
-  return{v:3,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
+  return{v:4,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
     exp:FOGON?rle(EXP):null,seen:blds.filter(b=>b.seen).map(b=>b.id),
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
     sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,
@@ -2896,7 +2974,8 @@ function saveLabel(d){if(!d)return'Empty';if(!d.opts)return'Saved by an older ve
   return CIVS[o.civs[0]].name+' · '+o.civs.length+' players · '+MAPTYPES[o.mapUsed||o.map]+' · '+SIZES[o.size].name+' · '+AGES[d.age[0]]+' · '+fmt(d.gameT)+' · '+o.diff+' · saved '+dt.toLocaleDateString()+' '+dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
 function loadGame(d){
   if(!d.opts){notify('That save was made by an older version and can’t be loaded.',true);return}
-  if((d.v||2)<3){d.opts.startAge=MED+(d.opts.startAge|0);d.opts.endAge=MED+(d.opts.endAge==null?3:d.opts.endAge);for(let t=0;t<d.opts.civs.length;t++)d.age[t]=(d.age[t]|0)+MED;for(let t=d.opts.civs.length;t<d.age.length;t++)d.age[t]=MED;d.v=3}
+  if((d.v||2)<3){d.opts.startAge=MED+(d.opts.startAge|0);d.opts.endAge=MED+(d.opts.endAge==null?3:d.opts.endAge);for(let t=0;t<d.opts.civs.length;t++)d.age[t]=(d.age[t]|0)+MED;for(let t=d.opts.civs.length;t<d.age.length;t++)d.age[t]=MED;d.v=4}
+  if(d.v<4){const up=x=>x>=3?x+2:x;d.opts.startAge=up(d.opts.startAge|0);d.opts.endAge=up(d.opts.endAge==null?6:d.opts.endAge);d.age=d.age.map(x=>up(x|0));d.v=4}
   newWorld(d.opts,d.seed);
   for(const u of units){world.remove(u.mesh)}units=[];
   for(const b of blds){removeBldCells(b);world.remove(b.mesh)}blds=[];
@@ -2985,9 +3064,10 @@ const screen=$('#screen');
 const SIZES={small:{half:48,name:'Small'},medium:{half:60,name:'Medium'},large:{half:80,name:'Large'},huge:{half:100,name:'Huge'}};
 const MAPTYPES={lowlands:'Lowlands',highlands:'Highlands',forest:'Great Forest',coast:'Coast',rivers:'Rivers',islands:'Islands',random:'Random'};
 const MAPDESC={lowlands:'Open farmland, lakes and woods',highlands:'Hills and rocky ridges with narrow passes',forest:'Dense woods with clearings',coast:'Land on one side, open sea on the other',rivers:'Rivers cut the land. Shallow fords let people wade across and boats sail through',islands:'Every people on its own island. Allies share land bridges. You need docks and transports',random:'Any of the above'};
-let SETUP={civ:'scots',diff:'normal',map:'lowlands',size:'medium',np:3,mode:'open',seasons:true,startAge:0,endAge:6,v:3,fog:true,opp:['random','random','random','random','random','random','random'],team:[1,2,2,2,2,2,2,2]};
+let SETUP={civ:'scots',diff:'normal',map:'lowlands',size:'medium',np:3,mode:'open',seasons:true,startAge:0,endAge:8,v:4,fog:true,opp:['random','random','random','random','random','random','random'],team:[1,2,2,2,2,2,2,2]};
 try{const t=localStorage.getItem('banner-bastion-setup');if(t)Object.assign(SETUP,JSON.parse(t))}catch(e){}
-if(!SETUP.v){SETUP.v=2;SETUP.mode='open'}if(SETUP.v<3){SETUP.v=3;SETUP.startAge=0;SETUP.endAge=ERAS.length-1;try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
+if(!SETUP.v){SETUP.v=2;SETUP.mode='open'}if(SETUP.v<3){SETUP.v=4;SETUP.startAge=0;SETUP.endAge=ERAS.length-1;try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
+if(SETUP.v<4){SETUP.v=4;if(SETUP.startAge>=3)SETUP.startAge+=2;if(SETUP.endAge>=3)SETUP.endAge+=2;try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
 function saveSetup(){try{localStorage.setItem('banner-bastion-setup',JSON.stringify(SETUP))}catch(e){}}
 function embURL(civ,team){return emblemCanvas(civ,team).toDataURL()}
 function playersHTML(){let h='';
@@ -2997,6 +3077,7 @@ function playersHTML(){let h='';
   return h}
 function setupWarn(){const big=SETUP.np>4||SETUP.size==='large'||SETUP.size==='huge';let w=big?'Big games run well on computers but may be slow on phones. For phones, try up to 4 players on a Small or Medium map.':'';
   if(SETUP.mode==='teams'){const t0=SETUP.team[0];let foes=false;for(let i=1;i<SETUP.np;i++)if(SETUP.team[i]!==t0)foes=true;if(!foes)w='Everyone is on your team. Put at least one player on another team.'}
+  if((SETUP.endAge|0)<=(SETUP.startAge|0)&&(SETUP.startAge|0)<ERAS.length-1)w='Start age and Final age are both the '+AGES[SETUP.startAge|0]+', so nobody will be able to advance. Raise “Final age” for a full game.';
   return w}
 function showStart(){state='menu';screen.hidden=false;
   screen.innerHTML='<div class="card"><div class="eyebrow">Real-time strategy · medieval Britain and Europe</div><h1>Banner &amp; Bastion</h1>'+
@@ -3016,7 +3097,7 @@ function showStart(){state='menu';screen.hidden=false;
   '<h3>Sound</h3>'+soundHTML()+'<div class="row"><button class="primary" id="go">Raise the banner</button>'+(readSave('auto')&&readSave('auto').opts?'<button class="secondary" id="cont">Continue last game</button>':'')+'<button class="secondary" id="ld">Load game</button></div>'+
   '<div class="help"><h3>Controls</h3><div><b>Left-click</b> select · <b>drag</b> box-select · <b>double-click</b> select all of a type</div><div><b>Right-click</b> move, gather, build, repair or attack</div>'+
   '<div><b>WASD</b>, arrows or screen edge to pan · <b>wheel</b> zoom · <b>Q/E</b> rotate</div><div><b>1–0</b> command hotkeys · <b>G</b> attack-move · <b>T</b> tech tree</div><div><b>P</b> pause (you can still give orders) · <b>[</b> <b>]</b> game speed ½× to 2× · <b>M</b> sound · <b>F10</b> menu</div>'+
-  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace to climb to the Copper, Bronze and Dark Ages. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
+  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
   const refresh=()=>{saveSetup();$('#s-players').innerHTML=playersHTML();$('#s-warn').textContent=setupWarn();$('#s-mapdesc').textContent=MAPDESC[SETUP.map];bindRows()};
   const bindRows=()=>{screen.querySelectorAll('[data-opp]').forEach(sl=>sl.onchange=()=>{SETUP.opp[+sl.dataset.opp-1]=sl.value;saveSetup()});
     screen.querySelectorAll('[data-team]').forEach(sl=>sl.onchange=()=>{SETUP.team[+sl.dataset.team]=+sl.value;saveSetup();$('#s-warn').textContent=setupWarn()})};
@@ -3027,8 +3108,8 @@ function showStart(){state='menu';screen.hidden=false;
   $('#s-np').onchange=e=>{SETUP.np=+e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-mode').onchange=e=>{SETUP.mode=e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};
-  $('#s-start').onchange=e=>{SETUP.startAge=+e.target.value;if(SETUP.endAge<SETUP.startAge){SETUP.endAge=SETUP.startAge;$('#s-end').value=SETUP.endAge}saveSetup()};
-  $('#s-end').onchange=e=>{SETUP.endAge=+e.target.value;if(SETUP.startAge>SETUP.endAge){SETUP.startAge=SETUP.endAge;$('#s-start').value=SETUP.startAge}saveSetup()};
+  $('#s-start').onchange=e=>{SETUP.startAge=+e.target.value;if(SETUP.endAge<SETUP.startAge){SETUP.endAge=SETUP.startAge;$('#s-end').value=SETUP.endAge}saveSetup();$('#s-warn').textContent=setupWarn()};
+  $('#s-end').onchange=e=>{SETUP.endAge=+e.target.value;if(SETUP.startAge>SETUP.endAge){SETUP.startAge=SETUP.endAge;$('#s-start').value=SETUP.startAge}saveSetup();$('#s-warn').textContent=setupWarn()};
   $('#ld').onclick=()=>showSaves('load',showStart);if($('#cont'))$('#cont').onclick=()=>{const d=readSave('auto');if(d)try{loadGame(d)}catch(e){console.error(e);notify('The autosave could not be loaded.',true)}};
   $('#go').onclick=()=>{if(SETUP.mode==='teams'&&setupWarn().startsWith('Everyone'))return;
     const civs=[SETUP.civ];for(let i=1;i<SETUP.np;i++){let c=SETUP.opp[i-1]||'random';if(c==='random'){const pool=CIVKEYS.filter(k=>!civs.includes(k));const src=pool.length?pool:CIVKEYS;c=src[(Math.random()*src.length)|0]}civs.push(c)}
@@ -3043,7 +3124,7 @@ function pause(){state='paused';screen.hidden=false;const pb=$('#pausebar');if(p
   bindSound();$('#res').onclick=resume;$('#rst').onclick=()=>{saveGame('auto',true);showStart()};$('#tt').onclick=showTree;$('#sv').onclick=()=>showSaves('save',pause);$('#ldg').onclick=()=>showSaves('load',pause)}
 function resume(){state='play';screen.hidden=true;canvas.focus();spdUI()}
 function showTree(){state='tree';screen.hidden=false;const civ=CIVKEY[0],C=CIVS[civ];
-  const rows=[['Town Center','tc'],['Mill','mill'],['Lumber Camp','lumber'],['Mining Camp','mining'],['Pottery Kiln','potter'],['Blacksmith','blacksmith'],['Barracks','barracks'],['Chariot Works','chariotry'],['Archery Range','range'],['Stable','stable'],['Market','market'],['Dock','dock'],['Smelter','smelter'],['Winepress','winepress'],["Forester's Lodge",'forester'],['Embassy','embassy'],['Monastery','monastery'],['Siege Workshop','siege'],['University','university'],['Castle','castle']].filter(r=>ANCIENT||!BUILD[r[1]].anc);
+  const rows=[['Town Center','tc'],['Mill','mill'],['Lumber Camp','lumber'],['Mining Camp','mining'],['Pottery Kiln','potter'],['Blacksmith','blacksmith'],['Barracks','barracks'],['Chariot Works','chariotry'],['Bloomery','bloom'],['Siege Yard','engyard'],['Temple','temple'],['Archery Range','range'],['Stable','stable'],['Market','market'],['Dock','dock'],['Smelter','smelter'],['Winepress','winepress'],["Forester's Lodge",'forester'],['Embassy','embassy'],['Monastery','monastery'],['Siege Workshop','siege'],['University','university'],['Castle','castle']].filter(r=>ANCIENT||!BUILD[r[1]].anc);
   const A0=AGEMIN,A1=AGEMAX,cols=[];for(let a=A0;a<=A1;a++)cols.push(a);
   let h='<div class="th">Building</div>'+cols.map(a=>'<div class="th">'+AGEN[a]+' · '+AGES[a]+'</div>').join('');
   h+='<div class="rh">Buildings</div>';for(const a of cols)h+='<div>'+Object.keys(BUILD).filter(k=>BUILD[k].age===a&&(ANCIENT||!BUILD[k].anc)&&!(BUILD[k].diplo&&!DIPLO)).map(k=>'<span class="chip '+(age[0]>=a?'on':'')+'" title="'+BUILD[k].desc.replace(/"/g,'&quot;')+'">'+BUILD[k].name+'</span>').join('')+'</div>';
@@ -3110,7 +3191,7 @@ function applyStartAge(){const k=AGEMIN,E=ERAS[k].start,B={food:200,wood:200,gol
 function localPt(b,ox,oz){const l=Math.hypot(b.x,b.z)||1,fx=-b.x/l,fz=-b.z/l,rx=fz,rz=-fx;const fw=(ox+oz)*.7071,rg=(ox-oz)*.7071;return{x:b.x+fx*fw+rx*rg,z:b.z+fz*fw+rz*rg}}
 function freeSpot(minB,tries){for(let k=0;k<(tries||60);k++){const x=(R()*2-1)*(HALF-8),z=(R()*2-1)*(HALF-8);if(!BASES.every(b=>Math.hypot(x-b.x,z-b.z)>minB))continue;const c=cellX(z)*N+cellX(x);if(grid[c]||occ[c]||TER[c])continue;return{x,z}}return null}
 function newWorld(opts,seed){
-  OPTS=Object.assign({},opts);diffKey=OPTS.diff;CIVKEY=OPTS.civs.slice();NP=CIVKEY.length;for(let t=NP;t<NT;t++)CIVKEY[t]=t===BARB?'barbarian':t>=VT0?'village':CIVKEY[0];TEAMS=OPTS.teams.slice();AGEMIN=clamp(OPTS.startAge==null?MED:OPTS.startAge|0,0,ERAS.length-1);AGEMAX=clamp(OPTS.endAge==null?ERAS.length-1:OPTS.endAge,AGEMIN,ERAS.length-1);ANCIENT=AGEMIN<MED;WAGE=AGEMIN;GROUPS=[];for(const k in DIFF){const d=DIFF[k];if(d.first0==null)d.first0=d.first;d.first=d.first0+Math.max(0,MED-AGEMIN)*({easy:300,normal:240,hard:150})[k]}relInit();nid=1;WSEED=seed||((Math.random()*1e9)|0);
+  OPTS=Object.assign({},opts);diffKey=OPTS.diff;CIVKEY=OPTS.civs.slice();NP=CIVKEY.length;for(let t=NP;t<NT;t++)CIVKEY[t]=t===BARB?'barbarian':t>=VT0?'village':CIVKEY[0];TEAMS=OPTS.teams.slice();AGEMIN=clamp(OPTS.startAge==null?MED:OPTS.startAge|0,0,ERAS.length-1);AGEMAX=clamp(OPTS.endAge==null?ERAS.length-1:OPTS.endAge,AGEMIN,ERAS.length-1);ANCIENT=AGEMIN<MED;WAGE=AGEMIN;GROUPS=[];BUILD.market.age=ANCIENT?4:MED+1;BUILD.market.aname='Forum';for(const k in DIFF){const d=DIFF[k];if(d.first0==null)d.first0=d.first;d.first=d.first0+Math.max(0,MED-AGEMIN)*({easy:300,normal:240,hard:150})[k]}relInit();nid=1;WSEED=seed||((Math.random()*1e9)|0);
   HALF=SIZES[OPTS.size].half;N=HALF*2;allocPath();FOGON=!!OPTS.fog;
   if(world)scene.remove(world);world=new T.Group();scene.add(world);
   units=[];blds=[];ress=[];projs=[];puffs=[];markers=[];sel=[];selSet=new Set();gameT=0;shownRings=[];pings=[];
