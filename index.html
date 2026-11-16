@@ -552,6 +552,8 @@ const TECHS={
 for(const k in UNITS)if(k!=='villager'&&k!=='fishboat')UNITS[k].age+=MED;for(const k in BUILD)if(BUILD[k].age>0)BUILD[k].age+=MED;for(const k in TECHS){TECHS[k].age+=MED;if(TECHS[k].ageUp)TECHS[k].ageUp+=MED}
 UNITS.spearman.line.push(['halberd',{name:'Halberdier',l:'Hb',hp:65,atk:6,bonus:{cav:30}}]);UNITS.knight.line.push(['cuirassier',{name:'Cuirassier',l:'Cu',hp:140,atk:14,arm:[3,3]}]);
 Object.assign(UNITS,{
+  spy:{name:'Spy',l:'Sy',cls:'spy',diplo:1,hp:30,atk:0,range:.6,rate:1,speed:5.2,cost:{food:60,gold:120},time:25,r:.36,arm:[0,1],sight:9,age:MED+1,desc:'Hidden from other peoples unless spotted by towers, scouts or monks. Pick a mission, then tap a foreign building'},
+  informer:{name:'Informer',l:'If',cls:'spy',diplo:1,anc:1,hp:24,atk:0,range:.6,rate:1,speed:4.8,cost:{food:80,copper:5},time:22,r:.36,arm:[0,0],sight:8,age:2,becomes:['spy',MED+1],desc:'An early spy: can scout, spread rumours and stir up villages'},
   arquebus:{name:'Arquebusier',l:'Aq',cls:'arch',hp:45,atk:16,range:7,rate:3.4,speed:3.7,cost:{food:50,gold:40,powder:1},time:18,r:.38,arm:[1,1],sight:9,age:MED+4,ranged:1,gun:1,proj:'shot',bonus:{inf:3},desc:'Slow-firing handgunner whose shot punches through armour. Needs gunpowder'},
   bombard:{name:'Bombard Cannon',l:'Bc',cls:'siege',hp:90,atk:55,range:12,rate:7,speed:2.0,cost:{wood:180,gold:180,iron:15,powder:5},time:34,r:.8,arm:[1,8],sight:13,age:MED+4,ranged:1,melee:1,gun:1,proj:'ball',splash:.9,bonus:{bld:110},desc:'Gunpowder artillery that wrecks walls, towers and ships from afar'},
   carrack:{name:'Carrack',l:'Ck',cls:'ship',naval:1,hp:380,atk:24,range:9,rate:4,speed:4.6,cost:{wood:220,gold:140,rope:8,cloth:8,powder:3},time:34,r:1.15,arm:[3,7],sight:11,age:MED+4,ranged:1,gun:1,proj:'ball',bonus:{bld:25,ship:8},desc:'Ocean-going ship with a broadside of cannon'},
@@ -565,7 +567,7 @@ Object.assign(UNITS,{
   horseman:{name:'Horseman',l:'Hm',cls:'cav',hp:68,atk:6,range:.7,rate:1.6,speed:6.3,cost:{food:70,iron:3},time:18,r:.7,arm:[0,1],sight:8,age:3,anc:1,until:MED+1,becomes:['scout',MED+1],needsTech:'riding',desc:'Fast rider with spear. Needs Horse Riding'},
   ballista:{name:'Ballista',l:'Bl',cls:'siege',hp:55,atk:14,range:8,rate:3.4,speed:2.6,cost:{wood:110,iron:8},time:24,r:.6,arm:[0,5],sight:9,age:4,anc:1,ranged:1,proj:'bolt',until:MED+2,becomes:['mangonel',MED+2],needsTech:'engineering',bonus:{bld:6},desc:'Bolt thrower that outranges archers. Needs Engineering'},
 });
-BUILD.range.trains.push('arquebus');BUILD.siege.trains.push('bombard');BUILD.dock.trains.push('carrack');
+BUILD.range.trains.push('arquebus');BUILD.embassy.trains.push('spy');BUILD.tc.trains.push('informer');BUILD.siege.trains.push('bombard');BUILD.dock.trains.push('carrack');
 Object.assign(BUILD,{
   nitrebed:{name:'Nitre Bed',l:'NB',s:3,hp:300,arm:[0,0],time:12,cost:{wood:80},walk:1,crop:'nitre',age:MED+4,h:1.3,desc:'A villager rakes saltpetre here for gunpowder (one villager)'},
   powdermill:{name:'Powder Mill',l:'PM',s:2,hp:700,arm:[2,8],time:28,cost:{wood:150,stone:80},drop:['nitre'],age:MED+4,h:2.8,desc:'Grinds saltpetre and charcoal into gunpowder',recipes:{powder:{in:{nitre:2,charcoal:1},out:{powder:2},time:7}}},
@@ -582,6 +584,7 @@ Object.assign(BUILD,{
   temple:{name:'Temple',l:'Te',s:3,hp:1300,arm:[2,8],time:36,cost:{wood:120,stone:180},age:4,anc:1,becomes:['monastery',MED+2],h:3.4,desc:'Philosophy and medicine are studied here. Becomes a Monastery in the Castle Age'},
 });
 Object.assign(TECHS,{
+  counterintel:{name:'Counter-intelligence',at:'embassy',age:MED+2,cost:{food:200,gold:250},time:45,desc:'Your towers, castles and Town Centers spot spies from further away and twice as often; enemy missions against you fail more'},
   renaissance:{name:'Renaissance',at:'tc',age:MED+3,ageUp:MED+4,cost:{food:2000,gold:1500,cloth:30},time:150,desc:'The Age of Discovery: gunpowder, cannon, carracks and the printing press'},
   halberd:{name:'Halberdier',at:'barracks',age:MED+4,req:'pike',cost:{food:300,gold:600},time:50,desc:'Pikemen become Halberdiers'},
   cuirassier:{name:'Cuirassier',at:'stable',age:MED+4,req:'cavalier',cost:{food:400,gold:600,arms:5},time:60,desc:'Cavaliers become Cuirassiers'},
@@ -714,12 +717,13 @@ function fogInit(){VIS=new Uint8Array(N*N);EXP=new Uint8Array(N*N);fogData=new U
 function stampVis(x,z,r){const cx=Math.floor(x+HALF),cz=Math.floor(z+HALF),r2=r*r;for(let j=-r;j<=r;j++){const b=cz+j;if(b<0||b>=N)continue;for(let i=-r;i<=r;i++){if(i*i+j*j>r2)continue;const a=cx+i;if(a<0||a>=N)continue;const c=b*N+a;VIS[c]=1;EXP[c]=1}}}
 function visAt(x,z){if(!FOGON)return true;const cx=Math.floor(x+HALF),cz=Math.floor(z+HALF);if(cx<0||cz<0||cx>=N||cz>=N)return false;return VIS[cz*N+cx]===1}
 function expAt(cx,cz){return!FOGON||EXP[cz*N+cx]===1}
-function unitSeen(u){return!FOGON||ally(u.team,0)||visAt(u.x,u.z)}
+function unitSeen(u){if(isSpy(u)&&!ally(u.team,0)&&!(u.exposed>gameT))return false;return!FOGON||ally(u.team,0)||visAt(u.x,u.z)}
 function bldSeen(b){return!FOGON||ally(b.team,0)||b.seen}
 function seenP(t){return!FOGON||MET[t]}
 function updFog(){if(!FOGON)return;VIS.fill(0);
   const sm=seaMul('sight');for(const u of units){if(u.dead||u.inside||!ally(u.team,0))continue;stampVis(u.x,u.z,Math.ceil(u.def.sight*sm))}
   for(const b of blds){if(b.dead||!ally(b.team,0))continue;stampVis(b.x,b.z,Math.ceil(b.s/2+(b.shoot?b.shoot.range:3)+(b.built?1:0)))}
+  for(let t=1;t<NP;t++)if(INTEL[t]>gameT){for(const b of blds)if(!b.dead&&b.team===t)stampVis(b.x,b.z,3);for(const u of units)if(!u.dead&&!u.inside&&u.team===t)stampVis(u.x,u.z,2)}
   for(let c=0,n=N*N;c<n;c++)fogData[c*4]=VIS[c]?255:EXP[c]?118:16;fogTex.needsUpdate=true;
   for(const b of blds){if(b.dead||ally(b.team,0))continue;if(!b.seen&&visAt(b.x,b.z))b.seen=true;if(b.seen)meet(b.team)}
   for(const u of units){if(u.dead||u.inside||ally(u.team,0)||MET[u.team])continue;if(visAt(u.x,u.z))meet(u.team)}}
@@ -1042,6 +1046,11 @@ function unitModel(type,team,v){
     const ax=mk(G.box,0xb8bec4,METAL);ax.scale.set(.05,.36,.26);ax.position.set(0,-.36,.7);aR.add(ax);
     const sh=shieldMesh(team,.3,.05);sh.rotation.z=Math.PI/2;sh.position.set(-.06,-.3,.06);aL.add(sh);
     h=1.85;break;}
+  case'spy':case'informer':{const cl=type==='spy'?0x2e2a34:0x5a4a3a;
+    legs2(g,0x2a2622);cn(g,cl,.36,1.0,0,.66,0);sp(g,skin,.28,.28,.28,0,1.32,.03);
+    const hd=mk(G.sph,cl);hd.scale.set(.36,.36,.36);hd.position.set(0,1.38,-.04);g.add(hd);cn(g,cl,.14,.3,0,1.6,-.12);bx(g,tc,.3,.05,.05,0,1.0,.24);
+    const[aR,aL]=arms2(g,cl,null,skin);const dg=mk(G.box,0xc8ccd2,METAL);dg.scale.set(.04,.04,.3);dg.position.set(0,-.46,.2);aR.add(dg);
+    h=1.75;break;}
   case'envoy':{
     legs2(g,0x2a2430);cn(g,tc,.34,.9,0,.62,0);cy(g,0x3a2a4a,.22,.45,0,1.0,0);
     {const tb=new T.Mesh(G.box,[M(0xe8dcc0),M(0xe8dcc0),M(0xe8dcc0),M(0xe8dcc0),embMat(team),embMat(team)]);tb.scale.set(.3,.42,.05);tb.position.set(0,.95,.21);tb.castShadow=true;g.add(tb)}
@@ -1595,8 +1604,8 @@ function bStats(team,type){
 function bCost(team,type){const c=Object.assign({},BUILD[type].cost);const civ=CIVKEY[team];
   if(civ==='picts'&&type==='tower')c.stone=Math.round(c.stone/2);if(civ==='irish'&&type==='farm')c.wood=40;return c}
 function trainsOf(b){if(b.type==='castle')return[CIVS[CIVKEY[b.team]].uu,'trebuchet'];return b.def.trains||[]}
-function unitAvail(team,type){const u=UNITS[type];return age[team]>=u.age&&(!u.uniq||u.uniq===CIVKEY[team])&&!u.noTrain&&(!u.anc||ANCIENT)&&(!u.until||age[team]<u.until)&&(!u.needsTech||has(team,u.needsTech))}
-function unitHidden(team,type){const u=UNITS[type];return(u.anc&&!ANCIENT)||u.noTrain||(u.until&&age[team]>=u.until)||(age[team]<MED&&u.age>age[team]+1)}
+function unitAvail(team,type){const u=UNITS[type];if(u.diplo&&!DIPLO)return false;return age[team]>=u.age&&(!u.uniq||u.uniq===CIVKEY[team])&&!u.noTrain&&(!u.anc||ANCIENT)&&(!u.until||age[team]<u.until)&&(!u.needsTech||has(team,u.needsTech))}
+function unitHidden(team,type){const u=UNITS[type];return(u.diplo&&!DIPLO)||(u.anc&&!ANCIENT)||u.noTrain||(u.until&&age[team]>=u.until)||(age[team]<MED&&u.age>age[team]+1)}
 function bldAvail(team,type){const d=BUILD[type];return age[team]>=d.age&&(!d.anc||ANCIENT)&&(!d.needsTech||!ANCIENT||has(team,d.needsTech))}
 function bldHidden(team,type){const d=BUILD[type];return(d.anc&&!ANCIENT)||(age[team]<MED&&d.age>age[team]+1)}
 function bName(team,type){const d=BUILD[type];return d.aname&&age[team]<MED?d.aname:d.name}
@@ -1847,7 +1856,7 @@ function nearestRes(rt,x,z,maxD,nav){let best=null,bd=maxD;const wc=nav?wcAt(x,z
 function nearestDrop(team,rt,x,z,nav){let best=null,bd=1e9;for(const b of blds){if(b.dead||!b.built||b.team!==team||!b.def.drop||!b.def.drop.includes(rt))continue;if(nav&&!b.def.water)continue;const d=rectDist(x,z,b);if(d<bd){bd=d;best=b}}return best}
 function canHitU(a,e){if(!a||!a.def)return true;if(e.def&&e.def.naval&&!a.def.naval&&!a.def.ranged)return false;if(a.def.naval&&!a.def.ranged)return false;if(a.skip===e&&gameT<a.skipT)return false;return true}
 function nearestEnemy(team,x,z,range,unitsOnly,bldOnly,att){let best=null,bd=range;
-  if(!bldOnly)for(const e of units){if(e.dead||e.inside||!foe(e.team,team))continue;if(att&&!canHitU(att,e))continue;if(att&&att.skip===e&&gameT<att.skipT)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;best=e}}
+  if(!bldOnly)for(const e of units){if(e.dead||e.inside||!hostileTo(e,team)||spyHidden(e))continue;if(att&&!canHitU(att,e))continue;if(att&&att.skip===e&&gameT<att.skipT)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;best=e}}
   if(unitsOnly)return best;
   for(const b of blds){if(b.dead||!foe(b.team,team))continue;if((b.def.wall||b.def.crop||b.def.road)&&!bldOnly)continue;if(b.def.road||b.def.plant)continue;if(att&&att.skip===b&&gameT<att.skipT)continue;const d=rectDist(x,z,b)+(bldOnly?0:3);if(d<bd){bd=d;best=b}}return best}
 function nearestEnemyBld(team,x,z,range){let best=null,bd=range;for(const b of blds){if(b.dead||!foe(b.team,team))continue;const d=rectDist(x,z,b);if(d<bd){bd=d;best=b}}return best}
@@ -1874,7 +1883,7 @@ function hit(tg,dmg,src){
     if(isMil(tg.def)&&canHitU(tg,src)&&(tg.task.t==='idle'||tg.task.t==='amove'||(tg.task.t==='attack'&&tg.task.target.kind==='bld'))&&!(tg.team===0&&tg.stance===2&&tg.task.t==='idle'&&!inRange(tg,src,tg.def.range)))tg.task={t:'attack',target:src,prev:tg.task.t==='amove'?tg.task:null,org:tg.team===0&&tg.stance&&tg.task.t==='idle'?{x:tg.x,z:tg.z}:null};
   }}
 function kill(e,silent){
-  e.dead=true;e.deadT=0;if(selSet.has(e)){sel=sel.filter(s=>s!==e);selSet.delete(e)}if(e.ring)e.ring.visible=false;
+  e.dead=true;e.deadT=0;if(e.kind==='unit'&&isSpy(e)&&!e.caught&&e.exposed>gameT&&e.exposedBy!=null){e.caught=true;const o=e.team,T=e.exposedBy;setTimeout(()=>spyIncident(o,T),0)}if(selSet.has(e)){sel=sel.filter(s=>s!==e);selSet.delete(e)}if(e.ring)e.ring.visible=false;
   if(e.kind==='unit'){if(foe(e.team,0))stats.killed++;else if(e.team===0)stats.lost++;sfxAt(e.def.naval?'splash':'death',e.x,e.z);
     if(e.gar&&e.gar.length){const ps=e.gar;e.gar=[];for(const p of ps){p.inside=null;kill(p);p.deadT=99}if(e.team===0)notify('Your transport sank with '+ps.length+' aboard!',true)}}
   else{if(e.gar&&e.gar.length)eject(e);removeBldCells(e);for(const q of e.queue){if(q.tech)PEND[e.team].delete(q.tech)}
@@ -1911,13 +1920,14 @@ function updUnit(u,dt){
   case'garrison':doGarrison(u,dt);break;
   case'heal':doHeal(u,dt);break;
   case'trade':doTrade(u,dt);break;
+  case'spy':doSpy(u,dt);break;
   case'board':doBoard(u,dt);break;
   case'envoy':doEnvoy(u,dt);break;
   case'unload':doUnload(u,dt);break;
   }}
 function doAttack(u,dt){
   const t=u.task,tg=t.target,d=u.def;
-  if(!alive(tg)||tg.inside||(tg.animal&&tg.hp<=0)||(tg.kind!=='res'&&!foe(tg.team,u.team))){if(t.prev){u.task=t.prev;u.path=null;u.pathFor=null;if(u.task.pt)planTo(u,u.task.pt)}else if(t.org&&u.stance===1&&Math.hypot(u.x-t.org.x,u.z-t.org.z)>1.5)orderMove(u,t.org);else setIdle(u);return}
+  if(!alive(tg)||tg.inside||(tg.animal&&tg.hp<=0)||(tg.kind!=='res'&&(!hostileTo(tg,u.team)||(tg.kind==='unit'&&spyHidden(tg))))){if(t.prev){u.task=t.prev;u.path=null;u.pathFor=null;if(u.task.pt)planTo(u,u.task.pt)}else if(t.org&&u.stance===1&&Math.hypot(u.x-t.org.x,u.z-t.org.z)>1.5)orderMove(u,t.org);else setIdle(u);return}
   if(t.org&&u.stance){if(u.stance===2&&!inRange(u,tg,d.range)){setIdle(u);return}
     if(u.stance===1&&Math.hypot(u.x-t.org.x,u.z-t.org.z)>7){u.skip=tg;u.skipT=gameT+5;orderMove(u,t.org);return}}
   if(tg.kind==='bld'&&!d.bldOnly&&isMil(d)){u.scanT-=dt;if(u.scanT<=0){u.scanT=.6;const e=nearestEnemy(u.team,u.x,u.z,5,true);if(e){t.target=e;u.path=null;return}}}
@@ -2080,6 +2090,7 @@ const GERSMELT={in:{ore:3,charcoal:1},out:{iron:2},time:6};
 function recipeOf(b){const r=b.def.recipes;if(!r)return null;if(!b.mode||!r[b.mode]||(r[b.mode].age||0)>age[b.team])b.mode=Object.keys(r)[0];if(b.type==='smelter'&&CIVKEY[b.team]==='germans')return GERSMELT;return r[b.mode]}
 function updWork(b,dt){const rc=recipeOf(b);if(!rc)return;
   if(b.off){b.wstat='Paused';b.working=false;return}
+  if(b.sabot>gameT){b.wstat='Sabotaged';b.working=false;return}
   if(!b.working){const st=res[b.team];const miss=Object.keys(rc.in).filter(k=>st[k]<rc.in[k]);
     if(miss.length){b.wstat='Needs '+miss.map(k=>RESNAME[k].toLowerCase()).join(' and ');return}
     for(const k in rc.in)st[k]-=rc.in[k];b.working=true;b.wp=0}
@@ -2098,6 +2109,7 @@ function popCap(team){let n=0;for(const b of blds)if(!b.dead&&b.built&&b.team===
 function qTime(team,q){if(q.tech)return TECHS[q.tech].time*(has(team,'writing')&&!TECHS[q.tech].ageUp?.75:1)*(has(team,'philosophy')&&!TECHS[q.tech].ageUp?.85:1)*(has(team,'printing')&&!TECHS[q.tech].ageUp?.75:1);const u=UNITS[q.type];return u.time*(has(team,'conscription')&&u.cls!=='vil'?.67:1)}
 function updBld(b,dt){
   if(!b.built){b.mesh.scale.y=.08+.92*b.progress;return}
+  if(b.burn>gameT){b.hp-=b.maxhp*.011*dt;if(Math.random()<dt*4)puff(b.x+(Math.random()-.5)*b.s,b.y+1+Math.random()*1.5,b.z+(Math.random()-.5)*b.s,Math.random()<.5?0xff7a20:0x3a3430,1,.35,.8,.9,1.6);if(b.hp<=0){kill(b);return}}
   if(b.type==='pen'){b.penT=(b.penT==null?25:b.penT)-dt;if(b.penT<=0){b.penT=70;let n=0;for(const r of ress)if(r.animal==='sheep'&&!r.dead&&r.pen===b.id)n++;if(n<3){const a=R()*TAU,sh=spawnAnimal('sheep',b.x+Math.cos(a)*2.4,b.z+Math.sin(a)*2.4);if(sh){sh.pen=b.id;sh.home={x:b.x,z:b.z}}}}}
   if(b.def.recipes)updWork(b,dt);
   if(b.queue.length){const q=b.queue[0],tm=qTime(b.team,q);
@@ -2315,7 +2327,7 @@ const PERSONA={
   merchant:{name:'Merchant',base:5,peace:-10,ally:45,war:-50,ratio:1.5,desc:'Loves gold. Tribute and trade carts win its friendship.'},
   honourable:{name:'Honourable',base:10,peace:0,ally:55,war:-30,ratio:1.3,desc:'Keeps its word, stands by allies and never forgets betrayal.'}};
 const CIVPERS={vikings:'warlike',picts:'warlike',irish:'warlike',germans:'merchant',spanish:'cautious',welsh:'cautious',english:'honourable',french:'honourable',scots:'honourable'};
-function relInit(){DIPLO=OPTS.mode==='open';REL=[];OPIN=[];METP=[];VISITT=[];treatyT=[];LOSS=new Array(NP).fill(0);KNOWP=new Array(NP).fill(false);HCD=new Array(NP).fill(0);DIPQ=[];EVTS=[];MEM=[];FLT=[];MREF=[];if(typeof AUD!=='undefined'&&AUD)audClose();PCACHE.clear();dipT=3;warAsk=-1;PERS=[null];
+function relInit(){DIPLO=OPTS.mode==='open';REL=[];OPIN=[];METP=[];VISITT=[];treatyT=[];LOSS=new Array(NP).fill(0);KNOWP=new Array(NP).fill(false);HCD=new Array(NP).fill(0);DIPQ=[];EVTS=[];MEM=[];FLT=[];MREF=[];REP=50;DEAL=[];INTEL=[];MAPT=[];NEWST=[];GOSS=[];spyMode=null;if(typeof AUD!=='undefined'&&AUD)audClose();PCACHE.clear();dipT=3;warAsk=-1;PERS=[null];
   for(let a=0;a<NP;a++){REL.push([]);OPIN.push([]);METP.push([]);VISITT.push([]);treatyT.push([]);
     for(let b=0;b<NP;b++){REL[a].push(a===b?2:DIPLO?1:(TEAMS[a]>0&&TEAMS[a]===TEAMS[b]?2:0));OPIN[a].push(0);METP[a].push(a===b||REL[a][b]===2);VISITT[a].push(-1e9);treatyT[a].push(0)}}
   renderDip()}
@@ -2351,18 +2363,18 @@ function setRel(a,b,v,quiet){const old=REL[a][b];if(old===v||a===b)return;REL[a]
     else if(METP[0][a]&&METP[0][b])notify('The '+cname(a)+' and the '+cname(b)+(v===0?' are now at war.':v===1?(old===0?' have made peace.':' have broken their alliance.'):' have formed an alliance.'))}
   renderPlayers(true);lastSig=''}
 function betrayal(a){for(let c=1;c<NP;c++)if(c!==a&&METP[c][a]&&PERS[c]==='honourable')OPIN[c][a]=Math.max(-100,OPIN[c][a]-15)}
-function declareWar(a,b){if(REL[a][b]===0)return;const was=REL[a][b];if(b===0&&a>0&&a<NP&&DIPLO){let k='war';if(memHas(a,'refused',120))k='war_refused';else for(let c=1;c<NP;c++)if(c!==a&&REL[a][c]===2&&REL[c][0]===0){k='war_join';break}const ln=say(a,k);setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'angry'),0)}if(gameT-treatyT[a][b]<90||was===2)betrayal(a);setRel(a,b,0);if(OPIN[b])OPIN[b][a]=Math.max(-100,OPIN[b][a]-(was===2?60:35))}
-function breakAlliance(a,b){if(REL[a][b]!==2)return;if(b===0&&a>0&&a<NP){const ln=say(a,'ally_break');setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'wary'),0)}betrayal(a);setRel(a,b,1);OPIN[b][a]=Math.max(-100,OPIN[b][a]-45)}
+function declareWar(a,b){if(REL[a][b]===0)return;const was=REL[a][b];if(b===0&&a>0&&a<NP&&DIPLO){let k='war';if(memHas(a,'refused',120))k='war_refused';else for(let c=1;c<NP;c++)if(c!==a&&REL[a][c]===2&&REL[c][0]===0){k='war_join';break}const ln=say(a,k);setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'angry'),0)}if(a===0&&b<NP)repAdd(gameT-treatyT[a][b]<90||was===2?-15:-3,'you broke your word');if(gameT-treatyT[a][b]<90||was===2)betrayal(a);if(a===0||b===0){const o=a===0?b:a;if(DEAL[o])dealEnd(o,': you are at war.')}setRel(a,b,0);if(OPIN[b])OPIN[b][a]=Math.max(-100,OPIN[b][a]-(was===2?60:35))}
+function breakAlliance(a,b){if(REL[a][b]!==2)return;if(a===0)repAdd(-10,'you broke an alliance');if(b===0&&a>0&&a<NP){const ln=say(a,'ally_break');setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'wary'),0)}betrayal(a);setRel(a,b,1);OPIN[b][a]=Math.max(-100,OPIN[b][a]-45)}
 function tribute(from,to,rk,amt){if(res[from][rk]<amt){if(from===0)notify('Not enough '+RESNAME[rk].toLowerCase()+'.',true);return false}
   res[from][rk]-=amt;const got=Math.round(amt*(1-tribFee(from)));res[to][rk]+=got;
   if(to!==0){const v=amt/(rk==='gold'?13:rk==='stone'?16:20)*(PERS[to]==='merchant'?1.5:1);OPIN[to][from]=clamp(OPIN[to][from]+Math.min(30,v),-100,100)}
-  if(from===0||to===0)sfxUI('coins');
+  if(from===0||to===0)sfxUI('coins');if(from===0&&to<NP)repAdd(.5);
   if(from===0)notify('Sent '+got+' '+RESNAME[rk].toLowerCase()+' to the '+cname(to)+(got<amt?' ('+(amt-got)+' lost to the courier fee, build an Embassy to lower it)':'')+'.');
   else if(to===0)notify('The '+cname(from)+' sent you '+got+' '+RESNAME[rk].toLowerCase()+'.');
   renderPlayers(true);return true}
 function aiConsider(b,a,kind,gift){const P=PERSONA[PERS[b]],o=OPIN[b][a]+(gift||0)/10,ratio=strength(b)/strength(a);
   if(kind==='peace')return REL[b][a]===0&&gameT-treatyT[a][b]>45&&(o>=P.peace||ratio<.6||LOSS[b]>8);
-  if(kind==='alliance')return REL[b][a]===1&&o>=P.ally&&!conflict(a,b);return false}
+  if(kind==='alliance')return REL[b][a]===1&&o>=P.ally&&!conflict(a,b)&&(a!==0||REP>=25);return false}
 function propose(a,b,kind,gift){
   if(b===0){if(kind==='alliance'&&hasEmbassy(a)&&!AIS[a].envoyPlan)AIS[a].envoyPlan={to:0,msg:{kind,gift},exp:gameT+150};else askHuman(a,kind,gift,false);return}
   if(aiConsider(b,a,kind,gift)){if(gift)tribute(a,b,'gold',gift);setRel(a,b,kind==='peace'?1:2)}else OPIN[a][b]-=4}
@@ -2424,13 +2436,14 @@ function dipTick(){dipContact();if(gameT>480)for(let a=1;a<NP;a++)for(let b=a+1;
   const str=[];for(let t=0;t<NP;t++)str.push(strength(t));
   for(let a=1;a<NP;a++){if(ELIM[a])continue;const P=PERSONA[PERS[a]],home=BASES[a];
     for(let b=0;b<NP;b++){if(b===a||ELIM[b]||!METP[a][b])continue;let o=OPIN[a][b];
-      o+=(P.base-(b===0&&memHas(a,'betray')&&PERS[a]==='honourable'?25:0)-o)*.02;let near=0;for(const bl of blds)if(!bl.dead&&bl.team===b&&!bl.def.wall&&Math.abs(bl.x-home.x)<26&&Math.abs(bl.z-home.z)<26)near++;
+      o+=(P.base+(b===0?(REP-50)*.3:0)-(b===0&&memHas(a,'betray')&&PERS[a]==='honourable'?25:0)-o)*.02;let near=0;for(const bl of blds)if(!bl.dead&&bl.team===b&&!bl.def.wall&&Math.abs(bl.x-home.x)<26&&Math.abs(bl.z-home.z)<26)near++;
       if(near)o-=Math.min(3,near*.5)*(PERS[a]==='warlike'?1.5:1);
       for(let c=0;c<NP;c++){if(c===a||c===b||ELIM[c])continue;if(REL[a][c]===0&&REL[b][c]===0)o+=1;if(REL[a][c]===2&&REL[b][c]===0)o-=1.5;if(REL[a][c]===2&&REL[b][c]===2)o+=.5}
       if(REL[a][b]===2)o+=.5+(has(b,'courtly')?.6:0);
       if(REL[a][b]===1&&str[a]>str[b])o-=(PERS[a]==='warlike'?.7:.15)*(diffKey==='hard'?1.6:diffKey==='easy'&&b===0?.3:1);
       OPIN[a][b]=clamp(o,-100,100)}}
-  for(let a=1;a<NP;a++)if(!ELIM[a]&&AIS[a])aiDiplo(a,str);
+  for(let a=1;a<NP;a++)if(!ELIM[a]&&AIS[a]){aiDiplo(a,str);aiSpyStep(a)}
+  dealTick();dipChatter();for(let a=1;a<NP;a++)if(!ELIM[a]&&REL[0][a]===2)REP=Math.min(100,REP+.02);if(REP<50)REP+=.01;
   renderPlayers()}
 function humanDip(act,t,rk){if(ELIM[t]||!METP[0][t])return;const C=cname(t);if(act==='aud'){audience(t);return}
   if(act==='trib'){tribute(0,t,rk,100);return}
@@ -2617,6 +2630,7 @@ function dipView(t){const o=OPIN[t][0],P=PERS[t],why=[];
   for(let c=1;c<NP;c++){if(c===t||ELIM[c])continue;if(REL[t][c]===0&&REL[0][c]===2){why.push('You are allied with our enemies, the '+cname(c)+'.');break}}
   if(REL[t][0]===2)why.push('We value our alliance.');if(REL[t][0]===1&&P==='warlike'&&strength(t)>strength(0))why.push('Frankly, you look weak to us.');
   let s=op+(why.length?' '+why.slice(0,3).join(' '):'');
+  if(REP<35)s+=' And word is that your promises are worthless.';else if(REP>=75)s+=' All the peoples say your word is good.';if(DEAL[t])s+=' Our trade serves us both.';if(memHas(t,'spy',2400))s+=' And we have not forgotten your spies.';
   s+=KNOWP[t]?'':' (Send an envoy from an Embassy and you will learn their temperament.)';return s}
 function audTopics(t){const r=REL[0][t],C=[],soon=gameT<HCD[t];
   if(r===0){C.push({l:'We seek peace.',f:()=>{if(soon)return say(t,'ref_peace')+' Ask us again later.';HCD[t]=gameT+45;if(aiConsider(t,0,'peace',0)){setRel(0,t,1);opinAdd(t,5);memAdd(t,'peace');return say(t,'acc_peace')}
@@ -2626,9 +2640,11 @@ function audTopics(t){const r=REL[0][t],C=[],soon=gameT<HCD[t];
       if(conflict(0,t))return'You are friends with our enemies, or we with yours. We cannot.';if(aiConsider(t,0,'alliance',0)){setRel(0,t,2);opinAdd(t,5);memAdd(t,'ally');return say(t,'acc_ally')}return say(t,'ref_ally')}});
     C.push({l:'We declare war on you.',f:()=>({line:say(t,'war_confirm'),mood:moodOf(t)==='friendly'?'wary':'angry',choices:[{l:'Yes. This means war.',f:()=>{const fresh=gameT-treatyT[0][t]<90;declareWar(0,t);memAdd(t,'betray');return{line:say(t,fresh?'war_betray':'war_reply'),choices:[{l:'Leave',f:()=>{audClose();return null}}],mood:'angry'}}},{l:'No. I spoke in haste.',f:()=>{opinAdd(t,-3);return'Hmph. Mind your words.'}}]})})}
   if(r===2)C.push({l:'Our alliance is at an end.',f:()=>({line:'You would break our alliance?',mood:'wary',choices:[{l:'Yes, it is over.',f:()=>{breakAlliance(0,t);memAdd(t,'betray');return say(t,'break_reply')}},{l:'No, forget I said it.',f:()=>'Good. Let us not speak of it again.'}]})});
+  C.push({l:'Let us make an agreement…',f:()=>({line:'What do you propose?',choices:audAgree(t)})});
   C.push({l:'Accept a gift from us.',f:()=>({line:'A gift? What do you offer?',choices:['food','wood','gold','stone'].flatMap(k=>[100,300].map(n=>({l:n+' '+RESNAME[k].toLowerCase(),dis:res[0][k]<n?'Not enough '+RESNAME[k].toLowerCase()+'.':'',f:()=>{const o0=OPIN[t][0];if(!tribute(0,t,k,n))return'You do not have that much.';memAdd(t,'gift');return say(t,(n>=300||(PERS[t]==='merchant'&&k==='gold'))?'gift_big':'gift_small')+(OPIN[t][0]-o0>=1?'':' (They are already as pleased as gifts can make them for now.)')}}))).concat([{l:'Never mind.',f:()=>'As you wish.'}])})});
   C.push({l:'Your people are great and wise.',f:()=>{if(gameT<(FLT[t]||0)){opinAdd(t,-1);return'You said so already. Do you want something?'}FLT[t]=gameT+180;
       if(PERS[t]==='warlike'&&strength(t)>strength(0)*1.1){opinAdd(t,-2);return say(t,'flat_weak')}opinAdd(t,PERS[t]==='merchant'?2:PERS[t]==='warlike'?2:4);return say(t,'flat_ok')}});
+  C.push({l:'What news do you hear?',f:()=>audNews(t)});
   C.push({l:'How do you see us?',f:()=>dipView(t)});
   C.push({l:'You '+cname(t)+' are beneath us.',f:()=>{const strong=strength(0)>strength(t)*1.3;opinAdd(t,PERS[t]==='honourable'?-25:PERS[t]==='warlike'&&strong?-6:-15);memAdd(t,'insult');
       if(REL[0][t]===1&&PERS[t]==='warlike'&&!strong&&OPIN[t][0]<-40&&gameT>DIFF[diffKey].first*.6){EVTS.push({t:gameT+8,f:()=>{if(REL[t][0]===1)declareWar(t,0)}});return{line:say(t,'insulted')+' You will regret those words.',mood:'angry'}}
@@ -2639,6 +2655,156 @@ function audience(t){if(ELIM[t]||!METP[0][t]||!DIPLO)return;const ml=memLine(t);
 function dipEvent(t,line,choices,secs,onExpire,mood){if(ELIM[t])return;sfxUI('parchment');DIPQ.push({team:t,line,choices,until:gameT+secs,onExpire,mood});if(DIPQ.length>6){const o=DIPQ.shift();if(o.onExpire)o.onExpire()}renderDip()}
 function dipAnswer(){if(!DIPQ.length)return;const d=DIPQ.shift();renderDip();const t=d.team;
   const ch=d.choices.map(c=>({l:c.l,dis:c.dis,f:()=>{const r=c.f();return r==null?say(t,'g_'+moodKey(t)):r}}));audOpen(t,d.line,ch,d.mood)}
+/* ================= DIPLOMACY II: reputation, deals, joint wars, threats, maps, news ================= */
+let REP=50,DEAL=[],INTEL=[],MAPT=[],NEWST=[],GOSS=[],spyMode=null,spyT=0;
+Object.assign(VOICE.warlike,{deal_ok:['Fair enough. Our wagons will roll.'],deal_no:['Trade with you? I think not.'],deal_poor:['We have little {res} to spare.'],deal_offer:['We will send you {gn} {gk} each minute, for {wn} {wk}. Take it or leave it.'],
+  join_yes:['At last, a real fight! We march on the {X}.'],join_no:['Fight your own battles.'],join_ask:['We are at war with the {X}. Join us, if you have the stomach for it.'],join_thanks:['Ha! Now we will crush them together.'],join_refused:['Cowards. We will remember who stood with us.'],
+  threat_pay:['Take your gold, then. But we will not forget this.'],threat_refuse:['Threats? From you? Come and try.'],bluff_laugh:['Ha! I knew you had no stomach for it.'],
+  maps_ok:['Here, our scouts\' maps. Do not get lost.'],maps_no:['Our maps are not for you.'],news:['Listen well.'],news_none:['Nothing worth telling.'],
+  peace_pay_ok:['Take the gold. This war is not worth it.'],peace_pay_no:['Pay YOU? Never.'],vil_ok:['Take the village, then. We want peace.'],vil_no:['That village is ours, and stays ours.'],
+  warn:['A warning, friend: {W}'],spy_caught:['We caught your spy sneaking through our lands. Explain yourself!'],spy_deny_ok:['Hmph. Perhaps. Keep your people out of our lands.'],spy_deny_no:['Liar! We know who sent him.'],spy_sorry:['At least you admit it.'],spy_paid:['Gold. Good. We will say no more.'],spy_theirs:['A spy? Not ours. We have no need to sneak; we come through the front gate.']});
+Object.assign(VOICE.cautious,{deal_ok:['A sensible arrangement. Agreed.'],deal_no:['We would rather not, for now.'],deal_poor:['We have too little {res} to spare.'],deal_offer:['Might we trade? We send {gn} {gk} each minute, for {wn} {wk}.'],
+  join_yes:['If we must. We will stand with you against the {X}.'],join_no:['We dare not start another war.'],join_ask:['The {X} attack us. Will you help us?'],join_thanks:['Thank you. We feel safer already.'],join_refused:['We understand, but we are disappointed.'],
+  threat_pay:['Here. Please, leave us in peace.'],threat_refuse:['We will not be bullied, even by you.'],bluff_laugh:['We are relieved, but we will be careful of you.'],
+  maps_ok:['Of course. Friends should know the land.'],maps_no:['We would rather keep our maps for now.'],news:['We have heard something.'],news_none:['All is quiet. We hope it stays so.'],
+  peace_pay_ok:['Yes, yes, take it. Just stop the fighting.'],peace_pay_no:['We cannot afford that.'],vil_ok:['Very well. Take it, and let there be peace.'],vil_no:['We cannot give up our people.'],
+  warn:['Be careful, friend: {W}'],spy_caught:['We found one of your spies among us. Why would you do this?'],spy_deny_ok:['We... will choose to believe you.'],spy_deny_no:['Please do not lie to us as well.'],spy_sorry:['Thank you for your honesty.'],spy_paid:['We accept. Let us forget it.'],spy_theirs:['A spy? We sent no spy. We swear it.']});
+Object.assign(VOICE.merchant,{deal_ok:['Done! A pleasure doing business.'],deal_no:['No deal, I am afraid.'],deal_poor:['{res} is scarce with us. No.'],deal_offer:['A proposal: {gn} {gk} from us each minute, for {wn} {wk} from you. Good for both!'],
+  join_yes:['War is expensive, but the {X} have been bad for business. We join you.'],join_no:['War is bad for business. No.'],join_ask:['The {X} are attacking us. Help us and we will make it worth your while.'],join_thanks:['Splendid! You will not regret it.'],join_refused:['A poor investment in our friendship.'],
+  threat_pay:['Take it. Consider it the cost of doing business.'],threat_refuse:['Your threat is a poor offer. Rejected.'],bluff_laugh:['I knew it was a bluff. A bad negotiator.'],
+  maps_ok:['Maps for maps. Fair trade.'],maps_no:['Our maps are worth more than that.'],news:['Information is worth gold, but for you, free.'],news_none:['No news is good news, as they say.'],
+  peace_pay_ok:['A costly peace is still cheaper than war.'],peace_pay_no:['That price is too high.'],vil_ok:['Take the village. It was losing money anyway.'],vil_no:['That village is too profitable.'],
+  warn:['Some free advice, partner: {W}'],spy_caught:['Your spy was caught in our counting-house. Bad form!'],spy_deny_ok:['Very well, we will let it go. This time.'],spy_deny_no:['Please. We count coins for a living; we know a lie.'],spy_sorry:['An apology. Cheap, but accepted.'],spy_paid:['Now we are talking. Matter closed.'],spy_theirs:['A spy? Ours? Ridiculous. Spies are bad for business.']});
+Object.assign(VOICE.honourable,{deal_ok:['An honest bargain. Agreed.'],deal_no:['We decline.'],deal_poor:['We have no {res} to spare.'],deal_offer:['We offer {gn} {gk} each minute, for {wn} {wk}. A fair exchange.'],
+  join_yes:['We stand with you. The {X} will face us both.'],join_no:['We have no quarrel with them.'],join_ask:['The {X} make war on us. We ask you, as our ally, to stand with us.'],join_thanks:['You keep your oath. We will not forget it.'],join_refused:['An ally who does not fight is no ally.'],
+  threat_pay:['You shame yourselves. Take your gold.'],threat_refuse:['We do not bow to threats.'],bluff_laugh:['Empty words. You have lost our respect.'],
+  maps_ok:['Here are our maps, freely given.'],maps_no:['Not until we trust you more.'],news:['We will tell you what we know.'],news_none:['We have heard nothing of note.'],
+  peace_pay_ok:['We accept your terms. Take the gold.'],peace_pay_no:['We will not buy our way out of war.'],vil_ok:['So be it. The village is yours.'],vil_no:['We will not abandon our people.'],
+  warn:['You should know this: {W}'],spy_caught:['We caught your spy. Is this how you treat us?'],spy_deny_ok:['Very well. We take you at your word.'],spy_deny_no:['You lie to our face as well? Shameful.'],spy_sorry:['An honest answer. We accept your apology.'],spy_paid:['Gold does not mend honour, but we accept it.'],spy_theirs:['We sent no spy. We do not stoop to such things.']});
+Object.assign(MEMLINE,{spy:{_:'Your spies were caught in our lands.'},dealbroke:{merchant:'You failed to pay what you promised. Business remembers.',_:'You failed to pay what you promised.'},joined:{_:'You fought at our side when we asked.'},
+  refusedjoin:{honourable:'When we asked for help, you did not come.',_:'You would not help us when we asked.'},extorted:{_:'You squeezed gold from us with threats.'},bluff:{warlike:'Your empty threats still make us laugh.',_:'Your threats were empty last time.'}});
+function repWord(){return REP<20?'Faithless':REP<40?'Doubtful':REP<60?'Fair':REP<80?'Trusted':'Honoured'}
+function repAdd(n,why){const o=REP;REP=clamp(REP+n,0,100);if(n<=-5&&why)notify('Your reputation suffers: '+why+' (now '+repWord().toLowerCase()+').',true);if(Math.floor(o/20)!==Math.floor(REP/20))renderPlayers(true)}
+/* --- trade deals --- */
+const VAL={food:1,wood:1,stone:1.25,gold:1.6};
+function dealFair(t,gk,wk,n){const f={merchant:.95,cautious:.9,honourable:.92,warlike:.8}[PERS[t]]||.9;return Math.max(10,Math.round(n*VAL[gk]/VAL[wk]*(f+OPIN[t][0]/400)/5)*5)}
+function dealText(d){return'you send '+d.give.n+' '+RESNAME[d.give.k].toLowerCase()+' a minute and receive '+d.get.n+' '+RESNAME[d.get.k].toLowerCase()}
+function dealEnd(t,why){if(!DEAL[t])return;DEAL[t]=null;if(why)notify('Your trade deal with the '+cname(t)+' has ended'+why,true);renderPlayers(true)}
+function dealTick(){for(let t=1;t<NP;t++){const d=DEAL[t];if(!d)continue;if(ELIM[t]||REL[0][t]===0){dealEnd(t,ELIM[t]?'.':': you are at war.');continue}
+    if(OPIN[t][0]<-35){dealEnd(t,': they no longer wish to trade with you.');continue}
+    if(gameT<d.next)continue;d.next+=60;
+    if(res[0][d.give.k]<d.give.n){dealEnd(t,'. You could not pay.');repAdd(-6,'you broke a trade deal');opinAdd(t,-12);memAdd(t,'dealbroke');continue}
+    if(res[t][d.get.k]<d.get.n){dealEnd(t,'. They could not pay, so it is cancelled.');continue}
+    res[0][d.give.k]-=d.give.n;res[t][d.give.k]+=d.give.n;res[t][d.get.k]-=d.get.n;res[0][d.get.k]+=d.get.n;stats.gathered+=d.get.n;opinAdd(t,PERS[t]==='merchant'?1.5:.8);repAdd(.3)}}
+function dealOffer(t){const R0=res[t];let gk=null,wk=null,hi=-1,lo=1e9;for(const k of['food','wood','stone','gold']){const v=R0[k]/VAL[k];if(v>hi){hi=v;gk=k}}for(const k of['food','wood','stone','gold']){if(k===gk)continue;const v=R0[k]/VAL[k];if(v<lo){lo=v;wk=k}}
+  if(!gk||!wk||R0[gk]<400)return null;const gn=Math.round(Math.min(150,R0[gk]/8)/10)*10;const wn=Math.max(10,Math.round(gn*VAL[gk]/VAL[wk]*1.12/5)*5);return{give:{k:wk,n:wn},get:{k:gk,n:gn}}}
+/* --- joint war --- */
+function joinWilling(t,c){const o=OPIN[t][0],P=PERS[t],need={warlike:20,honourable:25,cautious:55,merchant:45}[P]||40;return REL[t][0]===2&&REL[t][c]===1&&o>=need&&OPIN[t][c]<30&&strength(t)>strength(c)*.55&&!conflictAllyOf(t,c)}
+/* --- news --- */
+function newsLine(t){const out=[];
+  for(let c=1;c<NP;c++){if(c===t||ELIM[c]||!METP[0][c]||REL[0][c]===0)continue;if(OPIN[c][0]<PERSONA[PERS[c]].war+12)out.push('The '+cname(c)+' have no love for you. Their leader speaks of war.')}
+  for(let c=1;c<NP;c++){if(c===t||ELIM[c]||!METP[0][c]||REL[0][c]!==0)continue;let n=0;for(const u of units)if(!u.dead&&u.team===c&&isMil(u.def))n++;out.push('The '+cname(c)+' have an army of about '+(Math.round(n/5)*5||n)+' soldiers.')}
+  const al=[];for(let a=1;a<NP;a++)for(let b=a+1;b<NP;b++)if(REL[a][b]===2&&!ELIM[a]&&!ELIM[b]&&METP[0][a]&&METP[0][b])al.push('the '+cname(a)+' and the '+cname(b));if(al.length)out.push('We hear that '+al.join(', and ')+' are allies.');
+  for(let c=1;c<NP;c++){if(c===t||ELIM[c]||!METP[0][c])continue;if(OPIN[t][c]<-30){out.push('Between us: we cannot stand the '+cname(c)+'.');break}}
+  return out}
+/* --- maps --- */
+function shareMaps(t){for(const b of blds)if(!b.dead&&b.team===t){b.seen=true;if(EXP)stampExp(b.x,b.z,9)}for(const u of units)if(!u.dead&&u.team===t&&EXP)stampExp(u.x,u.z,5);for(let c=0;c<NP;c++)if(c!==t&&METP[0][c]&&!METP[t][c])makeContact(t,c);fogT=0}
+function stampExp(x,z,r){const cx=Math.floor(x+HALF),cz=Math.floor(z+HALF),r2=r*r;for(let j=-r;j<=r;j++){const b=cz+j;if(b<0||b>=N)continue;for(let i=-r;i<=r;i++){if(i*i+j*j>r2)continue;const a=cx+i;if(a<0||a>=N)continue;EXP[b*N+a]=1}}}
+/* --- the new audience topics --- */
+function audAgree(t){const r=REL[0][t],C=[],soon=gameT<HCD[t],P=PERS[t];
+  if(r!==0){if(DEAL[t])C.push({l:'Our trade deal is at an end. ('+dealText(DEAL[t])+')',f:()=>{dealEnd(t);repAdd(-1);opinAdd(t,P==='merchant'?-6:-3);return'As you wish. The wagons stop.'}});
+    else C.push({l:'Let us make a trade deal.',f:()=>({line:'What would you send us each minute?',choices:['food','wood','stone','gold'].map(gk=>({l:'100 '+RESNAME[gk].toLowerCase()+' a minute',f:()=>({line:'And what do you want in return?',choices:['food','wood','stone','gold'].filter(k=>k!==gk).map(wk=>({l:RESNAME[wk],f:()=>{
+        if(OPIN[t][0]<-15||REP<20||(P==='warlike'&&OPIN[t][0]<5))return say(t,'deal_no')+(REP<20?' Your word is worth nothing these days.':'');
+        const wn=dealFair(t,gk,wk,100);if(res[t][wk]<wn*3)return say(t,'deal_poor',{res:RESNAME[wk].toLowerCase()});
+        return{line:'We can give you '+wn+' '+RESNAME[wk].toLowerCase()+' each minute for your 100 '+RESNAME[gk].toLowerCase()+'. Agreed?',choices:[{l:'Agreed.',f:()=>{DEAL[t]={give:{k:gk,n:100},get:{k:wk,n:wn},next:gameT+60,since:gameT};opinAdd(t,3);sfxUI('coins');renderPlayers(true);return say(t,'deal_ok')+' (Every minute: '+dealText(DEAL[t])+'. End it from here at any time.)'}},{l:'No, that is not enough.',f:()=>'Then we have no deal.'}]}}})).concat([{l:'Never mind.',f:()=>'As you wish.'}])})})).concat([{l:'Never mind.',f:()=>'As you wish.'}])})})}
+  if(r===2)for(let c=1;c<NP;c++){if(c===t||ELIM[c]||REL[0][c]!==0||REL[t][c]!==1||!METP[t][c])continue;
+    C.push({l:'Join us in our war against the '+cname(c)+'.',f:()=>{if(soon)return'We are still thinking on your last request.';HCD[t]=gameT+45;
+      if(joinWilling(t,c)){declareWar(t,c);memAdd(t,'joined');opinAdd(t,3);return say(t,'join_yes',{X:cname(c)})}
+      return{line:say(t,'join_no',{X:cname(c)}),choices:[{l:'We will pay you 300 gold to join us.',dis:res[0].gold<300?'You do not have 300 gold.':'',f:()=>{if(REL[t][c]===1&&OPIN[t][0]>=10&&strength(t)>strength(c)*.5&&!conflictAllyOf(t,c)&&(P!=='cautious'||OPIN[t][0]>35)){res[0].gold-=300;res[t].gold+=300;sfxUI('coins');declareWar(t,c);memAdd(t,'joined');return say(t,'join_yes',{X:cname(c)})}return'Not even for gold.'}},{l:'Then we fight alone.',f:()=>'So be it.'}]}}})}
+  if(r===1){const amt=Math.min(600,150+Math.max(0,age[0]-AGEMIN)*50);
+    C.push({l:'Pay us '+amt+' gold, or face war.',f:()=>{if(soon)return'We are still thinking on your last words.';HCD[t]=gameT+60;const ratio=strength(0)/strength(t),need={warlike:2.2,honourable:2.5,cautious:1.3,merchant:1.4}[P]||1.6;
+      if(ratio>need&&res[t].gold>=amt){res[t].gold-=amt;res[0].gold+=amt;sfxUI('coins');opinAdd(t,-18);memAdd(t,'extorted');repAdd(-3,'you bullied a weaker neighbour');return{line:say(t,'threat_pay'),mood:'angry'}}
+      opinAdd(t,-10);return{line:say(t,'threat_refuse')+(res[t].gold<amt&&ratio>need?' And we have no such gold besides.':''),mood:'angry',choices:[{l:'Then it is war.',f:()=>{declareWar(0,t);return{line:say(t,'war_reply'),mood:'angry',choices:[{l:'Leave',f:()=>{audClose();return null}}]}}},{l:'We were only joking.',f:()=>{repAdd(-6,'you made an empty threat');opinAdd(t,-5);memAdd(t,'bluff');return say(t,'bluff_laugh')}}]}}})}
+  if(r!==0)C.push({l:'Let us share our maps.',f:()=>{if(gameT<(MAPT[t]||0))return'We shared our maps not long ago.';if(r!==2&&OPIN[t][0]<20)return say(t,'maps_no');MAPT[t]=gameT+300;shareMaps(t);opinAdd(t,2);return say(t,'maps_ok')+' (Their lands are now on your map.)'}});
+  if(r===0){const amt=300;C.push({l:'Peace, if you pay us '+amt+' gold.',f:()=>{if(soon)return'We are still thinking on your last offer.';HCD[t]=gameT+45;const ratio=strength(t)/strength(0);
+      if((ratio<.75||LOSS[t]>6)&&res[t].gold>=amt&&gameT-treatyT[0][t]>45){res[t].gold-=amt;res[0].gold+=amt;sfxUI('coins');setRel(0,t,1);memAdd(t,'peace');return say(t,'peace_pay_ok')}opinAdd(t,-3);return{line:say(t,'peace_pay_no'),mood:'angry'}}});
+    const V=VILS.find(v=>v.owner===t&&!v.hall.dead);if(V)C.push({l:'Peace, if you give us the village of '+V.name+'.',f:()=>{if(soon)return'We are still thinking on your last offer.';HCD[t]=gameT+45;const ratio=strength(t)/strength(0);
+      if((ratio<.6||LOSS[t]>10)&&gameT-treatyT[0][t]>45){setVilOwner(V,0,'bought');setRel(0,t,1);memAdd(t,'peace');return say(t,'vil_ok')}opinAdd(t,-3);return{line:say(t,'vil_no'),mood:'angry'}}})}
+  C.push({l:'Back.',f:()=>({line:say(t,'g_'+moodKey(t)),choices:audTopics(t)})});return C}
+function audNews(t){if(REL[0][t]!==2&&OPIN[t][0]<15)return'We share nothing with you.';if(gameT<(NEWST[t]||0))return'We told you all we know.';NEWST[t]=gameT+120;const n=newsLine(t);if(!n.length)return say(t,'news_none');return say(t,'news')+' '+n.slice(0,2).join(' ')}
+/* --- leaders who speak up on their own --- */
+function dipChatter(){if(!DIPLO)return;
+  for(let a=1;a<NP;a++){if(ELIM[a]||!METP[0][a]||!PERS[a]||gameT<(GOSS[a]||300))continue;const o=OPIN[a][0];const AI=AIS[a];if(!AI)continue;
+    // merchants and friends offer trade deals
+    if(!DEAL[a]&&REL[a][0]!==0&&o>=10&&REP>=25&&(PERS[a]==='merchant'||o>=30)&&Math.random()<.25){const d=dealOffer(a);if(d){GOSS[a]=gameT+420;
+        dipEvent(a,say(a,'deal_offer',{gn:d.get.n,gk:RESNAME[d.get.k].toLowerCase(),wn:d.give.n,wk:RESNAME[d.give.k].toLowerCase()}),[{l:'Agreed.',f:()=>{if(REL[a][0]===0)return'The moment has passed.';DEAL[a]=Object.assign(d,{next:gameT+60,since:gameT});opinAdd(a,3);renderPlayers(true);return say(a,'deal_ok')}},{l:'No, thank you.',f:()=>{opinAdd(a,-1);return say(a,'deal_no')}}],45,null,'friendly');return}}
+    // allies ask for help in their wars
+    if(REL[a][0]===2){for(let c=1;c<NP;c++){if(c===a||ELIM[c]||REL[a][c]!==0||REL[0][c]!==1||!METP[0][c])continue;GOSS[a]=gameT+600;const X=cname(c);
+        dipEvent(a,say(a,'join_ask',{X}),[{l:'We will join you against the '+X+'.',f:()=>{if(REL[0][c]!==1)return'Good.';const fresh=gameT-treatyT[0][c]<90;declareWar(0,c);if(fresh)repAdd(-4);memAdd(a,'joined');opinAdd(a,15);return say(a,'join_thanks')}},
+          {l:'We cannot, but take 200 gold for the war.',dis:res[0].gold<200?'You do not have 200 gold.':'',f:()=>{if(!tribute(0,a,'gold',200))return'…';return say(a,'gift_small')}},
+          {l:'No. This is your war.',f:()=>{opinAdd(a,PERS[a]==='honourable'?-15:PERS[a]==='warlike'?-12:-6);memAdd(a,'refusedjoin');return{line:say(a,'join_refused'),mood:'wary'}}}],45,()=>{opinAdd(a,-4)},'wary');return}}
+    // friends warn you
+    if((o>=40||REL[a][0]===2)&&Math.random()<.3){const n=newsLine(a).filter(s=>s.indexOf('speaks of war')>=0||s.indexOf('army of')>=0);if(n.length){GOSS[a]=gameT+480;dipEvent(a,say(a,'warn',{W:n[0]}),[{l:'Thank you, friend.',f:()=>{opinAdd(a,2);return say(a,'bye_warm')}}],30,null,'friendly');return}}}}
+/* ================= SPIES ================= */
+const SPYM={scout:{short:'Scout base',name:'Scout their base',risk:.1,desc:'Reveals their buildings and army for 3 minutes'},steal:{short:'Steal gold',name:'Steal gold',risk:.3,desc:'Takes gold (or food) from their stores'},sabotage:{short:'Sabo&shy;tage',name:'Sabotage',risk:.42,desc:'Sets a building on fire; a workshop stops for 2 minutes'},
+  rumour:{short:'Rumours',name:'Spread rumours',risk:.28,desc:'Turns their leader against their closest friend'},incite:{short:'Stir village',name:'Stir up a village',risk:.25,desc:'Turns a neutral village against everyone else, or stops a rival\'s village paying them for 3 minutes'}};
+const isSpy=u=>u&&u.def&&u.def.cls==='spy';
+const spyHidden=u=>isSpy(u)&&!(u.exposed>gameT);
+function hostileTo(e,team){return foe(e.team,team)||(e.exposed>gameT&&e.exposedBy===team)}
+function spyMissionsFor(u){return u.type==='informer'?['scout','rumour','incite']:['scout','steal','sabotage','rumour','incite']}
+function spyValid(m,b){if(!b||b.kind!=='bld'||b.dead)return'Pick a building.';if(m==='incite')return isVilT(b.team)&&vilOfHall(b)?'':'Pick a village hall.';
+  if(b.team===0)return'Pick another people\'s building.';if(b.team>=NP)return'Pick a building of another people.';if(m==='sabotage'&&(b.def.wall||b.def.road||b.def.plant))return'Pick a proper building, not a wall or road.';return''}
+function spyOrder(target){const m=spyMode;spyMode=null;canvas.style.cursor='';const sp=ownUnitsSel().filter(u=>isSpy(u)&&spyMissionsFor(u).includes(m));if(!sp.length){renderPanel(true);return}
+  const bad=spyValid(m,target);if(bad){notify(bad,true);renderPanel(true);return}
+  for(const u of sp){u.task={t:'spy',target,mission:m};u.path=null;u.pathFor=null}marker(target.x,target.z,0xb8a0ff);notify('Your spy sets out: '+SPYM[m].name.toLowerCase()+'.');renderPanel(true)}
+function doSpy(u,dt){const b=u.task.target;if(!b||b.dead){spyHome(u);return}if(inRange(u,b,.9)){spyArrive(u,b,u.task.mission);return}approach(u,b,dt)}
+function spyHome(u){if(u.dead)return;const h=blds.find(x=>!x.dead&&x.team===u.team&&x.type==='embassy')||blds.find(x=>!x.dead&&x.team===u.team&&x.type==='tc');if(h)orderMove(u,{x:h.x+h.s/2+1,z:h.z+h.s/2+1});else setIdle(u)}
+function spyRisk(u,T,m){let r=SPYM[m].risk;if(T<NP&&has(T,'counterintel'))r*=1.6;if(u.type==='informer')r*=1.3;if(u.exposed>gameT)r=Math.min(.95,r*2.2);return r}
+function spyArrive(u,b,m){const T=b.team,own=u.team;
+  if(Math.random()<spyRisk(u,T,m)){spyCaught(u,T<NP?T:-1);return}
+  const C=T<NP?cname(T):'',me=own===0;
+  if(m==='scout'){if(me){INTEL[T]=gameT+180;for(const x of blds)if(!x.dead&&x.team===T)x.seen=true;let n=0;for(const x of units)if(!x.dead&&x.team===T&&isMil(x.def))n++;fogT=0;
+      notify('Your spy reports on the '+C+': '+n+' soldiers, about '+Math.round(res[T].gold/50)*50+' gold and '+Math.round(res[T].food/50)*50+' food. Their lands show on your map for 3 minutes.')}}
+  else if(m==='steal'){const k=res[T].gold>=60?'gold':'food',n=Math.round(Math.min(res[T][k]*.15,(k==='gold'?150:250)+Math.max(0,age[own]-AGEMIN)*40));res[T][k]-=n;res[own][k]+=n;
+    if(me){sfxUI('coins');notify('Your spy stole '+n+' '+k+' from the '+C+'.')}else if(T===0)notify('Some '+k+' has gone missing from your stores ('+n+'). A thief?',true)}
+  else if(m==='sabotage'){b.burn=gameT+20;if(b.def.recipes)b.sabot=gameT+120;b.hp-=b.maxhp*.08;
+    if(me)notify('Your spy set fire to the '+C+'\'s '+b.name+'.');else if(T===0){notify('Fire at your '+b.name+'! Sabotage?',true);pingMini(b.x,b.z)}}
+  else if(m==='rumour'){let c=-1,bo=-1e9;for(let k=0;k<NP;k++){if(k===T||k===own||ELIM[k]||!METP[T][k])continue;const o=OPIN[T][k]+(REL[T][k]===2?50:0);if(o>bo){bo=o;c=k}}
+    if(c<0){if(me)notify('Your spy found nobody to turn the '+C+' against.');}else{OPIN[T][c]=clamp(OPIN[T][c]-30,-100,100);if(c>0&&OPIN[c])OPIN[c][T]=clamp(OPIN[c][T]-15,-100,100);
+      if(REL[T][c]===2&&OPIN[T][c]<-20&&c>0)breakAlliance(T,c);if(me)notify('Rumours spread: the '+C+' now distrust '+(c===0?'you':'the '+cname(c))+'.')}}
+  else if(m==='incite'){const V=vilOfHall(b);if(V){if(V.owner<0){for(let k=0;k<NP;k++)if(k!==own)V.fav[k]=Math.max(0,V.fav[k]-30);if(me)notify(V.name+' now distrusts everyone else.')}
+    else if(V.owner!==own){V.unrest=gameT+180;if(me)notify(V.name+' is in uproar and will pay '+(V.owner===0?'nobody':'the '+cname(V.owner))+' for 3 minutes.');else if(V.owner===0)notify(V.name+' is in uproar and has stopped paying you. Agitators?',true)}}}
+  puff(u.x,uY(u)+1.6,u.z,0xb8a0ff,3,.15,.4,.7,1);spyHome(u)}
+function spyCaught(u,T){if(u.dead)return;u.caught=true;kill(u);spyIncident(u.team,T)}
+function spyIncident(own,T){if(T>=NP)T=-1;
+  if(own===0&&T>0){opinAdd(T,PERS[T]==='honourable'?-35:-25);repAdd(-8,'your spy was caught');memAdd(T,'spy');
+    if(PERS[T]==='warlike'&&REL[T][0]===1&&OPIN[T][0]<PERSONA.warlike.war&&gameT>DIFF[diffKey].first*.5)EVTS.push({t:gameT+12,f:()=>{if(REL[T][0]===1)declareWar(T,0)}});
+    dipEvent(T,say(T,'spy_caught'),[
+      {l:'That was not our spy.',f:()=>{if(Math.random()<(PERS[T]==='honourable'?.3:.5)){opinAdd(T,12);repAdd(5);return say(T,'spy_deny_ok')}opinAdd(T,-10);repAdd(-4,'you were caught lying');return{line:say(T,'spy_deny_no'),mood:'angry'}}},
+      {l:'We apologise. It will not happen again.',f:()=>{opinAdd(T,10);repAdd(3);return say(T,'spy_sorry')}},
+      {l:'Let 200 gold settle the matter.',dis:res[0].gold<200?'You do not have 200 gold.':'',f:()=>{res[0].gold-=200;res[T].gold+=200;sfxUI('coins');opinAdd(T,PERS[T]==='merchant'?28:20);return say(T,'spy_paid')}}],45,null,'angry')}
+  else if(own===0)notify('Your spy was caught and killed.',true);
+  else if(T===0){notify('Your guards caught a spy of the '+cname(own)+'!',true);if(DIPLO&&METP[0][own])dipEvent(own,say(own,'spy_theirs'),[
+      {l:'Then pay 150 gold to prove your innocence.',f:()=>{if((PERS[own]==='cautious'||PERS[own]==='merchant'||strength(own)<strength(0))&&res[own].gold>=150){res[own].gold-=150;res[0].gold+=150;sfxUI('coins');opinAdd(own,-5);return'Fine. Take it, and let this be the end of it.'}opinAdd(own,-6);return{line:'We will pay nothing for a crime we did not commit.',mood:'angry'}}},
+      {l:'We will be watching you.',f:()=>{opinAdd(own,-2);return'Watch all you like.'}},{l:'Let it go.',f:()=>{opinAdd(own,3);return'Good. We are glad that is settled.'}}],40,null,'wary')}
+  else if(T>0&&OPIN[T])OPIN[T][own]=clamp(OPIN[T][own]-25,-100,100)}
+const DETB=['tc','castle','tower','btower','hillfort','lookout','vhall'],DETU=['scout','monk','runner','horseman'];
+function spyTick(dt){spyT-=dt;if(spyT>0)return;spyT=.5;
+  for(const u of units){if(u.dead||u.inside||!isSpy(u)||u.exposed>gameT)continue;
+    for(const b of blds){if(b.dead||!b.built||b.team===u.team||ally(b.team,u.team)||!DETB.includes(b.type))continue;const T=b.team<NP?b.team:-1,R=5+(T>=0&&has(T,'counterintel')?3:0);
+      if(rectDist(u.x,u.z,b)<R&&Math.random()<(T>=0&&has(T,'counterintel')?.12:.06)){spyExpose(u,b.team);break}}
+    if(u.exposed>gameT)continue;
+    for(const e of units){if(e.dead||e.inside||e.team===u.team||ally(e.team,u.team)||!DETU.includes(e.type))continue;if(Math.hypot(e.x-u.x,e.z-u.z)<4&&Math.random()<.08){spyExpose(u,e.team);break}}}}
+function spyExpose(u,T){u.exposed=gameT+25;u.exposedBy=T;if(u.team===0){notify('Your spy has been spotted'+(T<NP?' by the '+cname(T):'')+'! Get it out of there.',true);pingMini(u.x,u.z)}
+  else if(T===0){notify('An enemy spy has been spotted'+(METP[0][u.team]?': one of the '+cname(u.team):'')+'! Your soldiers and towers can attack it.',true);pingMini(u.x,u.z);sfxUI('horn',.6)}}
+function aiSpyStep(a){const AI=AIS[a];if(!DIPLO||age[a]<MED+2||!hasEmbassy(a))return;if(AI.spyT==null)AI.spyT=gameT+240+Math.random()*240;if(gameT<AI.spyT)return;
+  if(diffKey==='easy'&&Math.random()<.6){AI.spyT=gameT+400;return}
+  let tgt=-1,lo=1e9;for(let b=0;b<NP;b++){if(b===a||ELIM[b]||!METP[a][b]||REL[a][b]===2)continue;const o=OPIN[a][b]+(REL[a][b]===0?-40:0);if(o<lo){lo=o;tgt=b}}if(tgt<0||lo>25){AI.spyT=gameT+300;return}
+  let sp=units.find(u=>!u.dead&&u.team===a&&u.type==='spy'&&u.task.t!=='spy');
+  if(!sp){const emb=blds.find(b=>!b.dead&&b.built&&b.team===a&&b.type==='embassy');if(emb&&!emb.queue.length&&canAfford(a,UNITS.spy.cost)&&popUsed(a)<popCap(a))train(emb,'spy',a);AI.spyT=gameT+20;return}
+  const dest=blds.find(b=>!b.dead&&b.team===tgt&&b.type==='tc')||blds.find(b=>!b.dead&&b.team===tgt&&!b.def.wall&&!b.def.road);if(!dest||compAt(dest.x,dest.z)!==AI.comp){AI.spyT=gameT+300;return}
+  const r=Math.random(),m=diffKey==='hard'&&r<.2?'sabotage':r<.55?'scout':'steal';sp.task={t:'spy',target:dest,mission:m};sp.path=null;AI.spyT=gameT+360+Math.random()*240}
+
 const dipEl=document.getElementById('dip');
 function renderDip(){if(!dipEl)return;if(!DIPQ.length){dipEl.hidden=true;dipEl.innerHTML='';return}const d=DIPQ[0],t=d.team,one=d.choices.length===1;dipEl.hidden=false;
   dipEl.innerHTML='<button class="dpor" data-dans aria-label="Answer '+lname(t)+'">'+portraitSVG(t,d.mood||moodOf(t))+'</button><div class="dt"><div class="dn">'+lname(t)+' <span>of the '+cname(t)+'</span></div><p>“'+d.line+'”</p><div class="db">'+(one?'<button data-i="0" class="primary">'+d.choices[0].l+'</button>':'<button data-dans class="primary">Answer</button>')+'</div><div class="dbar"><i id="dipbar"></i></div>'+(DIPQ.length>1?'<span class="dmore">+'+(DIPQ.length-1)+' more</span>':'')+'</div>'}
@@ -2713,7 +2879,7 @@ function vilTick(dt){vilT-=dt;if(vilT>0)return;vilT=1;const D=DIFF[diffKey];
     if(b.grow>=1){const ox=b.ox,oz=b.oz,t=b.team;kill(b,true);plantTree(ox,oz,has(t,'forestry')?125:100);if(t===0&&(!FOGON||visAt(b.x,b.z)))puff(b.x,heightAt(b.x,b.z)+1.4,b.z,0x5f9a34,3,.25,.6,.6,1)}}
   if(BARBS)for(let p=1;p<NP;p++)if(AIS[p]&&!ELIM[p])aiPlant(p);
   for(const V of VILS){if(V.hall.dead)continue;
-    if(V.owner>=0){V.incT-=1;if(V.incT<=0){V.incT=20;const K=VILKIND[V.kind],a=Math.round(K.amt*(HOWMUL[V.how]||1));res[V.owner][K.r]+=a;if(V.owner===0){stats.gathered+=a;puff(V.hall.x,V.hall.y+3.5,V.hall.z,0xffd36a,2,.15,.4,.8,1)}}}
+    if(V.owner>=0&&!(V.unrest>gameT)){V.incT-=1;if(V.incT<=0){V.incT=20;const K=VILKIND[V.kind],a=Math.round(K.amt*(HOWMUL[V.how]||1));res[V.owner][K.r]+=a;if(V.owner===0){stats.gathered+=a;puff(V.hall.x,V.hall.y+3.5,V.hall.z,0xffd36a,2,.15,.4,.8,1)}}}
     else for(let t=0;t<NP;t++)if(V.fav[t]>0)V.fav[t]=Math.max(0,V.fav[t]-.02)}
   for(const u of units){if(u.dead||u.inside||u.task.t!=='idle'||u.raid)continue;
     if(u.vil){const V=VILS.find(v=>v.id===u.vil);if(V&&!V.hall.dead&&u.team===V.hall.team&&Math.hypot(u.x-V.hall.x,u.z-V.hall.z)>9)orderMove(u,{x:V.hall.x+(R()-.5)*6,z:V.hall.z+(R()-.5)*6})}
@@ -2824,7 +2990,7 @@ function tick(dt){
     const dx=b.x-a.x,dz=b.z-a.z,mn=a.def.r+b.def.r;if(dx>mn||dx<-mn||dz>mn||dz<-mn)continue;const d2=dx*dx+dz*dz;if(d2>=mn*mn)continue;
     const d=Math.sqrt(d2)||.01,p=(mn-d)*.25,nx=d2>0?dx/d:1,nz=d2>0?dz/d:0;const wa=a.working?.3:1,wb=b.working?.3:1;shift(a,-nx*p*wa,-nz*p*wa);shift(b,nx*p*wb,nz*p*wb)}}}
   for(const b of blds)if(!b.dead)updBld(b,dt);
-  guideTick(dt);histTick();
+  guideTick(dt);histTick();spyTick(dt);
   for(let pl=1;pl<NP;pl++)if(AIS[pl]&&!ELIM[pl])aiTick(pl,dt);
   for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.t+=dt/p.dur;
     if(alive(p.tg)&&!p.splash){p.tx=p.tg.x;p.tz=p.tg.z;p.ty=(p.tg.kind==='bld'?p.tg.y+1.5:uY(p.tg)+1)}
@@ -2863,7 +3029,7 @@ function animate(dt,t){
   const one=sel.length===1&&sel[0].kind==='bld'&&sel[0].team===0&&sel[0].rally;rally.visible=!!one;if(one){const r=sel[0].rally;rally.position.set(r.x,heightAt(r.x,r.z),r.z)}}
 
 /* ================= END ================= */
-const CORE=['tc','castle','barracks','range','stable','siege'];
+const CORE=['tc','castle','barracks','range','stable','siege','chariotry','hillfort','engyard'];
 function teamAlive(t){return blds.some(b=>!b.dead&&b.team===t&&CORE.includes(b.type))||units.some(u=>!u.dead&&u.team===t&&u.type==='villager')}
 function checkEnd(){if(state!=='play')return;
   for(let t=0;t<NP;t++){if(ELIM[t]||teamAlive(t))continue;ELIM[t]=true;
@@ -2905,7 +3071,8 @@ function command(target,gp,am){const fm=(a,b,c)=>formation(a,b,c,FORMK);
   if(target&&target.kind!=='res'&&isVilT(target.team)&&!foe(target.team,0)&&us.some(u=>isMil(u.def))){if(vilAsk.t===target.team&&performance.now()-vilAsk.time<5000){vilHostile(target.team,0);vilAsk.t=-1}else{vilAsk={t:target.team,time:performance.now()};notify('Right-click '+(vilOf(target.team)||{name:'the village'}).name+' again to attack it. Gifts, envoys or gold can win it peacefully.',true)}}
   else if(target&&target.team!=null&&target.team!==0&&target.team<NP&&target.kind!=='res'&&!foe(target.team,0)&&!ally(target.team,0)&&us.some(u=>isMil(u.def)))notify('You are at peace with the '+CIVS[CIVKEY[target.team]].name+'. Declare war in Diplomacy first.',true);
   if(!us.length){const b=sel.find(e=>e.kind==='bld'&&e.team===0&&e.def.trains);if(b&&gp){b.rally=target&&target.kind==='res'?target:{x:gp.x,z:gp.z};marker(b.rally.x,b.rally.z,0xf2d16b)}return}
-  if(target&&foe(target.team,0)&&!target.dead){us.forEach(u=>{if(u.type==='tradecart')return;if((u.def.bldOnly&&target.kind!=='bld')||(u.type==='monk'&&target.kind!=='unit'))orderMove(u,{x:target.x,z:target.z});else orderAttack(u,target)});marker(target.x,target.z,0xff5a45);return}
+  if(us.some(isSpy)&&target&&target.kind==='bld'&&target.team!==0&&!target.dead){spyMode=isVilT(target.team)?'incite':'scout';spyOrder(target);const rest=us.filter(u=>!isSpy(u));if(!rest.length)return;us.length=0;us.push(...rest)}
+  if(target&&(foe(target.team,0)||(target.kind==='unit'&&target.exposed>gameT&&target.exposedBy===0))&&!target.dead){us.forEach(u=>{if(u.type==='tradecart')return;if((u.def.bldOnly&&target.kind!=='bld')||(u.type==='monk'&&target.kind!=='unit'))orderMove(u,{x:target.x,z:target.z});else orderAttack(u,target)});marker(target.x,target.z,0xff5a45);return}
   if(target&&target.kind==='res'&&target.animal&&target.hp>0){us.forEach(u=>{if(u.type==='villager')orderGather(u,target);else if(isMil(u.def)&&!u.def.bldOnly)orderAttack(u,target)});marker(target.x,target.z,0xf2d16b);return}
   if(target&&target.kind==='unit'&&target.team===0){const mk2=us.filter(u=>u.type==='monk');mk2.forEach(u=>{u.task={t:'heal',target};u.path=null;u.pathFor=null});const rest=us.filter(u=>u.type!=='monk');if(rest.length&&gp)fm(rest,gp,am);if(gp)marker(gp.x,gp.z,0x8dff8a);return}
   if(target&&target.kind==='res'&&!target.fish){us.forEach(u=>{if(u.type==='villager')orderGather(u,target)});const rest=us.filter(u=>u.type!=='villager');if(rest.length)fm(rest,{x:target.x,z:target.z},am);marker(target.x,target.z,0xf2d16b);return}
@@ -2987,7 +3154,7 @@ function tryPlace(shiftKey){
   pay(0,c);const b=placeBld(type,0,placing.ox,placing.oz,false,rot);sfxUI('place');
   vil.forEach(u=>{if(shiftKey&&u.task.t==='build'&&!u.task.target.built)return;orderBuild(u,b)});marker(b.x,b.z,0x8dff8a);
   if(!(shiftKey&&canAfford(0,c)))cancelModes();else updGhost(mouse.x,mouse.y)}
-function cancelModes(noRender){placeHint(null);placing=null;if(ghost){scene.remove(ghost);ghost=null}for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];amoveMode=false;canvas.style.cursor='';if(!noRender)renderPanel(true)}
+function cancelModes(noRender){placeHint(null);placing=null;if(ghost){scene.remove(ghost);ghost=null}for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];amoveMode=false;spyMode=null;canvas.style.cursor='';if(!noRender)renderPanel(true)}
 
 const mouse={x:null,y:null,inside:false};
 let drag=null,boxing=false,midPan=null;const touches=new Map();let pinch=null,touchTap=null;
@@ -3012,6 +3179,7 @@ addEventListener('pointerup',e=>{
   if(e.button===1){midPan=null;return}if(e.button!==0||!drag)return;
   if(state==='play'){
     if(placing)tryPlace(e.shiftKey);
+    else if(spyMode){spyOrder(pick(e.clientX,e.clientY))}
     else if(amoveMode){const t=pick(e.clientX,e.clientY);command(t&&foe(t.team,0)?t:null,groundAt(e.clientX,e.clientY),true);if(!e.shiftKey){amoveMode=false;canvas.style.cursor='';renderPanel(true)}}
     else if(boxing)selectUnitsInBox(drag.x,drag.y,e.clientX,e.clientY,e.shiftKey);
     else{const t=pick(e.clientX,e.clientY);if(e.shiftKey&&t&&t.kind==='unit'&&t.team===0){if(selSet.has(t)){sel=sel.filter(s=>s!==t);selSet.delete(t);renderPanel(true)}else setSel([t],true)}else setSel(t?[t]:[],false)}}
@@ -3020,7 +3188,7 @@ canvas.addEventListener('dblclick',e=>{if(state!=='play'||placing)return;const t
   if(t.kind==='unit'){for(const u of units){if(u.dead||u.inside||u.team!==0||u.type!==t.type)continue;const p=proj(u.x,uY(u)+.8,u.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(u)}}
   else if(t.kind==='bld'){for(const b of blds){if(b.dead||b.team!==0||b.type!==t.type)continue;const p=proj(b.x,b.y,b.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(b)}}setSel(out,false)});
 let lastTapU={u:null,t:0};
-function tap(x,y){if(placing){updGhost(x,y);tryPlace(false);return}const t=pick(x,y,1.5),gp=groundAt(x,y);
+function tap(x,y){if(placing){updGhost(x,y);tryPlace(false);return}if(spyMode){spyOrder(pick(x,y,1.5));return}const t=pick(x,y,1.5),gp=groundAt(x,y);
   if(!amoveMode&&t&&t.kind==='unit'&&t.team===0){const now=performance.now();if(lastTapU.u===t&&now-lastTapU.t<420&&sel.length===1&&sel[0]===t){lastTapU.u=null;selectSame();return}lastTapU={u:t,t:now}}
   if(amoveMode){command(t&&foe(t.team,0)?t:null,gp,true);amoveMode=false;renderPanel(true);return}
   const ownU=ownUnitsSel().length,own=ownU||sel.some(e=>e.kind==='bld'&&e.team===0&&e.def.trains);
@@ -3034,7 +3202,7 @@ const keys=new Set();
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='SELECT')return;if(AUD&&state==='play'){if(e.key==='Escape')audClose();else if(/^[1-9]$/.test(e.key))audPick(+e.key-1);e.preventDefault();return}const k=e.key.toLowerCase();keys.add(k);
   if(state==='play'){const gd=/^Digit[1-9]$/.test(e.code||'')?+e.code[5]:0;
     if(gd&&(e.ctrlKey||e.metaKey||e.altKey)){e.preventDefault();grpSet(gd-1);return}if(gd&&e.shiftKey){e.preventDefault();grpSel(gd-1);return}
-    if(k==='escape'){if(placing||amoveMode)cancelModes();else setSel([],false)}
+    if(k==='escape'){if(placing||amoveMode||spyMode)cancelModes();else setSel([],false)}
     else if(k==='v'||k==='f'||k==='c'){const b=document.querySelector('#cmds [data-key="'+k+'"]');if(b)b.click()}
     else if(k==='p')setPaused(!gpaused);else if(k==='t')showTree();else if(k==='m')sndToggle();else if(k==='[')cycleSpeed(-1);else if(k===']')cycleSpeed(1);else if(k==='f10'){e.preventDefault();pause()}
     else if(k==='h'){const tc=blds.find(b=>!b.dead&&b.team===0&&b.type==='tc');if(tc){setSel([tc],false);cam.x=tc.x;cam.z=tc.z}}
@@ -3122,8 +3290,8 @@ function notify(msg,alert){toastEl.textContent=msg;toastEl.className='show'+(ale
 function notifyOnce(key,msg){if(onceSeen.has(key))return;onceSeen.add(key);notify(msg)}
 const costHTML=c=>Object.entries(c).map(([k,v])=>'<span>'+v+'<i class="ico '+k+'"></i></span>').join('');
 let lastSig='';
-function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+buildPage+age[0]+TECH[0].size+PEND[0].size+AGEMAX+(sel.length===1&&sel[0].type==='tc'&&sel[0].team===0?'t'+Math.floor(gameT/3):'')}
-const TASKLBL=u=>{const t=u.task;switch(t.t){case'idle':return'Idle';case'move':return'Moving';case'amove':return'Attack-moving';case'attack':return u.type==='monk'?'Converting':'Fighting';case'garrison':return'Taking shelter';case'heal':return'Healing';case'trade':return'Trading';case'board':return'Boarding';case'envoy':return'On a diplomatic visit';case'unload':return'Sailing to unload';case'inside':return'Aboard';
+function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+(spyMode||'')+buildPage+age[0]+TECH[0].size+PEND[0].size+AGEMAX+(sel.length===1&&sel[0].type==='tc'&&sel[0].team===0?'t'+Math.floor(gameT/3):'')}
+const TASKLBL=u=>{const t=u.task;switch(t.t){case'idle':return'Idle';case'move':return'Moving';case'amove':return'Attack-moving';case'attack':return u.type==='monk'?'Converting':'Fighting';case'garrison':return'Taking shelter';case'heal':return'Healing';case'spy':return'On a mission: '+SPYM[t.mission].name.toLowerCase()+(u.exposed>gameT?' (SPOTTED!)':'');case'trade':return'Trading';case'board':return'Boarding';case'envoy':return'On a diplomatic visit';case'unload':return'Sailing to unload';case'inside':return'Aboard';
   case'build':return(t.target&&t.target.built?'Repairing ':'Building ')+(t.target?t.target.name:'');case'return':return'Carrying '+(u.carry||'')+' home';
   case'gather':{const r=t.target;if(r&&r.kind==='bld')return({food:'Farming',hemp:'Harvesting hemp',grapes:'Tending vines',nitre:'Raking saltpetre'})[r.def.crop];if(r&&r.animal)return r.hp>0?'Hunting':'Butchering';if(r&&r.fish)return'Fishing';return({flint:'Knapping flint',clay:'Digging clay',cuore:'Mining copper ore',tin:'Mining tin',wood:'Chopping wood',food:'Foraging berries',ore:'Mining iron ore',gold:'Mining gold',stone:'Mining stone'})[t.rtype]||'Gathering'}}return''};
 const KEYS=['1','2','3','4','5','6','7','8','9','0','-'];
@@ -3152,6 +3320,7 @@ function renderPanel(force){
     if(own.some(u=>u.type==='villager')){const list=buildPage==='eco'?ECO_B:buildPage==='ind'?IND_B:MIL_B;
       for(const t of list){if(bldHidden(0,t))continue;const d=BUILD[t],nm=bName(0,t),lock=d.diplo&&!DIPLO?'Diplomacy games':age[0]<d.age?'Age '+AGEN[d.age]:d.needsTech&&ANCIENT&&!has(0,d.needsTech)?'Needs '+TECHS[d.needsTech].name:d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)?'Needs '+BUILD[d.needs].name:'';cmds+=btn('','build:'+t,nm,bCost(0,t),nm+': '+d.desc+(age[0]<d.age?' (requires '+AGES[d.age]+')':''),lock,placing&&placing.type===t,nextKey())}
       cmds+=btn('page','page',buildPage==='eco'?'Industry ›':buildPage==='ind'?'Military ›':'Economy ›',null,'Switch build menu','','',nextKey())}
+    {const sps=own.filter(isSpy);if(sps.length){const ms=[...new Set(sps.flatMap(spyMissionsFor))];for(const m of ms)cmds+=btn('tech','spym:'+m,SPYM[m].short,null,SPYM[m].name+': '+SPYM[m].desc+'. Then tap the building. Risk of capture about '+Math.round(SPYM[m].risk*100)+'%','',spyMode===m,nextKey())}}
     if(own.some(u=>isMil(u.def)||u.type==='monk'))cmds+=btn('','amove','Attack Move',null,'Move and fight anything on the way (G)','',amoveMode,'g');
     if(own.some(u=>u.gar&&u.gar.length))cmds+=btn('','unload','Unload here',null,'Put everyone aboard ashore at the nearest bank. Or right-click land to sail there and unload','','',nextKey());
     if(own.some(u=>u.gar))cmds+=btn('','board','How to board',null,'Select soldiers or villagers and right-click the transport','','',nextKey());
@@ -3213,6 +3382,7 @@ elCmds.addEventListener('click',e=>{const b=e.target.closest('.cmd');if(!b||stat
   else if(cmd==='vgift'||cmd==='vbuy'){const s=sel[0],V=s&&vilOfHall(s);if(V){cmd==='vgift'?vilGift(V,0):vilBuy(V,0);renderPanel(true)}}
   else if(cmd==='unload'){let ok=0,bad=0;for(const u of ownUnitsSel())if(u.gar&&u.gar.length){if(unloadShip(u,null))ok++;else bad++}if(bad&&!ok)notify('Sail closer to the shore to unload.',true);renderPanel(true)}
   else if(cmd==='board'){notify('Select land units, then right-click this transport to board it.')}
+  else if(cmd==='spym'){spyMode=spyMode===arg?null:arg;amoveMode=false;canvas.style.cursor=spyMode?'crosshair':'';renderPanel(true);if(spyMode)notify(arg==='incite'?'Now tap a village hall.':'Now tap one of their buildings'+(arg==='steal'?' (their Town Center or Market is best).':'.'))}
   else if(cmd==='amove'){amoveMode=!amoveMode;canvas.style.cursor=amoveMode?'crosshair':'';renderPanel(true);if(amoveMode)notifyOnce('am','Click a spot: your soldiers march there and fight anything on the way.')}});
 elInfo.addEventListener('click',e=>{if(e.target.closest('[data-desel]')){if(placing||amoveMode)cancelModes(true);setSel([],false);return}const q=e.target.closest('.qi');if(q){const b=sel[0],i=+q.dataset.q,it=b&&b.queue[i];if(it){if(it.tech){pay(0,TECHS[it.tech].cost,-1);PEND[0].delete(it.tech)}else pay(0,UNITS[it.type].cost,-1);b.queue.splice(i,1);renderPanel(true)}return}
   const m=e.target.closest('.mt');if(m){const u=sel.find(s=>s.id===+m.dataset.id);if(u)setSel([u],false)}});
@@ -3254,7 +3424,7 @@ function snapshot(){
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
     sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,guide:{on:GUIDE.on,i:GUIDE.i,v0:GUIDE.v0,min:GUIDE.min},hist:HIST,
     vil:{vils:VILS.map(V=>({id:V.id,team:V.team,name:V.name,kind:V.kind,x:V.x,z:V.z,owner:V.owner,how:V.how,fav:V.fav,incT:V.incT,env:V.env,hall:V.hall.id})),host:HOST,camps:CAMPS.map(C=>({id:C.id,b:C.b.id,cap:C.cap})),barbs:BARBS},
-    dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS,mem:MEM,flt:FLT,mref:MREF},
+    dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS,mem:MEM,flt:FLT,mref:MREF,rep:REP,deal:DEAL,intel:INTEL,mapt:MAPT,newst:NEWST,goss:GOSS},
     ai:AIS.map(A=>A&&{attackSize:A.attackSize,demandT:A.demandT||0,scoutI:A.scoutI||0,attacks:A.attacks,belled:A.belled||0,lastAtk:A.lastAtk>-1e8?A.lastAtk:-1e9}),cam:{x:cam.x,z:cam.z,dist:cam.dist,yaw:cam.yaw},nid,
     rdead:GENRES.filter(id=>!alive.has(id)),
     rmod:ress.filter(r=>!r.animal&&r.amt<r.max).map(r=>[r.id,Math.round(r.amt*10)/10,r.felled?1:0]),
@@ -3305,7 +3475,7 @@ function loadGame(d){
   if(d.ai)d.ai.forEach((a,i)=>{if(a&&AIS[i])Object.assign(AIS[i],a)});
   for(let t=0;t<NT;t++){if(age[t]==null)age[t]=0;if(!TECH[t])TECH[t]=new Set();if(!PEND[t])PEND[t]=new Set();if(!DEFC[t])DEFC[t]={};if(!res[t]){res[t]={food:0,wood:0,gold:0,stone:0};for(const k of GOODS)res[t][k]=0}if(ELIM[t]==null)ELIM[t]=t>=NP&&t<VT0;if(!MKT[t])MKT[t]=Object.assign({},MKTBASE)}
   if(d.vil){VILS=d.vil.vils.map(v=>Object.assign({},v,{hall:byId.get(v.hall)})).filter(V=>V.hall);HOST=d.vil.host||{};CAMPS=d.vil.camps.map(c=>({id:c.id,cap:c.cap,b:byId.get(c.b)})).filter(C=>C.b);BARBS=d.vil.barbs||{nextRaid:0,spawnT:0}}else{VILS=[];CAMPS=[];HOST={}}
-  if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;MEM=d.dip.mem||[];FLT=d.dip.flt||[];MREF=d.dip.mref||[];for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
+  if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;MEM=d.dip.mem||[];FLT=d.dip.flt||[];MREF=d.dip.mref||[];REP=d.dip.rep==null?50:d.dip.rep;DEAL=d.dip.deal||[];INTEL=d.dip.intel||[];MAPT=d.dip.mapt||[];NEWST=d.dip.newst||[];GOSS=d.dip.goss||[];for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
   DIPQ=[];EVTS=[];renderDip();lastPSig='';if(d.sea)Object.assign(SEAS,d.sea);seaApply(1,true);if(d.wear)wearLoad(d.wear);
   nid=Math.max(nid,d.nid||0);Object.assign(cam,d.cam);
   for(let t=0;t<NP;t++)restyle(t);
@@ -3335,16 +3505,16 @@ const playersEl=$('#players');
 function relOf(t){if(t===0)return['you','You'];if(ELIM[t])return['dead','Defeated'];return ally(t,0)?['ally','Allied']:foe(t,0)?['enemy','War']:['peace','Peace']}
 let lastPSig='';
 function renderPlayers(force){if(playersEl.hidden||!REL.length)return;
-  const sig=[REL[0].join(''),METP[0].join(''),KNOWP.join(''),ELIM.join(''),age.join(''),warAsk,hasEmbassy(0),OPIN.map(r=>Math.round(r[0]/5)).join(','),REL.map(r=>r.join('')).join('|')].join('/');
+  const sig=[REL[0].join(''),METP[0].join(''),KNOWP.join(''),ELIM.join(''),age.join(''),warAsk,hasEmbassy(0),OPIN.map(r=>Math.round(r[0]/5)).join(','),Math.round(REP),DEAL.map(d=>d?1:0).join(''),INTEL.map(v=>v>gameT?1:0).join(''),REL.map(r=>r.join('')).join('|')].join('/');
   if(!force&&sig===lastPSig)return;lastPSig=sig;
-  let h='<h4>'+(DIPLO?'Diplomacy':'Players')+'</h4><div class="pinfo">';
+  let h='<h4>'+(DIPLO?'Diplomacy':'Players')+'</h4>'+(DIPLO?'<div class="dsub">Your reputation: <b>'+repWord()+'</b> ('+Math.round(REP)+'/100). Keeping deals and alliances raises it; broken promises, caught spies and empty threats lower it.</div>':'')+'<div class="pinfo">';
   for(let t=0;t<NP;t++){const[rc,rl]=relOf(t),known=METP[0][t]||t===0;
     h+='<div class="prow"><span class="sw" style="background:'+PCSS[t]+'"></span><div><b>'+(t===0?'You':PNAME[t])+'</b> · '+(known?cname(t):'Not met yet')+(!DIPLO&&TEAMS[t]?' · Team '+TEAMS[t]:'')+'</div><span class="rel '+rc+'">'+(known||t===0?rl:'')+'</span>';
     if(t!==0&&known&&!ELIM[t]){const o=OPIN[t][0];let sub=AGES[age[t]];
       if(DIPLO){sub+=' · Attitude <b>'+attitude(o)+'</b> ('+Math.round(o)+')'+' · '+(KNOWP[t]?'<b>'+PERSONA[PERS[t]].name+'</b>: '+PERSONA[PERS[t]].desc:'Temperament unknown: send an envoy');
         const w=[],al=[];for(let c=0;c<NP;c++){if(c===t||ELIM[c]||!METP[0][c]&&c!==0)continue;if(REL[t][c]===0)w.push(c===0?'you':PNAME[c]);else if(REL[t][c]===2)al.push(c===0?'you':PNAME[c])}
         if(w.length)sub+=' · At war with '+w.join(', ');if(al.length)sub+=' · Allied with '+al.join(', ')}
-      h+='<div class="dsub" style="width:100%">'+sub+'</div>';
+      if(DEAL[t])sub+=' · <b>Trade deal</b>: '+dealText(DEAL[t]);if(INTEL[t]>gameT)sub+=' · Spied on';h+='<div class="dsub" style="width:100%">'+sub+'</div>';
       const B=(a,l,c)=>'<button data-dip="'+a+':'+t+'"'+(c?' class="'+c+'"':'')+'>'+l+'</button>';let acts='';
       if(DIPLO)acts+='<button data-dip="aud:'+t+'" class="aud"><span class="mp">'+portraitSVG(t,moodOf(t))+'</span>Audience with '+lname(t)+'</button>';
       if(DIPLO||ally(t,0)){acts+='<span class="tl">Tribute '+Math.round(tribFee(0)*100)+'% fee:</span>';for(const k of['food','wood','gold','stone'])acts+='<button data-dip="trib:'+t+':'+k+'" title="Send 100 '+k+'">100 <i class="ico '+k+'"></i></button>'}
@@ -3396,7 +3566,7 @@ function showStart(){state='menu';screen.hidden=false;
   '<h3>Sound</h3>'+soundHTML()+'<div class="row"><button class="primary" id="go">Raise the banner</button>'+(readSave('auto')&&readSave('auto').opts?'<button class="secondary" id="cont">Continue last game</button>':'')+'<button class="secondary" id="ld">Load game</button></div>'+
   '<div class="help"><h3>Controls</h3><div><b>Left-click</b> select · <b>drag</b> box-select · <b>double-click</b> select all of a type</div><div><b>Right-click</b> move, gather, build, repair or attack</div>'+
   '<div><b>WASD</b>, arrows or screen edge to pan · <b>wheel</b> zoom · <b>Q/E</b> rotate</div><div><b>1–0</b> command hotkeys · <b>G</b> attack-move · <b>T</b> tech tree</div><div><b>P</b> pause (you can still give orders) · <b>[</b> <b>]</b> game speed ½× to 2× · <b>M</b> sound · <b>F10</b> menu</div>'+
-  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit. Each people has a leader: open Diplomacy and press <b>Audience</b> to speak with them, or tap a leader’s portrait when they send word. Your replies change how they feel about you, and leaders remember gifts, insults and broken promises.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
+  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit. Each people has a leader: open Diplomacy and press <b>Audience</b> to speak with them, or tap a leader’s portrait when they send word. Under <b>Let us make an agreement</b> you can set up trade deals, share maps, ask allies to join your wars, make threats and set peace terms. Your <b>reputation</b> (shown in Diplomacy) makes every leader warmer or colder towards you. <b>Spies</b> (Embassy; Informers from the Town Center in the Bronze Age) are hidden unless towers, scouts or monks spot them: pick a mission, then tap a building. Caught spies cause a diplomatic incident. Your replies change how they feel about you, and leaders remember gifts, insults and broken promises.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
   const refresh=()=>{saveSetup();$('#s-players').innerHTML=playersHTML();$('#s-warn').textContent=setupWarn();$('#s-mapdesc').textContent=MAPDESC[SETUP.map];bindRows()};
   const bindRows=()=>{screen.querySelectorAll('[data-opp]').forEach(sl=>sl.onchange=()=>{SETUP.opp[+sl.dataset.opp-1]=sl.value;saveSetup()});
     screen.querySelectorAll('[data-team]').forEach(sl=>sl.onchange=()=>{SETUP.team[+sl.dataset.team]=+sl.value;saveSetup();$('#s-warn').textContent=setupWarn()})};
@@ -3849,7 +4019,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
