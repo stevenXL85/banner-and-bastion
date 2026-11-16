@@ -733,7 +733,7 @@ const GFXL={low:{name:'Low',pr:1,shadow:1024,rad:1.4,post:0,grass:.45,tuft:.3,pa
 const GFX={pref:'auto',lvl:'medium',L:GFXL.medium,auto:'medium',fpsT:0,fpsN:0,fpsAcc:0,dropped:false};
 function gfxAuto(){let soft=false;try{const gl=renderer.getContext(),ex=gl.getExtension('WEBGL_debug_renderer_info');const s=ex?String(gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)):'';soft=/swiftshader|llvmpipe|software|basic render/i.test(s)}catch(e){}
   if(soft)return'low';const mem=navigator.deviceMemory||4,cores=navigator.hardwareConcurrency||4;
-  const touch=(matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min(screen.width,screen.height)<700;
+  const touch=(matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min(window.screen.width,window.screen.height)<700;
   if(touch)return mem>=6&&cores>=8?'medium':'low';return cores>=6||mem>=8?'high':'medium'}
 try{const p=localStorage.getItem('bb-gfx');if(p&&(p==='auto'||GFXL[p]))GFX.pref=p}catch(e){}
 GFX.auto=gfxAuto();
