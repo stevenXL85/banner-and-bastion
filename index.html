@@ -475,7 +475,7 @@ const BUILD={
   tc:{name:'Town Center',l:'TC',s:4,hp:2400,arm:[3,8],time:80,cost:{wood:275,stone:100},pop:5,drop:['wood','food','gold','stone','ore','hemp','grapes','nitre','coal','flint','clay','cuore','tin'],trains:['villager'],shoot:{atk:5,range:7,rate:2,n:1},gar:15,age:2,h:5.4,desc:'Trains villagers, researches ages',chim:[1.1,3.3,.7]},
 };
 const ECO_B=['house','mill','lumber','mining','farm','pen','dock','rail','market','temple','embassy','university','tc'];
-const IND_B=['potter','cfurnace','bloom','road','forester','sapling','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress','nitrebed','powdermill','steelworks','factory'];
+const IND_B=['potter','cfurnace','bloom','road','forester','kiln','smelter','blacksmith','hempfarm','ropewalk','weaver','vineyard','winepress','nitrebed','powdermill','steelworks','factory'];
 const MIL_B=['barracks','chariotry','lookout','hillfort','engyard','range','stable','siege','monastery','tower','btower','castle','palisade','pgate','stonewall','gate'];
 const TECHS={
   feudal:{name:'Feudal Age',at:'tc',age:0,ageUp:1,cost:{food:600},time:70,desc:'Archery range, stable, blacksmith, towers, stone walls'},
@@ -1672,7 +1672,7 @@ function recompute(team){
   for(const b of blds){if(b.dead||b.team!==team)continue;const s=bStats(team,b.type);if(s.hp>b.maxhp&&b.built)b.hp+=s.hp-b.maxhp;b.maxhp=s.hp;b.arm=s.arm;b.shoot=s.shoot;b.name=s.name}
 }
 function applyTech(team,id){
-  TECH[team].add(id);PEND[team].delete(id);const t=TECHS[id];if(id==='cartography'&&team===0&&EXP){EXP.fill(1);fogT=0}if((id==='gtower'||id==='keep')&&blds)setTimeout(()=>restyle(team),0);if(team===0&&state==='play')sfxUI(t.ageUp?'fanfare':'chime',t.ageUp?1:.7);
+  TECH[team].add(id);PEND[team].delete(id);const t=TECHS[id];if(t.at==='mining'&&!RESTORING)setTimeout(()=>reopenShafts(team),0);if(id==='cartography'&&team===0&&EXP){EXP.fill(1);fogT=0}if((id==='gtower'||id==='keep')&&blds)setTimeout(()=>restyle(team),0);if(team===0&&state==='play')sfxUI(t.ageUp?'fanfare':'chime',t.ageUp?1:.7);
   if(t.ageUp){age[team]=t.ageUp;
     if(CIVKEY[team]==='vikings'){if(age[team]>=MED+1)TECH[team].add('wheel');if(age[team]>=MED+2)TECH[team].add('cart')}
     if(team<NP){const w=Math.max(...age.slice(0,NP));if(w!==WAGE){WAGE=w;for(let t=NP;t<NT;t++){DEFC[t]={};recompute(t)}}}
@@ -1696,7 +1696,7 @@ function buildTrees(){
   const geos=[[G.cyl7,G.cone7,G.cone7],[G.cyl7,G.ico,G.ico]];
   const whites=[fogify(new T.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true}),{}),fogify(new T.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true}),{leaf:1})];
   for(let kind=0;kind<2;kind++){const list=treeSpecs.filter(s=>s.kind===kind),set={},white=whites[kind];
-    ['trunk','a','b'].forEach((k,i)=>{const im=new T.InstancedMesh(geos[kind][i],k==='trunk'?M(0x5b3e27):white,list.length+TREEXTRA);im.count=list.length;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;set[k]=im;world.add(im)});
+    ['trunk','a','b'].forEach((k,i)=>{const im=new T.InstancedMesh(geos[kind][i],k==='trunk'?M(0x5b3e27):white,list.length+TREEXTRA);if(k!=='trunk')im.instanceColor=new T.InstancedBufferAttribute(new Float32Array((list.length+TREEXTRA)*3),3);im.count=list.length;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;set[k]=im;world.add(im)});
     list.forEach((s,i)=>{s.i=i;s.set=set;
       const c=s.autumn?col([0xc0782c,0xb8552a,0xd6a23a][i%3]):kind===0?col(0x2c5631).lerp(col(0x45743c),R()):col(0x4c7a31).lerp(col(0x78983c),R());
       set.a.setColorAt(i,c);set.b.setColorAt(i,c.clone().multiplyScalar(1.12));setTree(s,0,true)});
@@ -1887,7 +1887,7 @@ function orderMove(u,pt,am){u.task={t:am?'amove':'move',pt:{kind:'pt',x:pt.x,z:p
 function orderGather(u,r){u.task={t:'gather',target:r,rtype:r.kind==='bld'?(r.def.crop||'food'):r.rtype};u.path=null;u.pathFor=null}
 function orderBuild(u,b){u.task={t:'build',target:b};u.path=null;u.pathFor=null}
 function orderAttack(u,e){if(u.def.bldOnly&&e.kind!=='bld')return;if(u.type==='tradecart')return;if(u.type==='monk'&&e.kind!=='unit')return;u.task={t:'attack',target:e,prev:null};u.path=null;u.pathFor=null}
-function nearestRes(rt,x,z,maxD,nav){let best=null,bd=maxD;const wc=nav?wcAt(x,z):-2;for(const r of ress){if(r.dead||r.rtype!==rt||(r.animal==='boar'&&r.hp>0))continue;if(!!r.fish!==!!nav)continue;if(nav&&WCOMP[r.cz*N+r.cx]!==wc)continue;const d=Math.hypot(r.x-x,r.z-z);if(d<bd){bd=d;best=r}}return best}
+function nearestRes(rt,x,z,maxD,nav){let best=null,bd=maxD;const wc=nav?wcAt(x,z):-2;for(const r of ress){if(r.dead||r.rtype!==rt||(r.animal==='boar'&&r.hp>0)||(r.hidden&&!r.found))continue;if(!!r.fish!==!!nav)continue;if(nav&&WCOMP[r.cz*N+r.cx]!==wc)continue;const d=Math.hypot(r.x-x,r.z-z);if(d<bd){bd=d;best=r}}return best}
 function nearestDrop(team,rt,x,z,nav){let best=null,bd=1e9;for(const b of blds){if(b.dead||!b.built||b.team!==team||!b.def.drop||!b.def.drop.includes(rt))continue;if(nav&&!b.def.water)continue;const d=rectDist(x,z,b);if(d<bd){bd=d;best=b}}return best}
 function canHitU(a,e){if(!a||!a.def)return true;if(e.def&&e.def.naval&&!a.def.naval&&!a.def.ranged)return false;if(a.def.naval&&!a.def.ranged)return false;if(a.skip===e&&gameT<a.skipT)return false;return true}
 function nearestEnemy(team,x,z,range,unitsOnly,bldOnly,att){let best=null,bd=range;
@@ -1956,6 +1956,7 @@ function updUnit(u,dt){
   case'heal':doHeal(u,dt);break;
   case'trade':doTrade(u,dt);break;
   case'spy':doSpy(u,dt);break;
+  case'plant':doPlant(u,dt);break;
   case'board':doBoard(u,dt);break;
   case'envoy':doEnvoy(u,dt);break;
   case'unload':doUnload(u,dt);break;
@@ -1989,7 +1990,7 @@ function doGather(u,dt){
     if(R()<dt*.8&&(ty==='wood'||MINERALS.includes(ty)))sfxAt(ty==='wood'?'chop':'pick',u.x,u.z,.7);
     if(R()<dt*1.2)puff(u.x+Math.sin(u.face)*.5,uY(u)+.8,u.z+Math.cos(u.face)*.5,ty==='wood'?0xc9a06a:ty==='food'?0x8fae3e:ty==='gold'?0xffd36a:0xb5b1a8,1,.08,.4,1.4,.6);
   }else approach(u,r,dt)}
-function deplete(r){if(r.dead)return;r.dead=true;r.amt=0;if(!r.animal){const c=r.cz*N+r.cx;if(!r.fish)grid[c]--;resCell[c]=null}if(r.tree)setTree(r.tree,2);if(r.mesh)world.remove(r.mesh);
+function deplete(r){if(r.dead)return;if(!RESTORING&&!r.animal){if(r.fish)FISHGONE.push({cx:r.cx,cz:r.cz,t:gameT+240});else if(!r.tree&&MINERALS.includes(r.rtype))shaftAdd(r)}r.dead=true;r.amt=0;if(!r.animal){const c=r.cz*N+r.cx;if(!r.fish)grid[c]--;resCell[c]=null}if(r.tree)setTree(r.tree,2);if(r.mesh)world.remove(r.mesh);
   if(selSet.has(r)){sel=sel.filter(s=>s!==r);selSet.delete(r)}if(r.ring)r.ring.visible=false}
 function doReturn(u,dt){const t=u.task,ty=u.carry;
   if(!ty||u.carryAmt<=0){resumeWork(u,t.resume);return}
@@ -2006,6 +2007,7 @@ function doBuild(u,dt){const b=u.task.target;if(!b||b.dead){setIdle(u);return}
     if(R()<dt*2)puff(b.x+(R()-.5)*b.s,b.y+.3,b.z+(R()-.5)*b.s,0xb8a582,1,.25,.5,.6,1)}
   else approach(u,b,dt)}
 function afterBuild(u,b){
+  if(u.task.after){u.task=u.task.after;u.path=null;u.pathFor=null;return}
   if(b.def.crop){orderGather(u,b);return}
   if(b.def.recipes&&u.team===0)notifyOnce('wk'+b.type,b.name+' runs by itself while it has materials. Check the Goods panel.');
   if(b.def.drop&&b.type!=='tc'){for(const rt of b.def.drop){const r=nearestRes(rt,b.x,b.z,12);if(r){orderGather(u,r);return}}}
@@ -2320,7 +2322,7 @@ function aiEconomy(p,vils,home,ag,mb,afford){const AI=AIS[p];
       if(bldAvail(p,'farm')&&afford(bCost(p,'farm'))){const mill=mb.find(b=>b.type==='mill'&&b.built);if(aiBuildNear(p,'farm',mill||home,mill?2:4,mill?7:10,1,[v]))continue}
       best='wood'}
     const rt=best;const dp=drops(rt);
-    let tgt=null,bd=1e9;for(const r of ress){if(r.dead||r.rtype!==rt||r.fish)continue;const dh=Math.hypot(r.x-home.x,r.z-home.z);if(dh>HALF*.8)continue;if(COMP[r.cz*N+r.cx]!==AI.comp)continue;
+    let tgt=null,bd=1e9;for(const r of ress){if(r.dead||r.rtype!==rt||r.fish||!resKnown(r,p))continue;const dh=Math.hypot(r.x-home.x,r.z-home.z);if(dh>HALF*.8)continue;if(COMP[r.cz*N+r.cx]!==AI.comp)continue;
       const nd=dp.reduce((m,b)=>Math.min(m,rectDist(r.x,r.z,b)),99);const sc=nd+dh*.15;if(sc<bd){bd=sc;tgt=r}}
     if(!tgt){frac[types.indexOf(rt)]=0;if(rt!=='wood'){const w=nearestRes('wood',home.x,home.z,HALF*.8);if(w&&compAt(w.x,w.z)===AI.comp){orderGather(v,w);continue}}setIdle(v);continue}
     const nd=dp.reduce((m,b)=>Math.min(m,rectDist(tgt.x,tgt.z,b)),99);const camp=rt==='wood'?'lumber':'mining';
@@ -2913,11 +2915,75 @@ function genVillages(type){VILS=[];HOST={};CAMPS=[];BARBS={nextRaid:0,spawnT:0};
     const cap={easy:4,normal:5,hard:7}[OPTS.diff]||5;CAMPS.push({id:i+1,b,cap});for(let k=0;k<cap;k++){const sp=spawnPoint(b,null);const u=makeUnit('barbarian',BARB,sp.x,sp.z);u.camp=i+1}
     for(let i2=-4;i2<=4;i2++)for(let j2=-4;j2<=4;j2++){const a=cx+i2,b2=cz+j2;if(inb(a,b2))RESV[b2*N+a]=1}}}
 /* --- per-second upkeep --- */
+/* ================= LIVING LAND: planting, wild woods, fish, new deposits ================= */
+let SHAFTS=[],FISHGONE=[],DEPS=[],plantMode=false,RESTORING=false,ecoT={wild:15,fish:10,disc:1,find:900};
+/* --- planting by area --- */
+function plantCan(t){return age[t]>=BUILD.sapling.age&&blds.some(b=>!b.dead&&b.built&&b.team===t&&b.type==='forester')}
+function plantOrder(gp){plantMode=false;canvas.style.cursor='';if(!gp){renderPanel(true);return}const cx=cellX(gp.x),cz=cellX(gp.z);const vs=ownUnitsSel().filter(u=>u.type==='villager');
+  if(!vs.length){renderPanel(true);return}for(const u of vs){u.task={t:'plant',cx,cz,r:4};u.path=null;u.pathFor=null}marker(gp.x,gp.z,0x5f9a34);
+  notifyOnce('plant1','Your villagers will plant trees all around that spot until it is full. Give them any other order to stop.');renderPanel(true)}
+function plantCell(u,T2){const t=u.team,{cx,cz,r}=T2,near=new Set();
+  for(const b of blds){if(b.dead||b.def.plant)continue;if(b.ox>cx+r+2||b.ox+b.s<cx-r-2||b.oz>cz+r+2||b.oz+b.s<cz-r-2)continue;for(let i=-1;i<=b.s;i++)for(let j=-1;j<=b.s;j++)near.add((b.oz+j)*N+b.ox+i)}
+  let best=null,bd=1e9;const ux=cellX(u.x),uz=cellX(u.z);
+  for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(i*i+j*j>r*r+1)continue;const x=cx+i,z=cz+j;if(!inb(x,z))continue;const c=z*N+x;if(near.has(c)||ROAD[c]||(TER&&TER[c]))continue;
+    if(!validPlace('sapling',x,z,0,t))continue;if(units.some(o=>!o.dead&&!o.inside&&o!==u&&cellX(o.x)===x&&cellX(o.z)===z&&o.type!=='villager'))continue;
+    const d=Math.hypot(x-ux,z-uz)+(blds.some(b=>!b.dead&&b.type==='sapling'&&!b.built&&b.ox===x&&b.oz===z)?99:0);if(d<bd){bd=d;best=[x,z]}}return best}
+function doPlant(u,dt){const T2=u.task;const c=plantCell(u,T2);
+  if(!c){if(u.team===0)notify('Your villagers have finished planting: there is no more room there.');setIdle(u);return}
+  const cost=bCost(u.team,'sapling');if(!canAfford(u.team,cost)){if(u.team===0)notify('Not enough wood to keep planting.',true);setIdle(u);return}
+  pay(u.team,cost);const b=placeBld('sapling',u.team,c[0],c[1],false);u.task={t:'build',target:b,after:{t:'plant',cx:T2.cx,cz:T2.cz,r:T2.r}};u.path=null;u.pathFor=null}
+/* --- wild woods spread on their own --- */
+function wildTick(){const k=SEAS.on?[1,.7,.4,0][SEAS.idx]:.7;if(k<=0||!ress.length)return;let grown=0;if(TREESETS.some(S=>S&&S.n>S.cap-200))return;
+  for(let a=0;a<60&&grown<2;a++){const r=ress[(Math.random()*ress.length)|0];if(!r||r.dead||!r.tree||r.felled||r.amt<40||Math.random()>k)continue;
+    const x=r.cx+((Math.random()*5)|0)-2,z=r.cz+((Math.random()*5)|0)-2;if(!inb(x,z))continue;const c=z*N+x;if(grid[c]||occ[c]||ROAD[c]||(TER&&TER[c])||(RESV&&RESV[c]))continue;
+    let ok=true,trees=0;for(let i=-3;i<=3&&ok;i++)for(let j=-3;j<=3;j++){const a2=x+i,b2=z+j;if(!inb(a2,b2))continue;const c2=b2*N+a2;if(occ[c2]||ROAD[c2]){ok=false;break}if(Math.abs(i)<=2&&Math.abs(j)<=2&&resCell[c2]&&resCell[c2].tree)trees++}
+    if(!ok||trees>13)continue;if(units.some(o=>!o.dead&&!o.inside&&Math.abs(o.x-(x-HALF+.5))<1&&Math.abs(o.z-(z-HALF+.5))<1))continue;
+    const n=plantTree(x,z,60);if(n){n.tree.s*=.75;setTree(n.tree,0);grown++}}}
+/* --- fish shoals breed --- */
+function fishTick(){for(const r of ress)if(r.fish&&!r.dead&&r.amt<r.max)r.amt=Math.min(r.max,r.amt+4);
+  for(let i=FISHGONE.length-1;i>=0;i--){const f=FISHGONE[i];if(gameT<f.t)continue;FISHGONE.splice(i,1);const n=addFish(f.cx,f.cz);if(n){n.amt=100;n.extraF=true}else FISHGONE.push({cx:f.cx,cz:f.cz,t:gameT+60})}}
+/* --- spent mines and their reopening --- */
+function shaftMesh(rt,cx,cz){const g=new T.Group(),x=cx-HALF+.5,z=cz-HALF+.5;cy(g,0x6e665c,.55,.08,0,.04,0);cy(g,0x161210,.32,.05,0,.08,0);
+  for(const s of[-1,1])bx(g,0x5a3e26,.08,.6,.08,s*.3,.3,0);bx(g,0x5a3e26,.72,.08,.1,0,.62,0);for(let i=0;i<4;i++){const a=i/4*TAU+.4;const d=mk(G.dod,rt==='gold'?0x8a7a4a:0x7a746a);d.scale.setScalar(.16);d.position.set(Math.cos(a)*.5,.08,Math.sin(a)*.5);g.add(d)}
+  g.position.set(x,heightAt(x,z),z);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});world.add(g);return g}
+function shaftAdd(r){if((r.shaftN||0)>=2)return;const s={rt:r.rtype,cx:r.cx,cz:r.cz,max:r.max,n:r.shaftN||0,t:gameT};s.mesh=shaftMesh(s.rt,s.cx,s.cz);SHAFTS.push(s)}
+function reopenShafts(team){let n=0,seen=0;for(let i=SHAFTS.length-1;i>=0;i--){const s=SHAFTS[i];if(gameT-s.t<5)continue;const c=s.cz*N+s.cx;if(grid[c]||occ[c])continue;
+    const r=addExtra(s.rt,s.cx,s.cz,Math.round(s.max*(s.n===0?.5:.35)),{shaftN:s.n+1});if(!r)continue;world.remove(s.mesh);SHAFTS.splice(i,1);n++;if(expAt(s.cx,s.cz))seen++}
+  if(n&&seen)notify((team===0?'Your new mining methods':'New mining methods (the '+cname(team)+')')+' have reopened '+seen+' spent '+(seen>1?'mines':'mine')+(seen<n?' you know of':'')+'.')}
+/* --- deposits: hidden at the start, found by exploring; new finds later on --- */
+function addExtra(rt,cx,cz,amt,o){const r=addNode(rt,cx,cz);if(!r)return null;r.extra=true;if(amt){r.amt=amt;r.max=Math.max(amt,r.max)}Object.assign(r,o||{});if(r.hidden&&r.mesh)r.mesh.visible=!!(r.found&1);return r}
+function depPool(late){const A=late?WAGE:AGEMAX,P=[];if(ANCIENT&&(!late||A<MED))P.push('flint','clay','cuore','cuore','tin');if(!late||A>=MED){P.push('gold','gold','stone','stone');if(AGEMAX>=MED+1&&(!late||A>=MED+1))P.push('ore','ore');if(AGEMAX>=MED+5&&(!late||A>=MED+5))P.push('coal','coal')}if(ANCIENT&&late&&A<MED)P.push('stone');return P}
+function depSpot(rng,minB){for(let k=0;k<300;k++){const cx=4+((rng()*(N-8))|0),cz=4+((rng()*(N-8))|0),x=cx-HALF+.5,z=cz-HALF+.5;const c=cz*N+cx;if(TER&&TER[c])continue;if(grid[c]||occ[c]||(RESV&&RESV[c]))continue;
+    if(BASES.some(b=>Math.hypot(b.x-x,b.z-z)<minB))continue;if(blds.some(b=>!b.dead&&Math.hypot(b.x-x,b.z-z)<7))continue;if(DEPS.some(d=>Math.hypot(d.cx-cx,d.cz-cz)<10))continue;if(heightAt(x,z)<WATER+.3)continue;return[cx,cz]}return null}
+function depMake(rt,cx,cz,found,hidden,n){const D={id:DEPS.length+1,rt,cx,cz,found:found|0,hidden:!!hidden};let made=0;
+  for(const[i,j]of SPIRAL){if(made>=n)break;if(addExtra(rt,cx+i,cz+j,0,{dep:D.id,hidden:!!hidden,found:found|0}))made++}if(!made)return null;DEPS.push(D);return D}
+function depInit(){DEPS=[];const rng=mulberry32((WSEED^0x5eed)>>>0),P=depPool(false),n=2+NP;for(let i=0;i<n;i++){const sp=depSpot(rng,24);if(!sp)continue;depMake(P[(rng()*P.length)|0],sp[0],sp[1],0,true,4+((rng()*2)|0))}
+  ecoT.find=900+Math.random()*300}
+function depWhere(D){const x=D.cx-HALF+.5,z=D.cz-HALF+.5;let best=0,bd=1e9;for(let t=0;t<NP;t++){if(ELIM[t])continue;const d=Math.hypot(BASES[t].x-x,BASES[t].z-z);if(d<bd){bd=d;best=t}}
+  return best===0?(bd<30?'not far from your town':'out in the wilds beyond your town'):METP[0][best]?'near the lands of the '+cname(best):'in far-off country'}
+const DEPNAME={gold:'gold',stone:'stone',ore:'iron ore',coal:'coal',flint:'flint',clay:'clay',cuore:'copper ore',tin:'tin'};
+function discTick(){for(const D of DEPS){if(!D.hidden)continue;const all=(1<<NP)-1;if((D.found&all)===all)continue;const x=D.cx-HALF+.5,z=D.cz-HALF+.5;
+    for(const u of units){if(u.dead||u.inside||u.team>=NP||(D.found>>u.team&1))continue;if(Math.abs(u.x-x)>7||Math.abs(u.z-z)>7||Math.hypot(u.x-x,u.z-z)>7)continue;
+      D.found|=1<<u.team;for(const r of ress)if(r.dep===D.id&&!r.dead){r.found=D.found;if(r.mesh)r.mesh.visible=!!(r.found&1)}
+      if(u.team===0){sfxUI('chime');notify('Your '+(u.type==='villager'?'villagers':u.type==='scout'||u.type==='runner'||u.type==='horseman'?'scouts':u.def.naval?'sailors':'soldiers')+' have found '+DEPNAME[D.rt]+' '+depWhere(D)+'!');pingMini(x,z);if(EXP)stampExp(x,z,5);fogT=0}}}}
+function findTick(){if(ecoT.find>gameT||DEPS.length>30)return;ecoT.find=gameT+420+Math.random()*240;const P=depPool(true);if(!P.length)return;
+  const sp=depSpot(Math.random,22);if(!sp)return;const rt=P[(Math.random()*P.length)|0];const D=depMake(rt,sp[0],sp[1],(1<<NP)-1,false,4+((Math.random()*2)|0));if(!D)return;
+  sfxUI('chime');notify('Prospectors report a new seam of '+DEPNAME[rt]+' '+depWhere(D)+'. Whoever gets there first will profit.');pingMini(D.cx-HALF+.5,D.cz-HALF+.5);if(EXP)stampExp(D.cx-HALF+.5,D.cz-HALF+.5,3)}
+function ecoTick(){if(RESTORING)return;
+  if((ecoT.wild-=1)<=0){ecoT.wild=20;wildTick()}
+  if((ecoT.fish-=1)<=0){ecoT.fish=10;fishTick()}
+  discTick();findTick()}
+/* the computer sends its scout prospecting when its mines run low */
+function aiProspect(p){const AI=AIS[p];if((AI.prosT||0)>gameT)return;AI.prosT=gameT+60;const sc=units.find(u=>!u.dead&&u.team===p&&(u.type==='scout'||u.type==='runner'||u.type==='horseman')&&!u.raid&&u.task.t==='idle');if(!sc)return;
+  const home=BASES[p];let left=0;for(const r of ress)if(!r.dead&&(r.rtype==='gold'||r.rtype==='stone'||r.rtype==='ore')&&!(r.hidden&&!(r.found>>p&1))&&Math.hypot(r.x-home.x,r.z-home.z)<HALF*.8)left+=r.amt;if(left>2500)return;
+  const D=DEPS.find(d=>d.hidden&&!(d.found>>p&1)&&compAt(d.cx-HALF+.5,d.cz-HALF+.5)===AI.comp);if(D)orderMove(sc,{x:D.cx-HALF+.5+(Math.random()-.5)*6,z:D.cz-HALF+.5+(Math.random()-.5)*6})}
+const resKnown=(r,t)=>!r.hidden||!!(r.found>>t&1);
+
 function saplingRate(t){const S=SEAS.on?[1.4,1.2,.8,.3][SEAS.idx]:1;return S*(has(t,'forestry')?1.5:1)/150}
-function vilTick(dt){vilT-=dt;if(vilT>0)return;vilT=1;const D=DIFF[diffKey];
+function vilTick(dt){vilT-=dt;if(vilT>0)return;vilT=1;const D=DIFF[diffKey];ecoTick();
   for(const b of blds){if(b.dead||b.type!=='sapling'||!b.built)continue;b.grow=(b.grow||0)+saplingRate(b.team);
     if(b.grow>=1){const ox=b.ox,oz=b.oz,t=b.team;kill(b,true);plantTree(ox,oz,has(t,'forestry')?125:100);if(t===0&&(!FOGON||visAt(b.x,b.z)))puff(b.x,heightAt(b.x,b.z)+1.4,b.z,0x5f9a34,3,.25,.6,.6,1)}}
-  if(BARBS)for(let p=1;p<NP;p++)if(AIS[p]&&!ELIM[p])aiPlant(p);
+  if(BARBS)for(let p=1;p<NP;p++)if(AIS[p]&&!ELIM[p]){aiPlant(p);aiProspect(p)}
   for(const V of VILS){if(V.hall.dead)continue;
     if(V.owner>=0&&!(V.unrest>gameT)){V.incT-=1;if(V.incT<=0){V.incT=20;const K=VILKIND[V.kind],a=Math.round(K.amt*(HOWMUL[V.how]||1));res[V.owner][K.r]+=a;if(V.owner===0){stats.gathered+=a;puff(V.hall.x,V.hall.y+3.5,V.hall.z,0xffd36a,2,.15,.4,.8,1)}}}
     else for(let t=0;t<NP;t++)if(V.fav[t]>0)V.fav[t]=Math.max(0,V.fav[t]-.02)}
@@ -2934,11 +3000,9 @@ function aiPlant(p){const AI=AIS[p];AI.plantT=(AI.plantT||0)-1;if(AI.plantT>0||a
   let trees=0;for(const r of ress)if(!r.dead&&r.tree&&r.amt>0&&Math.abs(r.x-home.x)<24&&Math.abs(r.z-home.z)<24)trees++;AI.lowWood=trees<40;if(trees>=40)return;
   const mb=blds.filter(b=>!b.dead&&b.team===p);const fl=mb.find(b=>b.type==='forester');const vils=units.filter(u=>!u.dead&&u.team===p&&u.type==='villager');
   if(!fl){if(res[p].wood>=100&&vils.length>=10)aiBuildNear(p,'forester',home,8,15,1,vils);return}
-  if(!fl.built||res[p].wood<80)return;const pend=mb.filter(b=>b.type==='sapling').length;if(pend>=18)return;
-  for(let k=0;k<12;k++){const a=R()*TAU,d=4+R()*5,cx=cellX(fl.x+Math.cos(a)*d),cz=cellX(fl.z+Math.sin(a)*d);const cells=[];
-    for(let i=0;i<4;i++)for(let j=0;j<3;j++)if(validPlace('sapling',cx+i,cz+j,0,p))cells.push([cx+i,cz+j]);if(cells.length<8)continue;
-    let first=null;for(const[x,z]of cells){if(!canAfford(p,bCost(p,'sapling')))break;pay(p,bCost(p,'sapling'));const b=placeBld('sapling',p,x,z,false);if(!first)first=b}
-    if(first){const c2=vils.filter(v=>v.task.t!=='build').sort((a2,b2)=>Math.hypot(a2.x-first.x,a2.z-first.z)-Math.hypot(b2.x-first.x,b2.z-first.z));for(let i=0;i<Math.min(2,c2.length);i++)orderBuild(c2[i],first)}return}}
+  if(!fl.built||res[p].wood<60)return;if(vils.some(v=>v.task.t==='plant'||(v.task.after&&v.task.after.t==='plant')))return;
+  const v=vils.filter(v=>v.task.t!=='build').sort((a,b)=>Math.hypot(a.x-fl.x,a.z-fl.z)-Math.hypot(b.x-fl.x,b.z-fl.z))[0];if(!v)return;
+  const a=R()*TAU,d=5+R()*4;v.task={t:'plant',cx:cellX(fl.x+Math.cos(a)*d),cz:cellX(fl.z+Math.sin(a)*d),r:3};v.path=null;v.pathFor=null}
 function aiVillage(p){const AI=AIS[p],D=DIFF[diffKey],home=BASES[p];if(age[p]<(ANCIENT?1:MED+1))return;let best=null,bd=HALF*1.3;
   for(const V of VILS){if(V.owner>=0||V.hall.dead||compAt(V.x,V.z)!==AI.comp)continue;const d=Math.hypot(V.x-home.x,V.z-home.z);if(d<bd){bd=d;best=V}}
   if(!best)return;const r=res[p],price=vilPrice(best,p);
@@ -3092,7 +3156,7 @@ function pick(sx,sy,tm){const k=clamp(36/cam.dist,.5,2)*(tm||1);let best=null,bd
     for(const cx of[-s,s])for(const cz of[-s,s])for(const cy_ of[0,h]){const p=proj(b.x+cx,b.y+cy_,b.z+cz);x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)}
     const mx=(x1-x0)*.1,my=(y1-y0)*.06;if(sx>x0+mx&&sx<x1-mx&&sy>y0+my&&sy<y1-my){const p=proj(b.x,b.y,b.z),d=Math.hypot(p.x-sx,p.y-sy)+(b.s===1?0:8);if(d<bd){bd=d;best=b}}}
   if(best)return best;
-  for(const r of ress){if(r.dead||(r.animal&&!visAt(r.x,r.z))||!expAt(r.cx,r.cz))continue;const p=proj(r.x,heightAt(r.x,r.z)+(r.tree&&!r.felled?1.6:.4),r.z);if(p.z>1)continue;const d=Math.hypot(p.x-sx,p.y-sy),th=(r.tree?20:24)*k;if(d<th&&d<bd){bd=d;best=r}}
+  for(const r of ress){if(r.dead||(r.animal&&!visAt(r.x,r.z))||!expAt(r.cx,r.cz)||!resKnown(r,0))continue;const p=proj(r.x,heightAt(r.x,r.z)+(r.tree&&!r.felled?1.6:.4),r.z);if(p.z>1)continue;const d=Math.hypot(p.x-sx,p.y-sy),th=(r.tree?20:24)*k;if(d<th&&d<bd){bd=d;best=r}}
   return best}
 function setSel(list,add){if(!add){sel=[];selSet.clear()}for(const e of list){if(e&&!selSet.has(e)&&!e.dead){sel.push(e);selSet.add(e)}}buildPage='eco';renderPanel(true)}
 function selectUnitsInBox(x0,y0,x1,y1,add){const a=Math.min(x0,x1),b=Math.max(x0,x1),c=Math.min(y0,y1),d=Math.max(y0,y1),out=[];
@@ -3194,7 +3258,7 @@ function tryPlace(shiftKey){
   pay(0,c);const b=placeBld(type,0,placing.ox,placing.oz,false,rot);sfxUI('place');
   vil.forEach(u=>{if(shiftKey&&u.task.t==='build'&&!u.task.target.built)return;orderBuild(u,b)});marker(b.x,b.z,0x8dff8a);
   if(!(shiftKey&&canAfford(0,c)))cancelModes();else updGhost(mouse.x,mouse.y)}
-function cancelModes(noRender){placeHint(null);placing=null;if(ghost){scene.remove(ghost);ghost=null}for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];amoveMode=false;spyMode=null;canvas.style.cursor='';if(!noRender)renderPanel(true)}
+function cancelModes(noRender){placeHint(null);placing=null;if(ghost){scene.remove(ghost);ghost=null}for(const lg of lineGhosts)scene.remove(lg);lineGhosts=[];amoveMode=false;spyMode=null;plantMode=false;canvas.style.cursor='';if(!noRender)renderPanel(true)}
 
 const mouse={x:null,y:null,inside:false};
 let drag=null,boxing=false,midPan=null;const touches=new Map();let pinch=null,touchTap=null;
@@ -3220,6 +3284,7 @@ addEventListener('pointerup',e=>{
   if(state==='play'){
     if(placing)tryPlace(e.shiftKey);
     else if(spyMode){spyOrder(pick(e.clientX,e.clientY))}
+    else if(plantMode){plantOrder(groundAt(e.clientX,e.clientY))}
     else if(amoveMode){const t=pick(e.clientX,e.clientY);command(t&&foe(t.team,0)?t:null,groundAt(e.clientX,e.clientY),true);if(!e.shiftKey){amoveMode=false;canvas.style.cursor='';renderPanel(true)}}
     else if(boxing)selectUnitsInBox(drag.x,drag.y,e.clientX,e.clientY,e.shiftKey);
     else{const t=pick(e.clientX,e.clientY);if(e.shiftKey&&t&&t.kind==='unit'&&t.team===0){if(selSet.has(t)){sel=sel.filter(s=>s!==t);selSet.delete(t);renderPanel(true)}else setSel([t],true)}else setSel(t?[t]:[],false)}}
@@ -3228,7 +3293,7 @@ canvas.addEventListener('dblclick',e=>{if(state!=='play'||placing)return;const t
   if(t.kind==='unit'){for(const u of units){if(u.dead||u.inside||u.team!==0||u.type!==t.type)continue;const p=proj(u.x,uY(u)+.8,u.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(u)}}
   else if(t.kind==='bld'){for(const b of blds){if(b.dead||b.team!==0||b.type!==t.type)continue;const p=proj(b.x,b.y,b.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(b)}}setSel(out,false)});
 let lastTapU={u:null,t:0};
-function tap(x,y){if(placing){updGhost(x,y);tryPlace(false);return}if(spyMode){spyOrder(pick(x,y,1.5));return}const t=pick(x,y,1.5),gp=groundAt(x,y);
+function tap(x,y){if(placing){updGhost(x,y);tryPlace(false);return}if(spyMode){spyOrder(pick(x,y,1.5));return}if(plantMode){plantOrder(groundAt(x,y));return}const t=pick(x,y,1.5),gp=groundAt(x,y);
   if(!amoveMode&&t&&t.kind==='unit'&&t.team===0){const now=performance.now();if(lastTapU.u===t&&now-lastTapU.t<420&&sel.length===1&&sel[0]===t){lastTapU.u=null;selectSame();return}lastTapU={u:t,t:now}}
   if(amoveMode){command(t&&foe(t.team,0)?t:null,gp,true);amoveMode=false;renderPanel(true);return}
   const ownU=ownUnitsSel().length,own=ownU||sel.some(e=>e.kind==='bld'&&e.team===0&&e.def.trains);
@@ -3242,7 +3307,7 @@ const keys=new Set();
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='SELECT')return;if(AUD&&state==='play'){if(e.key==='Escape')audClose();else if(/^[1-9]$/.test(e.key))audPick(+e.key-1);e.preventDefault();return}const k=e.key.toLowerCase();keys.add(k);
   if(state==='play'){const gd=/^Digit[1-9]$/.test(e.code||'')?+e.code[5]:0;
     if(gd&&(e.ctrlKey||e.metaKey||e.altKey)){e.preventDefault();grpSet(gd-1);return}if(gd&&e.shiftKey){e.preventDefault();grpSel(gd-1);return}
-    if(k==='escape'){if(placing||amoveMode||spyMode)cancelModes();else setSel([],false)}
+    if(k==='escape'){if(placing||amoveMode||spyMode||plantMode)cancelModes();else setSel([],false)}
     else if(k==='v'||k==='f'||k==='c'){const b=document.querySelector('#cmds [data-key="'+k+'"]');if(b)b.click()}
     else if(k==='p')setPaused(!gpaused);else if(k==='t')showTree();else if(k==='m')sndToggle();else if(k==='[')cycleSpeed(-1);else if(k===']')cycleSpeed(1);else if(k==='f10'){e.preventDefault();pause()}
     else if(k==='h'){const tc=blds.find(b=>!b.dead&&b.team===0&&b.type==='tc');if(tc){setSel([tc],false);cam.x=tc.x;cam.z=tc.z}}
@@ -3291,7 +3356,7 @@ function buildMiniBase(){miniBase=document.createElement('canvas');miniBase.widt
 let miniAngle=0;
 function drawMini(){const S=mini.width,k=S/N;mctx.imageSmoothingEnabled=false;mctx.drawImage(miniBase,0,0,S,S);
   const RC={wood:'#2b4a26',food:'#d24a6a',gold:'#f2c341',stone:'#c9c5bd',ore:'#b0603f'};
-  for(const r of ress){if(r.dead||!expAt(r.cx,r.cz)||(r.animal&&!visAt(r.x,r.z)))continue;mctx.fillStyle=RC[r.rtype];mctx.fillRect(r.cx*k,r.cz*k,k+.3,k+.3)}
+  for(const r of ress){if(r.dead||!expAt(r.cx,r.cz)||(r.animal&&!visAt(r.x,r.z))||!resKnown(r,0))continue;mctx.fillStyle=RC[r.rtype]||'#8a8a8a';mctx.fillRect(r.cx*k,r.cz*k,k+.3,k+.3)}
   if(FOGON){if(!fogCv||fogCv.width!==N){fogCv=document.createElement('canvas');fogCv.width=fogCv.height=N;fogImg=fogCv.getContext('2d').createImageData(N,N)}
     const dd=fogImg.data;for(let c=0,n=N*N;c<n;c++){dd[c*4+3]=VIS[c]?0:EXP[c]?110:250}fogCv.getContext('2d').putImageData(fogImg,0,0);mctx.drawImage(fogCv,0,0,S,S)}
   for(const b of blds){if(b.dead||!bldSeen(b))continue;mctx.fillStyle=PCSS[b.team];mctx.fillRect(b.ox*k,b.oz*k,b.s*k,b.s*k)}
@@ -3330,8 +3395,8 @@ function notify(msg,alert){toastEl.textContent=msg;toastEl.className='show'+(ale
 function notifyOnce(key,msg){if(onceSeen.has(key))return;onceSeen.add(key);notify(msg)}
 const costHTML=c=>Object.entries(c).map(([k,v])=>'<span>'+v+'<i class="ico '+k+'"></i></span>').join('');
 let lastSig='';
-function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+(spyMode||'')+buildPage+age[0]+TECH[0].size+PEND[0].size+AGEMAX+(sel.length===1&&sel[0].type==='tc'&&sel[0].team===0?'t'+Math.floor(gameT/3):'')}
-const TASKLBL=u=>{const t=u.task;switch(t.t){case'idle':return'Idle';case'move':return'Moving';case'amove':return'Attack-moving';case'attack':return u.type==='monk'?'Converting':'Fighting';case'garrison':return'Taking shelter';case'heal':return'Healing';case'spy':return'On a mission: '+SPYM[t.mission].name.toLowerCase()+(u.exposed>gameT?' (SPOTTED!)':'');case'trade':return'Trading';case'board':return'Boarding';case'envoy':return'On a diplomatic visit';case'unload':return'Sailing to unload';case'inside':return'Aboard';
+function selSig(){let nb=0;for(const b of blds)if(b.team===0&&b.built&&!b.dead)nb++;return nb+'/'+sel.map(e=>e.id+(e.kind==='bld'?(e.built?'b':'u')+e.queue.length+'g'+e.gar.length:e.gar?'p'+e.gar.length:'')).join(',')+'|'+(placing?placing.type+(placing.start?'s':''):'')+(amoveMode?'A':'')+(spyMode||'')+(plantMode?'P':'')+buildPage+age[0]+TECH[0].size+PEND[0].size+AGEMAX+(sel.length===1&&sel[0].type==='tc'&&sel[0].team===0?'t'+Math.floor(gameT/3):'')}
+const TASKLBL=u=>{const t=u.task;switch(t.t){case'idle':return'Idle';case'move':return'Moving';case'amove':return'Attack-moving';case'attack':return u.type==='monk'?'Converting':'Fighting';case'garrison':return'Taking shelter';case'heal':return'Healing';case'plant':return'Planting trees';case'spy':return'On a mission: '+SPYM[t.mission].name.toLowerCase()+(u.exposed>gameT?' (SPOTTED!)':'');case'trade':return'Trading';case'board':return'Boarding';case'envoy':return'On a diplomatic visit';case'unload':return'Sailing to unload';case'inside':return'Aboard';
   case'build':return(t.target&&t.target.built?'Repairing ':'Building ')+(t.target?t.target.name:'');case'return':return'Carrying '+(u.carry||'')+' home';
   case'gather':{const r=t.target;if(r&&r.kind==='bld')return({food:'Farming',hemp:'Harvesting hemp',grapes:'Tending vines',nitre:'Raking saltpetre'})[r.def.crop];if(r&&r.animal)return r.hp>0?'Hunting':'Butchering';if(r&&r.fish)return'Fishing';return({coal:'Mining coal',flint:'Knapping flint',clay:'Digging clay',cuore:'Mining copper ore',tin:'Mining tin',wood:'Chopping wood',food:'Foraging berries',ore:'Mining iron ore',gold:'Mining gold',stone:'Mining stone'})[t.rtype]||'Gathering'}}return''};
 const KEYS=['1','2','3','4','5','6','7','8','9','0','-'];
@@ -3358,6 +3423,7 @@ function renderPanel(force){
   const btn=(cls,cmd,name,cost,title,lock,on,key)=>'<button class="cmd '+cls+(lock?' lock':'')+(on?' on':'')+'" data-cmd="'+cmd+'" data-key="'+(key||'')+'" '+(cost&&(!lock||cls==='age')?'data-cost=\''+JSON.stringify(cost)+'\' ':'')+(lock?'data-lock="'+lock+'" ':'')+'title="'+title.replace(/"/g,'&quot;')+'"><span class="k">'+(key||'').toUpperCase()+'</span><span class="n">'+name+'</span><span class="c">'+(cost&&(!lock||cls==='age')?costHTML(cost):'')+'</span></button>';
   if(own.length){
     if(own.some(u=>u.type==='villager')){const list=buildPage==='eco'?ECO_B:buildPage==='ind'?IND_B:MIL_B;
+      if(buildPage==='ind'&&age[0]>=BUILD.sapling.age)cmds+=btn('','plant','Plant forest',{wood:5},'Plant forest: tap a spot and your villagers plant trees all around it (5 wood each) until it is full or you give them other orders. Needs a Forester’s Lodge',plantCan(0)?'':'Needs Forester’s Lodge',plantMode,nextKey());
       for(const t of list){if(bldHidden(0,t))continue;const d=BUILD[t],nm=bName(0,t),lock=d.diplo&&!DIPLO?'Diplomacy games':age[0]<d.age?'Age '+AGEN[d.age]:d.needsTech&&ANCIENT&&!has(0,d.needsTech)?'Needs '+TECHS[d.needsTech].name:d.ntech&&age[0]>=d.age&&!has(0,d.ntech)?'Needs '+TECHS[d.ntech].name:d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)?'Needs '+BUILD[d.needs].name:'';cmds+=btn('','build:'+t,nm,bCost(0,t),nm+': '+d.desc+(age[0]<d.age?' (requires '+AGES[d.age]+')':''),lock,placing&&placing.type===t,nextKey())}
       cmds+=btn('page','page',buildPage==='eco'?'Industry ›':buildPage==='ind'?'Military ›':'Economy ›',null,'Switch build menu','','',nextKey())}
     {const sps=own.filter(isSpy);if(sps.length){const ms=[...new Set(sps.flatMap(spyMissionsFor))];for(const m of ms)cmds+=btn('tech','spym:'+m,SPYM[m].short,null,SPYM[m].name+': '+SPYM[m].desc+'. Then tap the building. Risk of capture about '+Math.round(SPYM[m].risk*100)+'%','',spyMode===m,nextKey())}}
@@ -3422,6 +3488,7 @@ elCmds.addEventListener('click',e=>{const b=e.target.closest('.cmd');if(!b||stat
   else if(cmd==='vgift'||cmd==='vbuy'){const s=sel[0],V=s&&vilOfHall(s);if(V){cmd==='vgift'?vilGift(V,0):vilBuy(V,0);renderPanel(true)}}
   else if(cmd==='unload'){let ok=0,bad=0;for(const u of ownUnitsSel())if(u.gar&&u.gar.length){if(unloadShip(u,null))ok++;else bad++}if(bad&&!ok)notify('Sail closer to the shore to unload.',true);renderPanel(true)}
   else if(cmd==='board'){notify('Select land units, then right-click this transport to board it.')}
+  else if(cmd==='plant'){if(!plantCan(0)){notify('Build a Forester’s Lodge first.',true);return}plantMode=!plantMode;amoveMode=false;spyMode=null;canvas.style.cursor=plantMode?'crosshair':'';renderPanel(true);if(plantMode)notify('Now tap where to plant.')}
   else if(cmd==='spym'){spyMode=spyMode===arg?null:arg;amoveMode=false;canvas.style.cursor=spyMode?'crosshair':'';renderPanel(true);if(spyMode)notify(arg==='incite'?'Now tap a village hall.':'Now tap one of their buildings'+(arg==='steal'?' (their Town Center or Market is best).':'.'))}
   else if(cmd==='amove'){amoveMode=!amoveMode;canvas.style.cursor=amoveMode?'crosshair':'';renderPanel(true);if(amoveMode)notifyOnce('am','Click a spot: your soldiers march there and fight anything on the way.')}});
 elInfo.addEventListener('click',e=>{if(e.target.closest('[data-desel]')){if(placing||amoveMode)cancelModes(true);setSel([],false);return}const q=e.target.closest('.qi');if(q){const b=sel[0],i=+q.dataset.q,it=b&&b.queue[i];if(it){if(it.tech){pay(0,TECHS[it.tech].cost,-1);PEND[0].delete(it.tech)}else pay(0,UNITS[it.type].cost,-1);b.queue.splice(i,1);renderPanel(true)}return}
@@ -3462,6 +3529,7 @@ function snapshot(){
   return{v:4,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
     exp:FOGON?rle(EXP):null,seen:blds.filter(b=>b.seen).map(b=>b.id),
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
+    eco:{shafts:SHAFTS.map(x=>[x.rt,x.cx,x.cz,x.max,x.n,Math.round(x.t)]),fg:FISHGONE,deps:DEPS,t:ecoT,extra:ress.filter(r=>r.extra&&!r.dead).map(r=>[r.rtype,r.cx,r.cz,Math.round(r.amt),r.max,r.dep||0,r.hidden?1:0,r.found|0,r.shaftN|0]),fish2:ress.filter(r=>r.extraF&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt)])},
     sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,guide:{on:GUIDE.on,i:GUIDE.i,v0:GUIDE.v0,min:GUIDE.min},hist:HIST,
     vil:{vils:VILS.map(V=>({id:V.id,team:V.team,name:V.name,kind:V.kind,x:V.x,z:V.z,owner:V.owner,how:V.how,fav:V.fav,incT:V.incT,env:V.env,hall:V.hall.id})),host:HOST,camps:CAMPS.map(C=>({id:C.id,b:C.b.id,cap:C.cap})),barbs:BARBS},
     dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS,mem:MEM,flt:FLT,mref:MREF,rep:REP,deal:DEAL,intel:INTEL,mapt:MAPT,newst:NEWST,goss:GOSS},
@@ -3493,6 +3561,7 @@ function loadGame(d){
   age=d.age.slice();TECH=d.tech.map(a=>new Set(a));PEND=d.pend.map(a=>new Set(a));DEFC=age.map(()=>({}));
   MKT=d.mkt;MERRY=d.merry.slice();RATION=d.ration.slice();rationT=d.rationT.slice();ELIM=d.elim.slice();MET=d.met.slice();
   if(FOGON&&d.exp)EXP=unrle(d.exp,N*N);
+  RESTORING=true;for(const r of ress)if(r.extra||r.extraF)deplete(r);ress=ress.filter(r=>!r.dead);for(const x of SHAFTS)world.remove(x.mesh);SHAFTS=[];FISHGONE=[];DEPS=[];
   const byId=new Map();for(const r of ress)byId.set(r.id,r);
   for(const id of d.rdead){const r=byId.get(id);if(r){if(r.animal){r.dead=true;if(r.mesh)world.remove(r.mesh)}else deplete(r)}}
   for(const[id,amt,f]of d.rmod){const r=byId.get(id);if(!r||r.dead)continue;r.amt=amt;if(f&&r.tree){r.felled=true;setTree(r.tree,1)}
@@ -3500,6 +3569,8 @@ function loadGame(d){
   for(const[id,x,z,hp,amt,hx,hz]of d.ani){const r=byId.get(id);if(!r||r.dead)continue;r.x=x;r.z=z;r.hp=hp;r.amt=amt;r.home={x:hx,z:hz};r.cx=cellX(x);r.cz=cellX(z)}
   ress=ress.filter(r=>!r.dead);
   if(d.planted)for(const[cx,cz,amt,kind,f]of d.planted){const r=plantTree(cx,cz,amt,kind);if(r&&f){r.felled=true;setTree(r.tree,1)}}
+  if(d.eco){DEPS=d.eco.deps||[];FISHGONE=d.eco.fg||[];if(d.eco.t)ecoT=d.eco.t;for(const[rt,cx,cz,amt,max,dep,hid,found,sn]of d.eco.extra||[]){const r=addExtra(rt,cx,cz,amt,{dep,hidden:!!hid,found,shaftN:sn});if(r)r.max=max}
+    for(const[cx,cz,amt]of d.eco.fish2||[]){const r=addFish(cx,cz);if(r){r.amt=amt;r.extraF=true}}for(const[rt,cx,cz,max,n,t]of d.eco.shafts||[]){const x={rt,cx,cz,max,n,t};x.mesh=shaftMesh(rt,cx,cz);SHAFTS.push(x)}}
   const seen=new Set(d.seen||[]);
   for(const o of d.blds){const b=placeBld(o.type,o.team,o.ox,o.oz,o.built,o.rot);b.id=o.id;b.progress=o.progress;b.hp=o.hp;b.mode=o.mode||undefined;b.vil=o.vil||0;b.loot=o.loot||null;if(o.grow!=null)b.grow=o.grow;b.camp=o.camp||0;b.off=o.off;b.wp=o.wp;b.working=o.working;b.seen=seen.has(o.id);
     b.queue=o.queue.map(q=>Object.assign({},q));if(!b.built)b.mesh.scale.y=.08+.92*b.progress;b._d=o;byId.set(b.id,b)}
@@ -3517,7 +3588,7 @@ function loadGame(d){
   if(d.vil){VILS=d.vil.vils.map(v=>Object.assign({},v,{hall:byId.get(v.hall)})).filter(V=>V.hall);HOST=d.vil.host||{};CAMPS=d.vil.camps.map(c=>({id:c.id,cap:c.cap,b:byId.get(c.b)})).filter(C=>C.b);BARBS=d.vil.barbs||{nextRaid:0,spawnT:0}}else{VILS=[];CAMPS=[];HOST={}}
   if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;MEM=d.dip.mem||[];FLT=d.dip.flt||[];MREF=d.dip.mref||[];REP=d.dip.rep==null?50:d.dip.rep;DEAL=d.dip.deal||[];INTEL=d.dip.intel||[];MAPT=d.dip.mapt||[];NEWST=d.dip.newst||[];GOSS=d.dip.goss||[];for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
   DIPQ=[];EVTS=[];renderDip();lastPSig='';if(d.sea)Object.assign(SEAS,d.sea);seaApply(1,true);if(d.wear)wearLoad(d.wear);
-  nid=Math.max(nid,d.nid||0);Object.assign(cam,d.cam);
+  nid=Math.max(nid,d.nid||0);Object.assign(cam,d.cam);if(!d.eco)depInit();RESTORING=false;
   for(let t=0;t<NP;t++)restyle(t);
   fogT=0;updFog();
   $('#age-emb').src=embURL(CIVKEY[0],0);lastSig='';renderPanel(true);
@@ -3607,7 +3678,7 @@ function showStart(){state='menu';screen.hidden=false;
   '<h3>Sound</h3>'+soundHTML()+'<div class="row"><button class="primary" id="go">Raise the banner</button>'+(readSave('auto')&&readSave('auto').opts?'<button class="secondary" id="cont">Continue last game</button>':'')+'<button class="secondary" id="ld">Load game</button></div>'+
   '<div class="help"><h3>Controls</h3><div><b>Left-click</b> select · <b>drag</b> box-select · <b>double-click</b> select all of a type</div><div><b>Right-click</b> move, gather, build, repair or attack</div>'+
   '<div><b>WASD</b>, arrows or screen edge to pan · <b>wheel</b> zoom · <b>Q/E</b> rotate</div><div><b>1–0</b> command hotkeys · <b>G</b> attack-move · <b>T</b> tech tree</div><div><b>P</b> pause (you can still give orders) · <b>[</b> <b>]</b> game speed ½× to 2× · <b>M</b> sound · <b>F10</b> menu</div>'+
-  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit. Each people has a leader: open Diplomacy and press <b>Audience</b> to speak with them, or tap a leader’s portrait when they send word. Under <b>Let us make an agreement</b> you can set up trade deals, share maps, ask allies to join your wars, make threats and set peace terms. Your <b>reputation</b> (shown in Diplomacy) makes every leader warmer or colder towards you. <b>Spies</b> (Embassy; Informers from the Town Center in the Bronze Age) are hidden unless towers, scouts or monks spot them: pick a mission, then tap a building. Caught spies cause a diplomatic incident. Your replies change how they feel about you, and leaders remember gifts, insults and broken promises.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
+  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit. Each people has a leader: open Diplomacy and press <b>Audience</b> to speak with them, or tap a leader’s portrait when they send word. Under <b>Let us make an agreement</b> you can set up trade deals, share maps, ask allies to join your wars, make threats and set peace terms. Your <b>reputation</b> (shown in Diplomacy) makes every leader warmer or colder towards you. <b>Spies</b> (Embassy; Informers from the Town Center in the Bronze Age) are hidden unless towers, scouts or monks spot them: pick a mission, then tap a building. Caught spies cause a diplomatic incident. Your replies change how they feel about you, and leaders remember gifts, insults and broken promises.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu). Then select villagers, press <b>Plant forest</b> in the Industry menu and tap a spot: they plant trees all around it until it is full or you give them other orders. Saplings grow in 2–3 minutes. Woods also spread slowly on their own (not in winter), and fish shoals breed back. <b>New deposits:</b> some gold, stone and ore lie hidden in the wilds until your scouts or soldiers pass nearby; prospectors also announce new seams during long games; and spent mines can be reopened by new mining techniques.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
   const refresh=()=>{saveSetup();$('#s-players').innerHTML=playersHTML();$('#s-warn').textContent=setupWarn();$('#s-mapdesc').textContent=MAPDESC[SETUP.map];bindRows()};
   const bindRows=()=>{screen.querySelectorAll('[data-opp]').forEach(sl=>sl.onchange=()=>{SETUP.opp[+sl.dataset.opp-1]=sl.value;saveSetup()});
     screen.querySelectorAll('[data-team]').forEach(sl=>sl.onchange=()=>{SETUP.team[+sl.dataset.team]=+sl.value;saveSetup();$('#s-warn').textContent=setupWarn()})};
@@ -3815,7 +3886,7 @@ function newWorld(opts,seed){
   GENRES=ress.map(r=>r.id);
   for(let t=0;t<NP;t++){const b=BASES[t];const tc=placeBld('tc',t,cellX(b.x)-2,cellX(b.z)-2,true);
     const to=localPt(b,6,6);for(let i=0;i<4;i++){const p=spawnPoint(tc,to);makeUnit('villager',t,p.x,p.z)}const p=spawnPoint(tc,to);makeUnit(AGEMIN<=MED&&ANCIENT?'runner':'scout',t,p.x,p.z)}
-  applyStartAge();histReset();guideStart(OPTS.guide);WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
+  SHAFTS=[];FISHGONE=[];depInit();applyStartAge();histReset();guideStart(OPTS.guide);WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
   const b0=BASES[0],l0=Math.hypot(b0.x,b0.z)||1;cam.x=b0.x+b0.x/l0*-1.5;cam.z=b0.z+b0.z/l0*-1.5;cam.dist=36;cam.yaw=Math.atan2(b0.x,b0.z);
   $('#age-emb').src=embURL(CIVKEY[0],0);
   buildMiniBase();lastSig='';renderPanel(true);
@@ -4062,7 +4133,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={get DEPS(){return DEPS},get SHAFTS(){return SHAFTS},get FISHGONE(){return FISHGONE},ecoTick,wildTick,fishTick,findTick,discTick,reopenShafts,plantOrder,get ecoT(){return ecoT},get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
