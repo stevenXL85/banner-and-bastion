@@ -167,8 +167,25 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 .sndrow{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center}.sndrow label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px}.sndrow input[type=range]{width:130px;accent-color:#d6ad5a}
 #dip{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 92px);transform:translateX(-50%);z-index:7;width:min(440px,calc(100vw - 24px));display:flex;gap:12px;align-items:flex-start;
   background:linear-gradient(180deg,rgba(44,31,20,.98),rgba(26,18,12,.98));border:1px solid var(--brass);border-radius:9px;padding:12px;box-shadow:0 12px 34px rgba(0,0,0,.55)}
-#dip img{width:46px;height:46px;border-radius:6px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
-#dip .dt{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}#dip p{margin:0;font-size:14px;line-height:1.35}
+#dip .dpor{width:62px;height:72px;flex:none;padding:0;border:1px solid var(--brass2);border-radius:7px;overflow:hidden;background:none;cursor:pointer;min-height:0}#dip .dpor svg{display:block;width:100%;height:100%}
+#dip .dn{font-family:var(--display);color:var(--brass);font-size:14px}#dip .dn span{font-family:inherit;color:var(--muted);font-size:12px}
+#aud{position:fixed;inset:0;z-index:12;background:rgba(8,5,3,.62);display:flex;align-items:center;justify-content:center;padding:12px}
+#aud[hidden]{display:none}
+#aud .acard{position:relative;width:min(600px,100%);max-height:calc(100vh - 24px);overflow:auto;background:linear-gradient(180deg,rgba(40,29,19,.98),rgba(24,17,11,.99));border:1px solid var(--brass2);border-radius:12px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.6);color:var(--ink)}
+#aud .ax{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:8px;border:1px solid #5a4227;background:#2e2116;color:var(--ink);font-size:16px;cursor:pointer}
+#aud .ahead{display:flex;gap:14px;align-items:flex-start;padding-right:40px}
+#aud .apor{width:150px;height:175px;flex:none;border-radius:10px;overflow:hidden;border:2px solid var(--brass2);box-shadow:0 4px 14px rgba(0,0,0,.5)}#aud .apor svg{display:block;width:100%;height:100%}
+#aud .ameta{min-width:0;display:flex;flex-direction:column;gap:6px}#aud .aname{font-family:var(--display);font-size:24px;color:var(--brass);line-height:1.1}#aud .asub{font-size:13px;color:var(--muted)}
+#aud .achips{display:flex;flex-wrap:wrap;gap:6px}#aud .chip{font-size:12px;border:1px solid #5a4227;border-radius:10px;padding:2px 8px;color:var(--ink)}#aud .chip.dim{color:var(--muted)}
+#aud .amotto{font-style:italic;font-size:13px;color:#d8c9a6}
+#aud .aline{margin:14px 0 12px;padding:12px 14px;border-left:3px solid var(--brass);background:rgba(242,232,210,.06);border-radius:0 8px 8px 0;font-size:16px;line-height:1.45;font-family:var(--display)}
+#aud .achoices{display:flex;flex-direction:column;gap:7px}
+#aud .achoices button{display:flex;gap:10px;align-items:center;text-align:left;font:inherit;font-size:14.5px;padding:10px 12px;min-height:44px;border-radius:8px;border:1px solid #5a4227;background:#2e2116;color:var(--ink);cursor:pointer}
+#aud .achoices button:hover{border-color:var(--brass);background:#3a2a1c}#aud .achoices .an{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--brass2);color:var(--brass);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+#aud .achoices button.dis{opacity:.5}#aud .achoices small{display:block;font-size:11.5px;color:var(--muted)}
+#players .aud{display:inline-flex;align-items:center;gap:8px}#players .aud .mp{width:26px;height:30px;border-radius:4px;overflow:hidden;flex:none}#players .aud .mp svg{display:block;width:100%;height:100%}
+@media (max-width:560px){#aud{align-items:flex-end;padding:0}#aud .acard{border-radius:14px 14px 0 0;max-height:94vh;padding:14px 12px calc(env(safe-area-inset-bottom,0px) + 12px)}#aud .apor{width:96px;height:112px}#aud .aname{font-size:19px}#aud .amotto{display:none}#aud .aline{font-size:15px}}
+#dip .dt{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}#dip p{margin:0;font-size:14px;line-height:1.35;font-family:var(--display)}
 #dip .db{display:flex;flex-wrap:wrap;gap:6px}#dip button{font:inherit;font-weight:800;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid #5a4227;background:#2e2116;color:var(--ink);cursor:pointer;min-height:36px}
 #dip button.primary{background:linear-gradient(180deg,#d6ad5a,#a8813a);color:#1d140b;border-color:#e9c77a}
 #dip .dbar{height:3px;background:#3d2c1a;border-radius:2px;overflow:hidden}#dip .dbar i{display:block;height:100%;background:var(--brass);width:100%}
@@ -304,6 +321,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 <div id="guide" hidden></div>
 <div id="pausebar" hidden>Paused · select units and give orders, then press <b>P</b> or ▶ to resume</div>
 <div id="dip" hidden></div>
+<div id="aud" hidden></div>
 <div id="goods" hidden></div>
 <div id="players" class="gpanel" hidden></div>
 
@@ -2297,7 +2315,7 @@ const PERSONA={
   merchant:{name:'Merchant',base:5,peace:-10,ally:45,war:-50,ratio:1.5,desc:'Loves gold. Tribute and trade carts win its friendship.'},
   honourable:{name:'Honourable',base:10,peace:0,ally:55,war:-30,ratio:1.3,desc:'Keeps its word, stands by allies and never forgets betrayal.'}};
 const CIVPERS={vikings:'warlike',picts:'warlike',irish:'warlike',germans:'merchant',spanish:'cautious',welsh:'cautious',english:'honourable',french:'honourable',scots:'honourable'};
-function relInit(){DIPLO=OPTS.mode==='open';REL=[];OPIN=[];METP=[];VISITT=[];treatyT=[];LOSS=new Array(NP).fill(0);KNOWP=new Array(NP).fill(false);HCD=new Array(NP).fill(0);DIPQ=[];EVTS=[];dipT=3;warAsk=-1;PERS=[null];
+function relInit(){DIPLO=OPTS.mode==='open';REL=[];OPIN=[];METP=[];VISITT=[];treatyT=[];LOSS=new Array(NP).fill(0);KNOWP=new Array(NP).fill(false);HCD=new Array(NP).fill(0);DIPQ=[];EVTS=[];MEM=[];FLT=[];MREF=[];if(typeof AUD!=='undefined'&&AUD)audClose();PCACHE.clear();dipT=3;warAsk=-1;PERS=[null];
   for(let a=0;a<NP;a++){REL.push([]);OPIN.push([]);METP.push([]);VISITT.push([]);treatyT.push([]);
     for(let b=0;b<NP;b++){REL[a].push(a===b?2:DIPLO?1:(TEAMS[a]>0&&TEAMS[a]===TEAMS[b]?2:0));OPIN[a].push(0);METP[a].push(a===b||REL[a][b]===2);VISITT[a].push(-1e9);treatyT[a].push(0)}}
   renderDip()}
@@ -2314,7 +2332,13 @@ function strength(t){let s=1;for(const u of units){if(u.dead||u.team!==t)continu
 function conflict(a,b){for(let c=0;c<NP;c++){if(c===a||c===b||ELIM[c])continue;if((REL[a][c]===2&&REL[b][c]===0)||(REL[b][c]===2&&REL[a][c]===0))return true}return false}
 function makeContact(a,b){if(a===b||METP[a][b])return;METP[a][b]=METP[b][a]=true;
   if(a===0||b===0){const t=a===0?b:a;if(MET)MET[t]=true;
-    if(DIPLO&&!ally(t,0))dipAsk(t,'First contact: the '+cname(t)+' ('+PNAME[t]+'). You are '+relWord(t)+' for now. Open Diplomacy to send tribute, offer friendship or declare war.',[{l:'Diplomacy',f:()=>{playersEl.hidden=false;goodsEl.hidden=true;renderPlayers(true)}},{l:'OK',f:()=>{}}],25,null);
+    if(DIPLO&&!ally(t,0)&&t<NP&&PERS[t]){const P=PERS[t],strong=()=>strength(0)>strength(t)*1.2;dipEvent(t,say(t,'first'),[
+      {l:'Greetings. We come in friendship.',f:()=>{opinAdd(t,P==='warlike'?2:P==='merchant'?6:8);return say(t,'r_friend')}},
+      {l:'We should trade, you and we.',f:()=>{opinAdd(t,P==='merchant'?12:4);return say(t,'r_trade')}},
+      {l:'Keep your people away from our lands.',f:()=>{opinAdd(t,P==='warlike'?4:P==='honourable'?-2:-6);memAdd(t,'defied');return say(t,'r_warn')}},
+      {l:'Kneel before the '+CIVS[CIVKEY[0]].name+', and you may live.',f:()=>{const st=strong();opinAdd(t,P==='warlike'&&st?-5:P==='honourable'?-25:-18);memAdd(t,'insult');
+        if(P==='warlike'&&!st&&REL[t][0]===1&&gameT>DIFF[diffKey].first*.6)EVTS.push({t:gameT+10,f:()=>{if(REL[t][0]===1)declareWar(t,0)}});return say(t,st?'r_insult_strong':'r_insult')}}],40,null);
+      notifyOnce('aud1','A leader wants to speak with you. Tap their portrait to answer. Open Diplomacy at any time to request an audience.')}
     else notify('First contact: you have met the '+cname(t)+' ('+PNAME[t]+')'+(ally(t,0)?', your allies.':'.'),foe(t,0));renderPlayers(true)}}
 function dipContact(){const BS=8,bw=Math.ceil(N/BS),mask=new Uint16Array(bw*bw),kx=x=>clamp(((x+HALF)/BS)|0,0,bw-1);
   for(const b of blds)if(!b.dead)mask[kx(b.x)*bw+kx(b.z)]|=1<<b.team;for(const u of units)if(!u.dead&&!u.inside)mask[kx(u.x)*bw+kx(u.z)]|=1<<u.team;
@@ -2327,8 +2351,8 @@ function setRel(a,b,v,quiet){const old=REL[a][b];if(old===v||a===b)return;REL[a]
     else if(METP[0][a]&&METP[0][b])notify('The '+cname(a)+' and the '+cname(b)+(v===0?' are now at war.':v===1?(old===0?' have made peace.':' have broken their alliance.'):' have formed an alliance.'))}
   renderPlayers(true);lastSig=''}
 function betrayal(a){for(let c=1;c<NP;c++)if(c!==a&&METP[c][a]&&PERS[c]==='honourable')OPIN[c][a]=Math.max(-100,OPIN[c][a]-15)}
-function declareWar(a,b){if(REL[a][b]===0)return;const was=REL[a][b];if(gameT-treatyT[a][b]<90||was===2)betrayal(a);setRel(a,b,0);if(OPIN[b])OPIN[b][a]=Math.max(-100,OPIN[b][a]-(was===2?60:35))}
-function breakAlliance(a,b){if(REL[a][b]!==2)return;betrayal(a);setRel(a,b,1);OPIN[b][a]=Math.max(-100,OPIN[b][a]-45)}
+function declareWar(a,b){if(REL[a][b]===0)return;const was=REL[a][b];if(b===0&&a>0&&a<NP&&DIPLO){let k='war';if(memHas(a,'refused',120))k='war_refused';else for(let c=1;c<NP;c++)if(c!==a&&REL[a][c]===2&&REL[c][0]===0){k='war_join';break}const ln=say(a,k);setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'angry'),0)}if(gameT-treatyT[a][b]<90||was===2)betrayal(a);setRel(a,b,0);if(OPIN[b])OPIN[b][a]=Math.max(-100,OPIN[b][a]-(was===2?60:35))}
+function breakAlliance(a,b){if(REL[a][b]!==2)return;if(b===0&&a>0&&a<NP){const ln=say(a,'ally_break');setTimeout(()=>dipEvent(a,ln,[{l:'So be it.',f:()=>''}],30,null,'wary'),0)}betrayal(a);setRel(a,b,1);OPIN[b][a]=Math.max(-100,OPIN[b][a]-45)}
 function tribute(from,to,rk,amt){if(res[from][rk]<amt){if(from===0)notify('Not enough '+RESNAME[rk].toLowerCase()+'.',true);return false}
   res[from][rk]-=amt;const got=Math.round(amt*(1-tribFee(from)));res[to][rk]+=got;
   if(to!==0){const v=amt/(rk==='gold'?13:rk==='stone'?16:20)*(PERS[to]==='merchant'?1.5:1);OPIN[to][from]=clamp(OPIN[to][from]+Math.min(30,v),-100,100)}
@@ -2343,11 +2367,22 @@ function propose(a,b,kind,gift){
   if(b===0){if(kind==='alliance'&&hasEmbassy(a)&&!AIS[a].envoyPlan)AIS[a].envoyPlan={to:0,msg:{kind,gift},exp:gameT+150};else askHuman(a,kind,gift,false);return}
   if(aiConsider(b,a,kind,gift)){if(gift)tribute(a,b,'gold',gift);setRel(a,b,kind==='peace'?1:2)}else OPIN[a][b]-=4}
 function askHuman(a,kind,gift,byEnvoy){if(ELIM[a])return;const C=cname(a),who=(byEnvoy?'An envoy':'A messenger')+' of the '+C;
-  if(kind==='peace'){if(REL[a][0]!==0)return;dipAsk(a,who+' offers peace'+(gift?' and '+gift+' gold':'')+'.',[{l:'Accept peace',f:()=>{if(REL[a][0]!==0)return;if(gift&&res[a].gold>=gift){res[a].gold-=gift;res[0].gold+=gift}setRel(a,0,1);OPIN[a][0]+=5}},{l:'Refuse',f:()=>{OPIN[a][0]-=6;notify('You sent the '+C+' away. The war goes on.')}}],45,()=>{OPIN[a][0]-=3})}
-  else if(kind==='alliance'){if(REL[a][0]!==1)return;dipAsk(a,who+' proposes an alliance: shared sight, open gates, and war on common foes.',[{l:'Accept alliance',f:()=>{if(REL[a][0]!==1)return;if(conflict(a,0)){notify('You cannot ally with them while one of you is at war with the other\'s ally.',true);return}setRel(a,0,2);OPIN[a][0]+=8}},{l:'Decline',f:()=>{OPIN[a][0]-=8;notify('You politely declined the '+C+'.')}}],45,()=>{OPIN[a][0]-=4})}}
-function demand(a){const C=cname(a),rk=res[0].gold>=res[0].food?'gold':'food',amt=(rk==='gold'?150:250)+age[a]*100;
-  dipAsk(a,'The '+C+' demand '+amt+' '+RESNAME[rk].toLowerCase()+' as tribute, or they will declare war.',[{l:'Pay '+amt+' '+RESNAME[rk].toLowerCase(),f:()=>{if(res[0][rk]<amt){notify('You cannot afford it. The '+C+' take offence.',true);refuse();return}res[0][rk]-=amt;res[a][rk]+=amt;OPIN[a][0]+=25;notify('You paid the '+C+'. They are satisfied, for now.')}},{l:'Refuse',f:()=>refuse()}],40,()=>refuse());
-  function refuse(){OPIN[a][0]-=20;if(REL[a][0]===1)EVTS.push({t:gameT+6,f:()=>{if(REL[a][0]===1)declareWar(a,0)}})}}
+  if(kind==='peace'){if(REL[a][0]!==0)return;const ask=gift?gift+150:200;dipEvent(a,(byEnvoy?'(by envoy) ':'')+say(a,'peace_offer')+(gift?' We offer '+gift+' gold to seal it.':''),[
+      {l:'Accept peace'+(gift?' and the '+gift+' gold':'')+'.',f:()=>{if(REL[a][0]!==0)return'The moment has passed.';if(gift&&res[a].gold>=gift){res[a].gold-=gift;res[0].gold+=gift}setRel(a,0,1);opinAdd(a,5);memAdd(a,'peace');return say(a,'acc_peace')}},
+      {l:'Peace, for '+ask+' gold.',f:()=>{if(REL[a][0]!==0)return'The moment has passed.';const ratio=strength(a)/strength(0);if(res[a].gold>=ask&&(ratio<.75||LOSS[a]>6||PERS[a]==='merchant'||Math.random()<.35)){res[a].gold-=ask;res[0].gold+=ask;sfxUI('coins');setRel(a,0,1);opinAdd(a,-2);memAdd(a,'peace');return say(a,'pc_ok')}opinAdd(a,-6);return say(a,'pc_no')}},
+      {l:'No. The war goes on.',f:()=>{opinAdd(a,-6);return say(a,'bye_war')}}],45,()=>{opinAdd(a,-3)},'wary')}
+  else if(kind==='alliance'){if(REL[a][0]!==1)return;dipEvent(a,(byEnvoy?'(by envoy) ':'')+say(a,'ally_offer')+' (Allies share sight, open their gates to each other, and fight common foes.)',[
+      {l:'We accept. Let us be allies.',f:()=>{if(REL[a][0]!==1)return'The moment has passed.';if(conflict(a,0)){return'Alas, you are at war with our friends, or we with yours. It cannot be, for now.'}setRel(a,0,2);opinAdd(a,8);memAdd(a,'ally');return say(a,'acc_ally')}},
+      {l:'Not yet, but we are your friends.',f:()=>{opinAdd(a,-2);return say(a,'ally_notyet')}},
+      {l:'We decline.',f:()=>{opinAdd(a,-8);return say(a,'ally_decline')}}],45,()=>{opinAdd(a,-4)},'friendly')}}
+function demand(a){const rk=res[0].gold>=res[0].food?'gold':'food',amt=Math.round(((rk==='gold'?150:250)+Math.max(0,age[a]-AGEMIN)*80)/10)*10,rn=RESNAME[rk].toLowerCase(),half=Math.floor(amt/20)*10;
+  const war=()=>{if(REL[a][0]===1)EVTS.push({t:gameT+6,f:()=>{if(REL[a][0]===1)declareWar(a,0)}})};
+  const refuse=()=>{opinAdd(a,-20);memAdd(a,'refused');war()};
+  dipEvent(a,say(a,'demand',{amt,res:rn}),[
+    {l:'Pay the '+amt+' '+rn+'.',dis:res[0][rk]<amt?'You do not have '+amt+' '+rn+'.':'',f:()=>{if(res[0][rk]<amt){refuse();return say(a,'dem_defy_war',{res:rn})}res[0][rk]-=amt;res[a][rk]+=amt;sfxUI('coins');opinAdd(a,25);memAdd(a,'paid');return say(a,'dem_paid',{res:rn})}},
+    {l:'Half, and not a coin more ('+half+' '+rn+').',dis:res[0][rk]<half?'You do not have '+half+' '+rn+'.':'',f:()=>{const ratio=strength(a)/strength(0);if(res[0][rk]>=half&&(ratio<1.6||PERS[a]==='merchant'||Math.random()<.4)){res[0][rk]-=half;res[a][rk]+=half;sfxUI('coins');opinAdd(a,8);memAdd(a,'paid');return say(a,'dem_half_ok',{res:rn})}refuse();return{line:say(a,'dem_half_no',{res:rn}),mood:'angry'}}},
+    {l:'We do not bow. Come and take it.',f:()=>{if(strength(0)>=strength(a)*.85){opinAdd(a,PERS[a]==='warlike'?6:-4);memAdd(a,'defied');return say(a,'dem_defy_ok',{res:rn})}refuse();return{line:say(a,'dem_defy_war',{res:rn}),mood:'angry'}}},
+    {l:'Your threats amuse us.',f:()=>{opinAdd(a,-35);memAdd(a,'insult');memAdd(a,'refused');if(REL[a][0]===1)EVTS.push({t:gameT+4,f:()=>{if(REL[a][0]===1)declareWar(a,0)}});return{line:say(a,'dem_insult'),mood:'angry'}}}],40,()=>refuse(),'angry')}
 /* --- envoys --- */
 function orderEnvoy(u,b){u.task={t:'envoy',target:b};u.path=null;u.pathFor=null}
 function doEnvoy(u,dt){const b=u.task.target;if(!b||b.dead||b.team===u.team){setIdle(u);return}
@@ -2357,7 +2392,10 @@ function envoyArrive(u,t){const a=u.team;if(isVilT(t)){vilEnvoy(u,t);return}if(t
   puff(u.x,uY(u)+1.8,u.z,0xf2d16b,4,.15,.5,.8,1);
   if(t!==0){OPIN[t][a]=clamp(OPIN[t][a]+(fresh?12:3)*k*(PERS[t]==='honourable'?1.3:1),-100,100);
     if(a===0){KNOWP[t]=true;for(const b of blds)if(b.team===t)b.seen=true;notify('Your envoy was received by the '+cname(t)+'. They are '+PERSONA[PERS[t]].name.toLowerCase()+', and now '+attitude(OPIN[t][0]).toLowerCase()+' towards you'+(fresh?'.':'. (Visits only count fully every 3 minutes.)'));renderPlayers(true)}}
-  else{KNOWP[a]=true;const msg=u.msg;u.msg=null;if(msg)askHuman(a,msg.kind,msg.gift,true);else{res[0].food+=50;notify('An envoy of the '+cname(a)+' brings greetings and a gift of 50 food. They seem '+PERSONA[PERS[a]].name.toLowerCase()+'.')}renderPlayers(true)}}
+  else{KNOWP[a]=true;const msg=u.msg;u.msg=null;if(msg)askHuman(a,msg.kind,msg.gift,true);else{res[0].food+=50;dipEvent(a,say(a,'envoy')+' (You now know they are '+PERSONA[PERS[a]].name.toLowerCase()+'.)',[
+      {l:'Welcome them warmly.',f:()=>{opinAdd(a,4);return say(a,'env_welcome')}},
+      {l:'Send them home with 50 gold.',dis:res[0].gold<50?'You do not have 50 gold.':'',f:()=>{if(!tribute(0,a,'gold',50))return'…';memAdd(a,'gift');return say(a,'env_back')}},
+      {l:'Send them away.',f:()=>{opinAdd(a,-5);return say(a,'env_away')}}],40,null,'friendly')}renderPlayers(true)}}
 function aiEnvoyStep(a){const AI=AIS[a],pl=AI.envoyPlan;if(!pl)return;
   const deliver=()=>{if(pl.msg){if(pl.to===0)askHuman(a,pl.msg.kind,pl.msg.gift,false);else propose(a,pl.to,pl.msg.kind,pl.msg.gift)}AI.envoyPlan=null};
   if(ELIM[pl.to]){AI.envoyPlan=null;return}if(gameT>pl.exp){deliver();return}
@@ -2386,7 +2424,7 @@ function dipTick(){dipContact();if(gameT>480)for(let a=1;a<NP;a++)for(let b=a+1;
   const str=[];for(let t=0;t<NP;t++)str.push(strength(t));
   for(let a=1;a<NP;a++){if(ELIM[a])continue;const P=PERSONA[PERS[a]],home=BASES[a];
     for(let b=0;b<NP;b++){if(b===a||ELIM[b]||!METP[a][b])continue;let o=OPIN[a][b];
-      o+=(P.base-o)*.02;let near=0;for(const bl of blds)if(!bl.dead&&bl.team===b&&!bl.def.wall&&Math.abs(bl.x-home.x)<26&&Math.abs(bl.z-home.z)<26)near++;
+      o+=(P.base-(b===0&&memHas(a,'betray')&&PERS[a]==='honourable'?25:0)-o)*.02;let near=0;for(const bl of blds)if(!bl.dead&&bl.team===b&&!bl.def.wall&&Math.abs(bl.x-home.x)<26&&Math.abs(bl.z-home.z)<26)near++;
       if(near)o-=Math.min(3,near*.5)*(PERS[a]==='warlike'?1.5:1);
       for(let c=0;c<NP;c++){if(c===a||c===b||ELIM[c])continue;if(REL[a][c]===0&&REL[b][c]===0)o+=1;if(REL[a][c]===2&&REL[b][c]===0)o-=1.5;if(REL[a][c]===2&&REL[b][c]===2)o+=.5}
       if(REL[a][b]===2)o+=.5+(has(b,'courtly')?.6:0);
@@ -2394,7 +2432,7 @@ function dipTick(){dipContact();if(gameT>480)for(let a=1;a<NP;a++)for(let b=a+1;
       OPIN[a][b]=clamp(o,-100,100)}}
   for(let a=1;a<NP;a++)if(!ELIM[a]&&AIS[a])aiDiplo(a,str);
   renderPlayers()}
-function humanDip(act,t,rk){if(ELIM[t]||!METP[0][t])return;const C=cname(t);
+function humanDip(act,t,rk){if(ELIM[t]||!METP[0][t])return;const C=cname(t);if(act==='aud'){audience(t);return}
   if(act==='trib'){tribute(0,t,rk,100);return}
   if(act==='war'){if(warAsk!==t){warAsk=t;renderPlayers(true);return}warAsk=-1;if(REL[0][t]===2)breakAlliance(0,t);declareWar(0,t);return}
   if(act==='break'){breakAlliance(0,t);return}
@@ -2404,13 +2442,208 @@ function humanDip(act,t,rk){if(ELIM[t]||!METP[0][t])return;const C=cname(t);
   const kind=act==='peace'?'peace':'alliance';
   EVTS.push({t:gameT+3,f:()=>{if(ELIM[t])return;if(aiConsider(t,0,kind,0)){setRel(0,t,kind==='peace'?1:2);OPIN[t][0]+=5}
     else{const o=OPIN[t][0];notify('The '+C+' refuse'+(kind==='peace'?' peace':' an alliance')+'. '+(o<-15?'They do not trust you.':kind==='alliance'&&conflict(0,t)?'Your alliances clash with theirs.':'Win more of their favour first: tribute, envoys, trade.'),true)}renderPlayers(true)}});renderPlayers(true)}
-/* --- offer cards --- */
+/* ================= LEADERS & AUDIENCES ================= */
+const LEADERS={
+  scots:{name:'Eithne',full:'Eithne the Steadfast',title:'Queen',atitle:'Chieftain',f:1,skin:'#e9c6a6',hair:'#b4552c',hs:'long',beard:'none',head:'circlet',robe:'#2f4f8a',trim:'#d6ad5a',oath:['The hills remember.','By the stones of the glens.'],motto:'We bend like heather, and we never break.'},
+  english:{name:'Aldred',full:'Aldred of Wessenford',title:'King',atitle:'Chieftain',skin:'#efcaa9',hair:'#8a6a3a',hs:'short',beard:'short',head:'crown',robe:'#9a2a2a',trim:'#e8c25a',oath:['On my honour.','By the crown I wear.'],motto:'Our fields feed us; our bows guard them.'},
+  irish:{name:'Fiachra',full:'Fiachra Swiftspear',title:'High King',atitle:'Chieftain',skin:'#f0cfb2',hair:'#c9873a',hs:'long',beard:'mous',head:'circlet',robe:'#2f7a3a',trim:'#d6ad5a',oath:['By the swift river.','So the bards will sing.'],motto:'The fastest horse wins the cattle.'},
+  welsh:{name:'Morwen',full:'Morwen of the Hills',title:'Princess',atitle:'Chieftain',f:1,skin:'#ecc7a7',hair:'#2a1e18',hs:'long',beard:'none',head:'veil',robe:'#a8342a',trim:'#e8dcc0',oath:['The mountains are our walls.','By the red dragon.'],motto:'No army has ever taken our hills.'},
+  picts:{name:'Caltra',full:'Caltra Stormbrow',title:'King',atitle:'War-chief',skin:'#e2bc9a',hair:'#3a2a20',hs:'wild',beard:'full',head:'band',robe:'#3b4a5e',trim:'#9a7a4a',woad:1,oath:['The storm comes with us.','By the painted stones.'],motto:'Strike fast, vanish faster.'},
+  vikings:{name:'Sigrun',full:'Sigrun Ironsail',title:'Jarl',atitle:'Sea-chief',f:1,skin:'#f2d2b8',hair:'#e0c07a',hs:'braids',beard:'none',head:'helm',robe:'#6a6e74',trim:'#b88a3a',oath:['By wind and wave.','The sea takes the weak.'],motto:'Every shore is ours, if we want it.'},
+  french:{name:'Aimery',full:'Aimery of Valrose',title:'Duke',atitle:'Chieftain',skin:'#efcbab',hair:'#4a3020',hs:'short',beard:'goatee',head:'coronet',robe:'#2a3f9a',trim:'#e8c25a',oath:['By my lance.','As the troubadours say.'],motto:'A charge of knights decides the day.'},
+  germans:{name:'Adelheid',full:'Adelheid of Erzberg',title:'Margravine',atitle:'Chieftain',f:1,skin:'#efcdb0',hair:'#a8803e',hs:'bun',beard:'none',head:'cap',robe:'#2a2a2e',trim:'#d6ad5a',oath:['Silver does not lie.','By the guilds of Erzberg.'],motto:'Every mountain has ore, if you dig deep enough.'},
+  spanish:{name:'Rodrigo',full:'Rodrigo of Altamar',title:'Count',atitle:'Chieftain',skin:'#dcb08a',hair:'#1e1612',hs:'short',beard:'full',head:'morion',robe:'#8a1f2a',trim:'#e8c25a',oath:['By the frontier castles.','Santiago guide us.'],motto:'We hold the border, whatever it costs.'}};
+const VOICE={
+ warlike:{
+  first:['So, the {Y} have wandered into our lands. I am {N} of the {C}. Speak, and choose your words with care.','{N} of the {C} sees you, {Y}. Are you here to fight, or to bow?'],
+  r_friend:['Friendship is cheap. We shall see what yours is worth.'],r_trade:['Trade? Perhaps, if the price is right.'],r_warn:['Ha! You have a spine. I like that.'],
+  r_insult:['Kneel? You will learn who kneels.'],r_insult_strong:['Big words. Perhaps you even have the swords to match them.'],
+  g_warm:['Ah, my friends the {Y}! What do you need?'],g_neutral:['Speak quickly. I have a war-band to feed.'],g_cold:['You test my patience, {Y}.'],g_war:['Come to beg, have you?'],
+  peace_offer:['Enough blood for now. We offer peace.'],ally_offer:['Our enemies tremble when we stand together. Join us.'],
+  demand:['Pay us {amt} {res}, or we come for it with fire.','We hunger, {Y}. {amt} {res}, or our warriors visit your villages.'],
+  envoy:['Our envoy brings you 50 food. A gift from the strong.'],
+  war:['Your lands are ripe for the taking. We are coming.','Sharpen your swords, {Y}. We march.'],war_refused:['You refused our demand. Now we take everything.'],war_join:['Our allies fight you, so we fight you too. Good hunting!'],
+  ally_break:['You are no use to us any more. Our alliance is over.'],
+  acc_peace:['Peace, then. Do not make us regret it.'],ref_peace:['Peace? We are winning this war.'],ref_peace_dist:['Peace with you? Your word is worth nothing.'],
+  acc_ally:['Good! Our enemies will fear us both.'],ref_ally:['Prove your strength first.'],
+  war_confirm:['War? Ha! Are you sure about that?'],war_reply:['At last! Bring your best warriors.'],war_betray:['Treacherous dogs! You will pay in blood.'],
+  break_reply:['Fine. Fight your own wars.'],gift_small:['A trinket. Thank you, I suppose.'],gift_big:['Now that is a worthy gift!'],
+  flat_ok:['Ha, true enough.'],flat_weak:['Sweet words from the weak. Keep them.'],insulted:['Watch your tongue, or lose it.'],
+  dem_paid:['A wise choice. Our warriors stay home.'],dem_half_ok:['Half? Hmph. This time, then.'],dem_half_no:['You haggle with us? War, then!'],dem_defy_ok:['Hm. You do not fear us. Keep your {res}, for now.'],dem_defy_war:['Then we will take it!'],dem_insult:['You will choke on those words!'],
+  pc_ok:['Your gold speaks well. Peace.'],pc_no:['Pay you? No. We fight on!'],
+  ally_notyet:['As you wish. Do not wait too long.'],ally_decline:['Your loss.'],env_welcome:['My envoy says you have good ale.'],env_back:['Gold too? You understand respect.'],env_away:['You turn away my envoy? Remember this.'],
+  bye_warm:['Go well, friend. Hunt well.'],bye_neutral:['Go.'],bye_cold:['Leave, before I change my mind.'],bye_war:['Next time we meet, it will be on the battlefield.']},
+ cautious:{
+  first:['Strangers. I am {N} of the {C}. We want no quarrel with the {Y}. What brings you here?'],
+  r_friend:['Good. Peace suits us both.'],r_trade:['Trade would be welcome, in time.'],r_warn:['We hear you. We will keep our distance.'],r_insult:['Such arrogance. We will not forget this.'],r_insult_strong:['Such arrogance. We will not forget this.'],
+  g_warm:['Welcome, friends. It is always good to see you.'],g_neutral:['You may speak. We are listening.'],g_cold:['We are wary of you. Say what you came to say.'],g_war:['Must we keep killing each other? Speak.'],
+  peace_offer:['This war helps no one. Let us make peace.'],ally_offer:['We would sleep easier as allies. Will you join us?'],
+  demand:['Forgive us, but we require {amt} {res}. Refuse, and we must take up arms.'],envoy:['We send greetings, and 50 food, in friendship.'],
+  war:['You leave us no choice. We must defend ourselves.'],war_refused:['You would not help us. We must help ourselves.'],war_join:['Our allies are at war with you. We must stand with them.'],
+  ally_break:['We can no longer trust you. Our alliance is over.'],
+  acc_peace:['Gladly. Peace at last.'],ref_peace:['We are not ready to trust you yet.'],ref_peace_dist:['You have given us too many reasons to fear you.'],
+  acc_ally:['We feel safer already.'],ref_ally:['We are not ready for that. Perhaps in time.'],
+  war_confirm:['You would go to war with us? Please, think carefully.'],war_reply:['So it begins. We will defend ourselves.'],war_betray:['We trusted you! How could you?'],
+  break_reply:['We are saddened, but we understand.'],gift_small:['Thank you, friend.'],gift_big:['Such generosity! We are grateful.'],
+  flat_ok:['You are kind to say so.'],flat_weak:['You are kind to say so.'],insulted:['There is no need for this.'],
+  dem_paid:['Thank you. We will not trouble you again.'],dem_half_ok:['Half will do. Thank you.'],dem_half_no:['That is not enough. We are sorry.'],dem_defy_ok:['We... understand. Forget we asked.'],dem_defy_war:['Then you leave us no choice.'],dem_insult:['We tried to be reasonable.'],
+  pc_ok:['Agreed. Let the fighting stop.'],pc_no:['Gold will not undo what was done.'],
+  ally_notyet:['We understand. Our offer stands.'],ally_decline:['We understand. Perhaps later.'],env_welcome:['Our envoy thanks you for your kindness.'],env_back:['You are generous. We will remember.'],env_away:['Our envoy returns hurt. We are troubled.'],
+  bye_warm:['Go safely, friend.'],bye_neutral:['Until next time.'],bye_cold:['Go, then.'],bye_war:['We hope you come to your senses.']},
+ merchant:{
+  first:['Ah, new faces, new markets! I am {N} of the {C}. The {Y} have goods to trade, I hope?'],
+  r_friend:['Friends make the best customers.'],r_trade:['Now you speak my language! We will do well together.'],r_warn:['Borders are bad for business, but as you wish.'],r_insult:['Insults cost nothing. They will cost you.'],r_insult_strong:['Insults cost nothing. They will cost you.'],
+  g_warm:['My favourite customers! What can I do for you?'],g_neutral:['Yes? Time is gold, so make it quick.'],g_cold:['I see no profit in this, but go on.'],g_war:['This war is ruining us both. What do you want?'],
+  peace_offer:['War is terrible for trade. Shall we have peace?'],ally_offer:['An alliance would be very good for business. Yours and ours.'],
+  demand:['Times are hard. We need {amt} {res} from you, or we will have to take it.'],envoy:['A small gift of 50 food: a taste of what trade could bring.'],
+  war:['Business is business. War it is.'],war_refused:['You would not pay. We will collect another way.'],war_join:['Our partners are at war with you. We honour our contracts.'],
+  ally_break:['This partnership no longer pays.'],
+  acc_peace:['Peace is good for trade. Agreed.'],ref_peace:['Peace has a price, and you have not paid it.'],ref_peace_dist:['Peace with you? The risk is too high.'],
+  acc_ally:['Splendid. To shared profits!'],ref_ally:['What is in it for us? Not enough, yet.'],
+  war_confirm:['War? Do you know what that will cost you?'],war_reply:['A costly mistake, for both of us.'],war_betray:['You break a contract? Nobody will trade with you now.'],
+  break_reply:['A shame. It was profitable.'],gift_small:['Most welcome!'],gift_big:['Ah, now this is a deal I like!'],
+  flat_ok:['Flattery is free, but I will take it.'],flat_weak:['Flattery is free, but I will take it.'],insulted:['Insults are bad for business.'],
+  dem_paid:['Pleasure doing business.'],dem_half_ok:['A fair counter-offer. Done.'],dem_half_no:['That is not a deal. War, then.'],dem_defy_ok:['Hm. Not worth the cost of a war. Forget it.'],dem_defy_war:['Then we collect with swords.'],dem_insult:['That will cost you dearly.'],
+  pc_ok:['Now that is a price I accept. Peace.'],pc_no:['Not for that price.'],
+  ally_notyet:['The offer stays open. Interest may rise.'],ally_decline:['A poor bargain to refuse.'],env_welcome:['My envoy says your markets look promising.'],env_back:['Gold for gold! I like you.'],env_away:['Bad for business, that.'],
+  bye_warm:['Come back soon, and bring gold!'],bye_neutral:['Good day.'],bye_cold:['Come back when you have something to offer.'],bye_war:['When you want peace, bring gold.']},
+ honourable:{
+  first:['Well met. I am {N} of the {C}. My word is my bond, and I hope the {Y} keep theirs.'],
+  r_friend:['Then let it be so, and let it last.'],r_trade:['Fair trade between honest peoples. I accept.'],r_warn:['A blunt welcome. We will remember it.'],r_insult:['You shame yourselves. This insult will be remembered.'],r_insult_strong:['You shame yourselves. This insult will be remembered.'],
+  g_warm:['Welcome, true friends of the {C}.'],g_neutral:['You have our attention.'],g_cold:['We have doubts about you. Speak plainly.'],g_war:['We are at war. Choose your words well.'],
+  peace_offer:['We have fought with honour. Now we offer peace.'],ally_offer:['We offer you our sword and our word. Will you be our ally?'],
+  demand:['You owe us {amt} {res}. Pay what is due, or we will take it by force.'],envoy:['Our envoy brings 50 food and our good wishes.'],
+  war:['We have been wronged. Now we draw our swords.'],war_refused:['You refused what was due. We will have justice.'],war_join:['We swore to stand by our allies. We keep our oaths.'],
+  ally_break:['You have dishonoured our bond. It is broken.'],
+  acc_peace:['We accept. See that you keep to it.'],ref_peace:['Not while the wrong you did us stands.'],ref_peace_dist:['You have broken faith with us. We cannot trust your peace.'],
+  acc_ally:['Then we are bound. We will not fail you.'],ref_ally:['Trust must be earned. Not yet.'],
+  war_confirm:['You would break the peace between us? Think on it.'],war_reply:['Then you will face us on the field.'],war_betray:['Oath-breakers! Every people will hear of this.'],
+  break_reply:['You break your word? We will not forget.'],gift_small:['A kind gift. Thank you.'],gift_big:['Your generosity honours us.'],
+  flat_ok:['Kind words. Thank you.'],flat_weak:['Kind words. Thank you.'],insulted:['That was beneath you.'],
+  dem_paid:['The debt is settled. We are content.'],dem_half_ok:['Half, then, and the matter is closed.'],dem_half_no:['That is not what is due.'],dem_defy_ok:['Perhaps we asked too much. Let it be.'],dem_defy_war:['Then we will have justice by the sword.'],dem_insult:['You have no honour.'],
+  pc_ok:['Your gold settles the matter. Peace.'],pc_no:['Honour is not for sale.'],
+  ally_notyet:['As you wish. Our offer stands.'],ally_decline:['A pity. We had hoped for more.'],env_welcome:['Our envoy speaks well of your welcome.'],env_back:['You honour us with your gift.'],env_away:['Our envoy was treated with contempt.'],
+  bye_warm:['Go with honour, friend.'],bye_neutral:['Until we meet again.'],bye_cold:['You may go.'],bye_war:['Next time, we meet on the field.']}};
+const MEMLINE={betray:{honourable:'You broke your word to us once. We have not forgotten.',warlike:'Last time, you turned your blade on us.',_:'You betrayed us before.'},
+  paid:{warlike:'You paid us before. That was wise.',_:'You paid what we asked, last time.'},gift:{merchant:'Your last gift was very welcome.',_:'Your gifts were generous.'},
+  insult:{_:'We still remember your insult.'},refused:{warlike:'You refused us once. Bold, or foolish.',_:'You refused our request before.'},
+  defied:{warlike:'You stood up to us. We respect that.',_:'You stood firm with us before.'},ally:{_:'We have stood together before.'},peace:{_:'We made peace once. Let it hold.'},
+  flatter:{merchant:'Your sweet words last time were noted.',_:''}};
+let MEM=[],FLT=[],AUD=null,MREF=[];
+function memAdd(a,k){if(a<1||a>=NP)return;if(!MEM[a])MEM[a]=[];MEM[a].push({k,t:Math.round(gameT)});if(MEM[a].length>14)MEM[a].shift()}
+function memHas(a,k,within){return(MEM[a]||[]).some(m=>m.k===k&&(!within||gameT-m.t<within))}
+const leaderOf=t=>LEADERS[CIVKEY[t]]||LEADERS.english;
+function ltitle(t){const L=leaderOf(t);return age[t]<MED?L.atitle:L.title}
+function lname(t){return ltitle(t)+' '+leaderOf(t).name}
+function moodOf(t){const o=OPIN[t]?OPIN[t][0]:0;if(foe(t,0))return o>15?'wary':'angry';return o<-50?'angry':o<-15?'wary':o<15?'neutral':'friendly'}
+function vpick(a){return a[(Math.random()*a.length)|0]}
+function say(t,key,v){const V=VOICE[PERS[t]]||VOICE.cautious,L=leaderOf(t);let s=vpick(V[key]||VOICE.honourable[key]||['…']);
+  v=Object.assign({N:lname(t),C:cname(t),Y:CIVS[CIVKEY[0]].name,L:L.name},v||{});return s.replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:m)}
+function memLine(t){const M=MEM[t]||[];for(let i=M.length-1;i>=0;i--){const m=M[i];if(gameT-m.t>1500)break;if(m.t<=(MREF[t]||-1))break;const L=MEMLINE[m.k];if(!L)continue;const s=L[PERS[t]]!=null?L[PERS[t]]:L._;if(s){MREF[t]=m.t;return s+' '}}return''}
+/* --- portrait --- */
+const PCACHE=new Map();
+function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=x=>clamp(Math.round(k<0?x*(1+k):x+(255-x)*k),0,255);return'#'+((1<<24)|(f(r)<<16)|(f(g)<<8)|f(b)).toString(16).slice(1)}
+function portraitSVG(t,mood){const civ=CIVKEY[t],L=leaderOf(t),A=age[t]||0,anc=A<MED,ren=A>=MED+4,key=civ+t+mood+(anc?'a':ren?'r':'m');if(PCACHE.has(key))return PCACHE.get(key);
+  const tc=PCSS[t]||'#888',sk=L.skin,skd=shade(sk,-.18),hr=L.hair,hrd=shade(hr,-.25),rb=anc?shade(L.robe,-.15):L.robe,tr=anc?'#9a7a4a':L.trim;let s='';
+  s+='<defs><radialGradient id="pg'+key+'" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="'+shade(tc,-.2)+'"/><stop offset="1" stop-color="#140e09"/></radialGradient></defs>';
+  s+='<rect width="120" height="140" rx="10" fill="url(#pg'+key+')"/>';
+  const head=anc&&(L.head==='crown'||L.head==='coronet'||L.head==='circlet'||L.head==='cap'||L.head==='morion')?'band':L.head;
+  if(head==='veil')s+='<path d="M30 58 Q28 20 60 19 Q92 20 90 58 L96 112 L24 112Z" fill="#efe8d8"/><path d="M30 58 Q28 20 60 19 Q92 20 90 58" fill="none" stroke="#d8cfbc" stroke-width="2"/>';
+  if(L.hs==='long'||L.hs==='braids'||L.hs==='wild')s+='<path d="M33 48 Q'+(L.hs==='wild'?'24 92 30 106':'30 96 38 104')+' L82 104 Q'+(L.hs==='wild'?'96 92 87 48':'90 96 87 48')+'Z" fill="'+hrd+'"/>';
+  if(L.hs==='braids')for(const x of[38,82]){for(let i=0;i<5;i++)s+='<ellipse cx="'+x+'" cy="'+(72+i*8)+'" rx="5" ry="5.2" fill="'+(i%2?hr:hrd)+'"/>';s+='<rect x="'+(x-4)+'" y="111" width="8" height="4" rx="1.5" fill="'+tr+'"/>'}
+  s+='<path d="M6 140 Q10 102 60 97 Q110 102 114 140Z" fill="'+rb+'"/>';
+  if(anc||L.civFur||civ==='vikings'||civ==='picts')s+='<path d="M12 128 Q22 104 60 100 Q98 104 108 128 Q96 114 60 112 Q24 114 12 128Z" fill="'+(civ==='vikings'||anc?'#b8a080':'#5a4a3a')+'" opacity=".9"/>';
+  s+='<path d="M26 112 L92 140" stroke="'+tc+'" stroke-width="10" opacity=".95"/>';
+  s+='<path d="M40 101 Q60 118 80 101" fill="none" stroke="'+tr+'" stroke-width="5" stroke-linecap="round"/>';
+  if(ren)for(let i=0;i<9;i++){const x=40+i*5;s+='<path d="M'+x+' 98 L'+(x+2.5)+' 106 L'+(x+5)+' 98Z" fill="#f4f1e8" stroke="#d8d2c2" stroke-width=".6"/>'}
+  s+='<rect x="50" y="78" width="20" height="24" rx="6" fill="'+skd+'"/>';
+  s+='<ellipse cx="37.5" cy="58" rx="3.5" ry="6" fill="'+skd+'"/><ellipse cx="82.5" cy="58" rx="3.5" ry="6" fill="'+skd+'"/>';
+  s+='<ellipse cx="60" cy="56" rx="23" ry="28" fill="'+sk+'"/>';
+  if(L.woad)s+='<path d="M46 62 q4 -3 8 0 M66 62 q4 -3 8 0 M52 34 q8 6 16 0 M44 66 l-2 8 M76 66 l2 8" fill="none" stroke="#2f5aa8" stroke-width="2" stroke-linecap="round" opacity=".85"/>';
+  if(L.hs==='bun')s+='<circle cx="60" cy="24" r="9" fill="'+hr+'"/>';
+  if(head!=='helm'&&head!=='veil'&&head!=='morion')s+='<path d="M37 52 Q36 26 60 26 Q84 26 83 52 Q78 37 60 36 Q42 37 37 52Z" fill="'+hr+'"/>';
+  else if(head==='veil')s+='<path d="M38 46 Q40 30 60 30 Q80 30 82 46 Q74 38 60 38 Q46 38 38 46Z" fill="'+hr+'"/>';
+  if(L.hs==='wild')s+='<path d="M37 44 l-6 -6 l7 1 l-3 -8 l7 5 l1 -8 l5 7 M83 44 l6 -6 l-7 1 l3 -8 l-7 5 l-1 -8 l-5 7" fill="'+hr+'"/>';
+  const by={friendly:[48,46],neutral:[49,49],wary:[51,51],angry:[47,53]}[mood]||[49,49];
+  s+='<ellipse cx="51" cy="57" rx="3.8" ry="'+(mood==='angry'?1.7:2.3)+'" fill="#f6efe4"/><ellipse cx="69" cy="57" rx="3.8" ry="'+(mood==='angry'?1.7:2.3)+'" fill="#f6efe4"/><circle cx="51.4" cy="57.2" r="1.7" fill="#2a1a10"/><circle cx="69.4" cy="57.2" r="1.7" fill="#2a1a10"/>';
+  if(mood==='wary')s+='<path d="M47 55.2 L55 55.2 M65 55.2 L73 55.2" stroke="'+skd+'" stroke-width="1.6"/>';
+  s+='<path d="M44.5 '+by[0]+(mood==='friendly'?' Q50 '+(by[0]-3)+' 56 '+by[1]:' L56 '+by[1])+' M76 '+by[0]+(mood==='friendly'?' Q70 '+(by[0]-3)+' 64 '+by[1]:' L64 '+by[1])+'" fill="none" stroke="'+(L.f?hrd:shade(hr,-.35))+'" stroke-width="'+(L.f?2:2.8)+'" stroke-linecap="round"/>';
+  s+='<path d="M60 58 L57 67 Q60 69 63 67" fill="none" stroke="'+skd+'" stroke-width="1.6" stroke-linecap="round"/>';
+  if(mood==='friendly')s+='<circle cx="46" cy="67" r="4" fill="#e88a7a" opacity=".25"/><circle cx="74" cy="67" r="4" fill="#e88a7a" opacity=".25"/>';
+  const bd=L.beard;
+  if(bd==='full')s+='<path d="M37 58 Q37 94 60 98 Q83 94 83 58 Q79 77 69 78 Q60 82 51 78 Q41 77 37 58Z" fill="'+hr+'"/>';
+  if(bd==='short')s+='<path d="M41 66 Q44 88 60 90 Q76 88 79 66 Q73 79 60 80 Q47 79 41 66Z" fill="'+hr+'" opacity=".95"/>';
+  if(bd==='goatee')s+='<path d="M54 79 Q60 92 66 79 Q60 82 54 79Z" fill="'+hr+'"/>';
+  const my=mood==='friendly'?'M52 74 Q60 80 68 74':mood==='neutral'?'M53 75 L67 75':mood==='wary'?'M53 76 Q60 74 67 76':'M52 77 Q60 71 68 77';
+  s+='<path d="'+my+'" fill="none" stroke="'+(bd==='full'?'#5a2a22':'#9a4a3e')+'" stroke-width="2.4" stroke-linecap="round"/>';
+  if(bd==='full'||bd==='short'||bd==='mous'||bd==='goatee')s+='<path d="M50 72 Q55 68 60 70 Q65 68 70 72 Q65 72.5 60 71.5 Q55 72.5 50 72Z" fill="'+hr+'"/>'+(bd==='mous'?'<path d="M50 72 Q47 78 48 82 M70 72 Q73 78 72 82" fill="none" stroke="'+hr+'" stroke-width="2.6" stroke-linecap="round"/>':'');
+  const G='#e8c25a',Gd='#b88a2a';
+  if(head==='crown'){s+='<path d="M37 34 L37 22 L44 29 L52 18 L60 27 L68 18 L76 29 L83 22 L83 34Z" fill="'+G+'" stroke="'+Gd+'" stroke-width="1"/><rect x="37" y="31" width="46" height="6" rx="1.5" fill="'+Gd+'"/>';for(const[x,c]of[[48,'#b8344a'],[60,'#2f6fd6'],[72,'#3f9a3a']])s+='<circle cx="'+x+'" cy="34" r="1.9" fill="'+c+'"/>'}
+  if(head==='coronet'){s+='<rect x="38" y="31" width="44" height="5" rx="1.5" fill="'+G+'" stroke="'+Gd+'" stroke-width=".8"/>';for(const x of[42,51,60,69,78])s+='<path d="M'+(x-3)+' 31 Q'+x+' 23 '+(x+3)+' 31Z" fill="'+G+'"/>'}
+  if(head==='circlet')s+='<path d="M37.5 41 Q60 33 82.5 41" fill="none" stroke="'+G+'" stroke-width="2.6"/><circle cx="60" cy="36.6" r="2.6" fill="'+(civ==='irish'?'#3f9a3a':'#2f6fd6')+'" stroke="'+G+'" stroke-width="1"/>';
+  if(head==='veil')s+='<path d="M37 42 Q60 34 83 42" fill="none" stroke="'+G+'" stroke-width="2.2"/>';
+  if(head==='band'){s+='<path d="M37 41 Q60 34 83 41" fill="none" stroke="#6b4a2c" stroke-width="3.6"/><path d="M80 40 Q92 22 86 10 Q84 24 78 38Z" fill="'+(civ==='picts'?'#2f5aa8':'#d8c8a0')+'"/>';for(const x of[48,60,72])s+='<circle cx="'+x+'" cy="38.4" r="1.4" fill="#c8b890"/>'}
+  if(head==='helm'){const hc=anc?'#b88a4a':'#8e939c',hd=anc?'#8a6030':'#5e636c';s+='<path d="M34 50 Q34 18 60 18 Q86 18 86 50Z" fill="'+hc+'"/><path d="M34 50 L86 50" stroke="'+hd+'" stroke-width="4"/><path d="M60 18 L60 50" stroke="'+hd+'" stroke-width="2.4"/><rect x="58" y="48" width="4" height="15" rx="1.4" fill="'+hd+'"/>';for(const x of[40,48,72,80])s+='<circle cx="'+x+'" cy="46" r="1.2" fill="'+hd+'"/>'}
+  if(head==='morion')s+='<path d="M26 44 Q34 40 40 40 Q42 20 60 18 Q78 20 80 40 Q86 40 94 44 Q86 48 60 47 Q34 48 26 44Z" fill="#a8adb6" stroke="#6e737c" stroke-width="1.2"/><path d="M48 22 Q60 8 72 22" fill="#a8adb6" stroke="#6e737c" stroke-width="1.2"/><path d="M62 14 Q70 4 66 0" fill="none" stroke="'+tc+'" stroke-width="3"/>';
+  if(head==='cap')s+='<ellipse cx="58" cy="30" rx="27" ry="9" fill="#2a1e30"/><path d="M36 30 Q40 14 62 14 Q82 15 84 30Z" fill="#3a2a44"/><rect x="40" y="29" width="38" height="3" fill="'+G+'"/><path d="M78 26 Q100 14 98 2 Q92 16 74 24Z" fill="#f4efe4"/>';
+  if(civ==='french'&&!anc)s+='<path d="M58 106 l2 -5 l2 5 l-2 3Z M54 108 l4 -1 M62 107 l4 1" fill="'+G+'" stroke="'+G+'" stroke-width=".8"/>';
+  const out='<svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Portrait of '+lname(t)+'">'+s+'</svg>';PCACHE.set(key,out);return out}
+/* --- the audience screen --- */
+const audEl=document.getElementById('aud');
+function audOpen(t,line,choices,mood){if(!audEl||ELIM[t])return;const was=AUD?AUD.prev:gpaused;AUD={t,prev:was,line,choices,mood};if(!gpaused){gpaused=true;spdUI()}sfxUI('parchment');audRender()}
+function audClose(){if(!AUD)return;const p=AUD.prev;AUD=null;audEl.hidden=true;audEl.innerHTML='';if(gpaused!==p){gpaused=p;spdUI()}renderPlayers(true);canvas.focus()}
+function audSet(line,choices,mood){if(!AUD)return;AUD.line=line;AUD.choices=choices||audAfter(AUD.t);if(mood)AUD.mood=mood;audRender()}
+function audAfter(t){return[{l:'Talk about something else',f:()=>({line:say(t,'g_'+moodKey(t)),choices:audTopics(t)})},{l:'Farewell',f:()=>audBye(t)}]}
+function moodKey(t){const m=moodOf(t);return foe(t,0)?'war':m==='friendly'&&OPIN[t][0]>=45?'warm':m==='friendly'?'warm':m==='neutral'?'neutral':'cold'}
+function audBye(t){const k=foe(t,0)?'bye_war':{warm:'bye_warm',neutral:'bye_neutral',cold:'bye_cold'}[moodKey(t)]||'bye_neutral';const line=say(t,k);
+  if(AUD){AUD.line=line;AUD.choices=[{l:'Leave',f:()=>{audClose();return null}}];AUD.mood=moodOf(t);audRender()}return null}
+function audRender(){if(!AUD){audEl.hidden=true;return}const t=AUD.t,L=leaderOf(t),o=Math.round(OPIN[t][0]),[rc,rl]=relOf(t),mood=AUD.mood||moodOf(t);
+  audEl.hidden=false;
+  audEl.innerHTML='<div class="acard" role="dialog" aria-modal="true" aria-label="Audience with '+lname(t)+'"><button class="ax" data-ax aria-label="End the audience">✕</button>'+
+    '<div class="ahead"><div class="apor">'+portraitSVG(t,mood)+'</div><div class="ameta"><div class="aname">'+lname(t)+'</div><div class="asub">'+L.full+' · leader of the '+cname(t)+' ('+PNAME[t]+')</div>'+
+    '<div class="achips"><span class="rel '+rc+'">'+rl+'</span><span class="chip">'+attitude(o)+' ('+o+')</span>'+(KNOWP[t]?'<span class="chip">'+PERSONA[PERS[t]].name+'</span>':'<span class="chip dim">Temperament unknown</span>')+'</div>'+
+    '<div class="amotto">“'+L.motto+'”</div></div></div>'+
+    '<blockquote class="aline">'+AUD.line+'</blockquote><div class="achoices">'+AUD.choices.map((c,i)=>'<button data-ai="'+i+'"'+(c.dis?' class="dis" title="'+c.dis+'"':'')+'><span class="an">'+(i+1)+'</span><span>'+c.l+(c.dis?'<small>'+c.dis+'</small>':'')+'</span></button>').join('')+'</div></div>'}
+function audPick(i){if(!AUD)return;const c=AUD.choices[i];if(!c)return;if(c.dis){notify(c.dis,true);return}const t=AUD.t;const r=c.f();if(!AUD)return;
+  if(r==null)return;if(typeof r==='string')audSet(r,ELIM[t]?[{l:'Leave',f:()=>{audClose();return null}}]:audAfter(t),moodOf(t));else audSet(r.line,r.choices,r.mood||moodOf(t))}
+if(audEl){audEl.addEventListener('click',e=>{if(e.target===audEl||e.target.closest('[data-ax]')){audClose();return}const b=e.target.closest('[data-ai]');if(b)audPick(+b.dataset.ai)})}
+function opinAdd(t,n){OPIN[t][0]=clamp(OPIN[t][0]+n,-100,100)}
+function dipView(t){const o=OPIN[t][0],P=PERS[t],why=[];
+  const op={Warm:'We count you among our truest friends.',Friendly:'We think well of you.',Neutral:'We have no strong feelings about you, yet.',Unfriendly:'We do not trust you.',Hostile:'We despise you.'}[attitude(o)];
+  if(memHas(t,'betray',2400))why.push('You broke your word to us.');if(memHas(t,'insult',1500))why.push('You insulted us.');if(memHas(t,'gift',900)||memHas(t,'paid',900))why.push('Your gifts pleased us.');
+  if(memHas(t,'defied',1500)&&P==='warlike')why.push('You showed us you are no coward.');
+  const home=BASES[t];let near=0;for(const b of blds)if(!b.dead&&b.team===0&&!b.def.wall&&Math.abs(b.x-home.x)<26&&Math.abs(b.z-home.z)<26)near++;if(near)why.push('Your buildings creep too close to our borders.');
+  for(let c=1;c<NP;c++){if(c===t||ELIM[c])continue;if(REL[t][c]===0&&REL[0][c]===0){why.push('We share an enemy in the '+cname(c)+'.');break}}
+  for(let c=1;c<NP;c++){if(c===t||ELIM[c])continue;if(REL[t][c]===0&&REL[0][c]===2){why.push('You are allied with our enemies, the '+cname(c)+'.');break}}
+  if(REL[t][0]===2)why.push('We value our alliance.');if(REL[t][0]===1&&P==='warlike'&&strength(t)>strength(0))why.push('Frankly, you look weak to us.');
+  let s=op+(why.length?' '+why.slice(0,3).join(' '):'');
+  s+=KNOWP[t]?'':' (Send an envoy from an Embassy and you will learn their temperament.)';return s}
+function audTopics(t){const r=REL[0][t],C=[],soon=gameT<HCD[t];
+  if(r===0){C.push({l:'We seek peace.',f:()=>{if(soon)return say(t,'ref_peace')+' Ask us again later.';HCD[t]=gameT+45;if(aiConsider(t,0,'peace',0)){setRel(0,t,1);opinAdd(t,5);memAdd(t,'peace');return say(t,'acc_peace')}
+      return{line:(OPIN[t][0]<-15?say(t,'ref_peace_dist'):say(t,'ref_peace')),choices:[{l:'We will pay 200 gold for peace.',dis:res[0].gold<200?'You do not have 200 gold.':'',f:()=>{if(aiConsider(t,0,'peace',200)||(PERS[t]==='merchant'&&OPIN[t][0]>-40)){res[0].gold-=200;res[t].gold+=200;setRel(0,t,1);opinAdd(t,6);memAdd(t,'peace');sfxUI('coins');return say(t,'pc_ok')}opinAdd(t,-2);return say(t,'pc_no')}},
+        {l:'Then the war goes on.',f:()=>say(t,'bye_war')}]}}})}
+  if(r===1){C.push({l:'Let us be allies.',dis:hasEmbassy(0)?'':'Build an Embassy (Feudal Age) to propose alliances.',f:()=>{if(soon)return'We have heard your offer. Give us time to think.';HCD[t]=gameT+45;
+      if(conflict(0,t))return'You are friends with our enemies, or we with yours. We cannot.';if(aiConsider(t,0,'alliance',0)){setRel(0,t,2);opinAdd(t,5);memAdd(t,'ally');return say(t,'acc_ally')}return say(t,'ref_ally')}});
+    C.push({l:'We declare war on you.',f:()=>({line:say(t,'war_confirm'),mood:moodOf(t)==='friendly'?'wary':'angry',choices:[{l:'Yes. This means war.',f:()=>{const fresh=gameT-treatyT[0][t]<90;declareWar(0,t);memAdd(t,'betray');return{line:say(t,fresh?'war_betray':'war_reply'),choices:[{l:'Leave',f:()=>{audClose();return null}}],mood:'angry'}}},{l:'No. I spoke in haste.',f:()=>{opinAdd(t,-3);return'Hmph. Mind your words.'}}]})})}
+  if(r===2)C.push({l:'Our alliance is at an end.',f:()=>({line:'You would break our alliance?',mood:'wary',choices:[{l:'Yes, it is over.',f:()=>{breakAlliance(0,t);memAdd(t,'betray');return say(t,'break_reply')}},{l:'No, forget I said it.',f:()=>'Good. Let us not speak of it again.'}]})});
+  C.push({l:'Accept a gift from us.',f:()=>({line:'A gift? What do you offer?',choices:['food','wood','gold','stone'].flatMap(k=>[100,300].map(n=>({l:n+' '+RESNAME[k].toLowerCase(),dis:res[0][k]<n?'Not enough '+RESNAME[k].toLowerCase()+'.':'',f:()=>{const o0=OPIN[t][0];if(!tribute(0,t,k,n))return'You do not have that much.';memAdd(t,'gift');return say(t,(n>=300||(PERS[t]==='merchant'&&k==='gold'))?'gift_big':'gift_small')+(OPIN[t][0]-o0>=1?'':' (They are already as pleased as gifts can make them for now.)')}}))).concat([{l:'Never mind.',f:()=>'As you wish.'}])})});
+  C.push({l:'Your people are great and wise.',f:()=>{if(gameT<(FLT[t]||0)){opinAdd(t,-1);return'You said so already. Do you want something?'}FLT[t]=gameT+180;
+      if(PERS[t]==='warlike'&&strength(t)>strength(0)*1.1){opinAdd(t,-2);return say(t,'flat_weak')}opinAdd(t,PERS[t]==='merchant'?2:PERS[t]==='warlike'?2:4);return say(t,'flat_ok')}});
+  C.push({l:'How do you see us?',f:()=>dipView(t)});
+  C.push({l:'You '+cname(t)+' are beneath us.',f:()=>{const strong=strength(0)>strength(t)*1.3;opinAdd(t,PERS[t]==='honourable'?-25:PERS[t]==='warlike'&&strong?-6:-15);memAdd(t,'insult');
+      if(REL[0][t]===1&&PERS[t]==='warlike'&&!strong&&OPIN[t][0]<-40&&gameT>DIFF[diffKey].first*.6){EVTS.push({t:gameT+8,f:()=>{if(REL[t][0]===1)declareWar(t,0)}});return{line:say(t,'insulted')+' You will regret those words.',mood:'angry'}}
+      return{line:say(t,'insulted'),mood:'angry'}}});
+  C.push({l:'Farewell.',f:()=>audBye(t)});return C}
+function audience(t){if(ELIM[t]||!METP[0][t]||!DIPLO)return;const ml=memLine(t);audOpen(t,ml+say(t,'g_'+moodKey(t)),audTopics(t))}
+/* --- incoming messages: a small card that opens the audience --- */
+function dipEvent(t,line,choices,secs,onExpire,mood){if(ELIM[t])return;sfxUI('parchment');DIPQ.push({team:t,line,choices,until:gameT+secs,onExpire,mood});if(DIPQ.length>6){const o=DIPQ.shift();if(o.onExpire)o.onExpire()}renderDip()}
+function dipAnswer(){if(!DIPQ.length)return;const d=DIPQ.shift();renderDip();const t=d.team;
+  const ch=d.choices.map(c=>({l:c.l,dis:c.dis,f:()=>{const r=c.f();return r==null?say(t,'g_'+moodKey(t)):r}}));audOpen(t,d.line,ch,d.mood)}
 const dipEl=document.getElementById('dip');
-function dipAsk(team,text,btns,secs,onExpire){sfxUI('parchment');DIPQ.push({team,text,btns,until:gameT+secs,onExpire});if(DIPQ.length>6){const o=DIPQ.shift();if(o.onExpire)o.onExpire()}renderDip()}
-function renderDip(){if(!dipEl)return;if(!DIPQ.length){dipEl.hidden=true;dipEl.innerHTML='';return}const d=DIPQ[0];dipEl.hidden=false;
-  dipEl.innerHTML='<img src="'+embURL(CIVKEY[d.team],d.team)+'" alt=""><div class="dt"><p>'+d.text+'</p><div class="db">'+d.btns.map((b,i)=>'<button data-i="'+i+'"'+(i===0?' class="primary"':'')+'>'+b.l+'</button>').join('')+'</div><div class="dbar"><i id="dipbar"></i></div>'+(DIPQ.length>1?'<span class="dmore">+'+(DIPQ.length-1)+' more</span>':'')+'</div>'}
+function renderDip(){if(!dipEl)return;if(!DIPQ.length){dipEl.hidden=true;dipEl.innerHTML='';return}const d=DIPQ[0],t=d.team,one=d.choices.length===1;dipEl.hidden=false;
+  dipEl.innerHTML='<button class="dpor" data-dans aria-label="Answer '+lname(t)+'">'+portraitSVG(t,d.mood||moodOf(t))+'</button><div class="dt"><div class="dn">'+lname(t)+' <span>of the '+cname(t)+'</span></div><p>“'+d.line+'”</p><div class="db">'+(one?'<button data-i="0" class="primary">'+d.choices[0].l+'</button>':'<button data-dans class="primary">Answer</button>')+'</div><div class="dbar"><i id="dipbar"></i></div>'+(DIPQ.length>1?'<span class="dmore">+'+(DIPQ.length-1)+' more</span>':'')+'</div>'}
 function dipFrame(){for(let i=EVTS.length-1;i>=0;i--)if(gameT>=EVTS[i].t){const e=EVTS[i];EVTS.splice(i,1);e.f()}if(!DIPQ.length)return;const d=DIPQ[0];if(gameT>=d.until){DIPQ.shift();if(d.onExpire)d.onExpire();renderDip();return}const b=document.getElementById('dipbar');if(b)b.style.width=Math.max(0,100*(d.until-gameT)/45)+'%'}
-if(dipEl)dipEl.addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(!b||!DIPQ.length)return;const d=DIPQ.shift();d.btns[+b.dataset.i].f();renderDip()});
+if(dipEl)dipEl.addEventListener('click',e=>{if(e.target.closest('[data-dans]')){dipAnswer();return}const b=e.target.closest('button[data-i]');if(!b||!DIPQ.length)return;const d=DIPQ.shift();d.choices[+b.dataset.i].f();renderDip()});
 
 /* ================= VILLAGES, BARBARIANS, ROADS ================= */
 let VILS=[],HOST={},CAMPS=[],BARBS={nextRaid:0,spawnT:0},vilT=0,ROAD=null,vilAsk={t:-1,time:0};
@@ -2798,7 +3031,7 @@ document.addEventListener('mouseleave',()=>{mouse.inside=false});
 function panBy(dx,dy){const k=cam.dist/H*1.25,fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);cam.x+=-rx*dx*k+fx*dy*k;cam.z+=-rz*dx*k+fz*dy*k;clampCam()}
 function clampCam(){cam.x=clamp(cam.x,-HALF+6,HALF-6);cam.z=clamp(cam.z,-HALF+6,HALF-6)}
 const keys=new Set();
-addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='SELECT')return;if(AUD&&state==='play'){if(e.key==='Escape')audClose();else if(/^[1-9]$/.test(e.key))audPick(+e.key-1);e.preventDefault();return}const k=e.key.toLowerCase();keys.add(k);
   if(state==='play'){const gd=/^Digit[1-9]$/.test(e.code||'')?+e.code[5]:0;
     if(gd&&(e.ctrlKey||e.metaKey||e.altKey)){e.preventDefault();grpSet(gd-1);return}if(gd&&e.shiftKey){e.preventDefault();grpSel(gd-1);return}
     if(k==='escape'){if(placing||amoveMode)cancelModes();else setSel([],false)}
@@ -3021,7 +3254,7 @@ function snapshot(){
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
     sea:{idx:SEAS.idx,w:SEAS.w,wT:SEAS.wT,snow:SEAS.snow},wear:wearSave(),grp:GROUPS.map(g=>(g||[]).filter(u=>!u.dead).map(u=>u.id)),form:FORMK,guide:{on:GUIDE.on,i:GUIDE.i,v0:GUIDE.v0,min:GUIDE.min},hist:HIST,
     vil:{vils:VILS.map(V=>({id:V.id,team:V.team,name:V.name,kind:V.kind,x:V.x,z:V.z,owner:V.owner,how:V.how,fav:V.fav,incT:V.incT,env:V.env,hall:V.hall.id})),host:HOST,camps:CAMPS.map(C=>({id:C.id,b:C.b.id,cap:C.cap})),barbs:BARBS},
-    dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS},
+    dip:{rel:REL,opin:OPIN.map(r=>r.map(v=>Math.round(v*10)/10)),metp:METP,pers:PERS,visit:VISITT.map(r=>r.map(v=>v<-1e8?-1e9:v)),know:KNOWP,treaty:treatyT,loss:LOSS,mem:MEM,flt:FLT,mref:MREF},
     ai:AIS.map(A=>A&&{attackSize:A.attackSize,demandT:A.demandT||0,scoutI:A.scoutI||0,attacks:A.attacks,belled:A.belled||0,lastAtk:A.lastAtk>-1e8?A.lastAtk:-1e9}),cam:{x:cam.x,z:cam.z,dist:cam.dist,yaw:cam.yaw},nid,
     rdead:GENRES.filter(id=>!alive.has(id)),
     rmod:ress.filter(r=>!r.animal&&r.amt<r.max).map(r=>[r.id,Math.round(r.amt*10)/10,r.felled?1:0]),
@@ -3072,7 +3305,7 @@ function loadGame(d){
   if(d.ai)d.ai.forEach((a,i)=>{if(a&&AIS[i])Object.assign(AIS[i],a)});
   for(let t=0;t<NT;t++){if(age[t]==null)age[t]=0;if(!TECH[t])TECH[t]=new Set();if(!PEND[t])PEND[t]=new Set();if(!DEFC[t])DEFC[t]={};if(!res[t]){res[t]={food:0,wood:0,gold:0,stone:0};for(const k of GOODS)res[t][k]=0}if(ELIM[t]==null)ELIM[t]=t>=NP&&t<VT0;if(!MKT[t])MKT[t]=Object.assign({},MKTBASE)}
   if(d.vil){VILS=d.vil.vils.map(v=>Object.assign({},v,{hall:byId.get(v.hall)})).filter(V=>V.hall);HOST=d.vil.host||{};CAMPS=d.vil.camps.map(c=>({id:c.id,cap:c.cap,b:byId.get(c.b)})).filter(C=>C.b);BARBS=d.vil.barbs||{nextRaid:0,spawnT:0}}else{VILS=[];CAMPS=[];HOST={}}
-  if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
+  if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;MEM=d.dip.mem||[];FLT=d.dip.flt||[];MREF=d.dip.mref||[];for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
   DIPQ=[];EVTS=[];renderDip();lastPSig='';if(d.sea)Object.assign(SEAS,d.sea);seaApply(1,true);if(d.wear)wearLoad(d.wear);
   nid=Math.max(nid,d.nid||0);Object.assign(cam,d.cam);
   for(let t=0;t<NP;t++)restyle(t);
@@ -3113,9 +3346,7 @@ function renderPlayers(force){if(playersEl.hidden||!REL.length)return;
         if(w.length)sub+=' · At war with '+w.join(', ');if(al.length)sub+=' · Allied with '+al.join(', ')}
       h+='<div class="dsub" style="width:100%">'+sub+'</div>';
       const B=(a,l,c)=>'<button data-dip="'+a+':'+t+'"'+(c?' class="'+c+'"':'')+'>'+l+'</button>';let acts='';
-      if(DIPLO){const r=REL[0][t];if(r===0)acts+=B('peace','Offer peace','good');
-        if(r===1){acts+=B('ally','Propose alliance'+(hasEmbassy(0)?'':' (needs Embassy)'),'good');acts+=B('war',warAsk===t?'Confirm: declare war!':'Declare war',warAsk===t?'warn':'war')}
-        if(r===2)acts+=B('break','End alliance','war')}
+      if(DIPLO)acts+='<button data-dip="aud:'+t+'" class="aud"><span class="mp">'+portraitSVG(t,moodOf(t))+'</span>Audience with '+lname(t)+'</button>';
       if(DIPLO||ally(t,0)){acts+='<span class="tl">Tribute '+Math.round(tribFee(0)*100)+'% fee:</span>';for(const k of['food','wood','gold','stone'])acts+='<button data-dip="trib:'+t+':'+k+'" title="Send 100 '+k+'">100 <i class="ico '+k+'"></i></button>'}
       if(acts)h+='<div class="dact">'+acts+'</div>'}
     else if(t!==0&&!known)h+='<div class="dsub" style="width:100%">'+(ELIM[t]?'Out of the game':'Explore to find them')+'</div>';
@@ -3165,7 +3396,7 @@ function showStart(){state='menu';screen.hidden=false;
   '<h3>Sound</h3>'+soundHTML()+'<div class="row"><button class="primary" id="go">Raise the banner</button>'+(readSave('auto')&&readSave('auto').opts?'<button class="secondary" id="cont">Continue last game</button>':'')+'<button class="secondary" id="ld">Load game</button></div>'+
   '<div class="help"><h3>Controls</h3><div><b>Left-click</b> select · <b>drag</b> box-select · <b>double-click</b> select all of a type</div><div><b>Right-click</b> move, gather, build, repair or attack</div>'+
   '<div><b>WASD</b>, arrows or screen edge to pan · <b>wheel</b> zoom · <b>Q/E</b> rotate</div><div><b>1–0</b> command hotkeys · <b>G</b> attack-move · <b>T</b> tech tree</div><div><b>P</b> pause (you can still give orders) · <b>[</b> <b>]</b> game speed ½× to 2× · <b>M</b> sound · <b>F10</b> menu</div>'+
-  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
+  '<div><b>Touch:</b> tap to select, tap ground or target to command, <b>long-press</b> to select without giving an order, then keep holding and <b>drag a box</b> around several units; <b>double-tap</b> a unit for all of its type; ✕ to deselect, drag to pan, pinch to zoom</div><div><b>Groups:</b> select units and press the round <b>+</b> on the left edge to save them as a numbered group. Tap the number to select the group, tap again to jump to it; hold it (or right-click) to replace or clear it. Keyboard: Ctrl or Alt+1–9 saves, Shift+1–9 selects.</div><div><b>Stance and formation:</b> soldiers are <b>Aggressive</b> (chase what they see), <b>Defensive</b> (fight nearby, then return to their post) or <b>Hold Ground</b> (never leave their spot). Groups march in <b>Box</b>, <b>Line</b> or <b>Column</b> at the pace of the slowest, or <b>Loose</b> at their own speed. Keys V and F; C selects all of a type.</div><div><b>Ancient ages:</b> a Stone Age start means flint, clay and pottery first. Research Farming at the Granary for farms, fire pottery at the Pottery Kiln, then smelt copper and (with tin) bronze at the Smelting Furnace. The Iron Age brings the Bloomery (iron ore into iron), horsemen and hill forts; the Classical Age brings legionaries, hoplites, ballistas, temples and the forum. Clubmen and slingers upgrade as you go and become militia and archers in the Middle Ages. Select the Town Center at any time to see exactly what the next age needs.</div><div><b>Walls:</b> pick a wall, click the start point, then the end point. Put gates on walls.</div><div><b>Scouting:</b> with fog of war on, you only see what your units and buildings can see. Send your scout out early to find resources and rivals.</div><div><b>Industry:</b> from the Feudal Age, mine iron ore and build a Charcoal Kiln, Smelter and Blacksmith. Open Goods (top bar) to watch production.</div><div><b>Hunting:</b> sheep, deer and wild boar give fast food early on. Boar fight back.</div><div><b>Diplomacy:</b> in Open diplomacy games everyone starts at peace. Open <b>Diplomacy</b> (top bar) to offer peace, propose alliances, send tribute or declare war. Build an Embassy to train Envoys, then right-click another people\'s Town Center to visit. Each people has a leader: open Diplomacy and press <b>Audience</b> to speak with them, or tap a leader’s portrait when they send word. Your replies change how they feel about you, and leaders remember gifts, insults and broken promises.</div><div><b>Villages:</b> neutral villages dot the map. Select a Village Hall to gift gold or buy it, send an Envoy, or right-click it twice with soldiers to conquer it. Owned villages send you resources. <b>Barbarian camps</b> hold loot: destroy them to take it. <b>Roads</b> (Industry menu) speed up everyone who walks on them.</div><div><b>Roads and walls:</b> tap the start, then tap each corner; tap the last point again or press Done to finish. Busy routes slowly wear into dirt paths that are a little faster to walk.</div><div><b>Planting trees:</b> build a Forester’s Lodge (Feudal Age, Industry menu), then choose Saplings and tap two corners of a patch. Saplings grow into trees in 2–3 minutes, faster in spring and summer.</div><div><b>Start and final age:</b> on the setup screen, start later for a quicker game or stop earlier for a shorter one.</div><div><b>Demolish:</b> select one of your buildings and press Demolish (Delete). Unfinished buildings are refunded in full, finished ones give back 25%.</div><div><b>Seasons:</b> crops grow fastest in summer and slowest in winter. Snow, rain and fog slow movement and shorten sight; roads ignore the mud and snow.</div><div><b>Shelter:</b> right-click a Town Center, tower or castle to garrison. The Town Bell sends villagers inside.</div></div></div>';
   const refresh=()=>{saveSetup();$('#s-players').innerHTML=playersHTML();$('#s-warn').textContent=setupWarn();$('#s-mapdesc').textContent=MAPDESC[SETUP.map];bindRows()};
   const bindRows=()=>{screen.querySelectorAll('[data-opp]').forEach(sl=>sl.onchange=()=>{SETUP.opp[+sl.dataset.opp-1]=sl.value;saveSetup()});
     screen.querySelectorAll('[data-team]').forEach(sl=>sl.onchange=()=>{SETUP.team[+sl.dataset.team]=+sl.value;saveSetup();$('#s-warn').textContent=setupWarn()})};
@@ -3618,7 +3849,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
