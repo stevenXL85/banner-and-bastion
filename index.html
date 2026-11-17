@@ -164,7 +164,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 #toast.show{opacity:1}
 .season{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;padding:2px 8px;border-radius:10px;border:1px solid #5a4227;color:var(--muted);white-space:nowrap}
 .season.sspring{color:#b8e08a}.season.ssummer{color:#ffd36a}.season.sautumn{color:#f0a050}.season.swinter{color:#cfe3ff}
-#placehint{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);transform:translateX(-50%);z-index:5;pointer-events:none;background:rgba(20,14,9,.92);border:1px solid var(--brass2);
+#placehint .phx{pointer-events:auto;margin-left:10px;font:inherit;font-weight:700;color:#f4e6c8;background:rgba(150,40,30,.85);border:1px solid #d08a6a;border-radius:8px;padding:4px 10px;cursor:pointer;min-height:32px}
+#placehint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 104px);bottom:auto;max-width:calc(100vw - 24px);transform:translateX(-50%);z-index:5;pointer-events:none;background:rgba(20,14,9,.92);border:1px solid var(--brass2);
   border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;max-width:calc(100vw - 24px);text-align:center}
 #btn-pause{display:inline-flex;align-items:center;justify-content:center;min-width:34px}#btn-pause.on{border-color:var(--brass);background:rgba(214,173,90,.25);color:#ffe2a0}
 #btn-speed{min-width:40px;font-variant-numeric:tabular-nums}
@@ -3588,14 +3589,16 @@ function startPlacing(type){
   const d=BUILD[type];if(d.diplo&&!DIPLO){notify('Embassies are only used in Open diplomacy games.',true);return}if(age[0]<d.age){notify(d.name+' requires the '+AGES[d.age]+'.',true);return}if(d.needsTech&&ANCIENT&&!has(0,d.needsTech)){notify('Research '+TECHS[d.needsTech].name+' first (at the '+bName(0,TECHS[d.needsTech].at)+').',true);return}if(d.needs&&!blds.some(b=>!b.dead&&b.built&&b.team===0&&b.type===d.needs)){notify('Build a '+BUILD[d.needs].name+' first.',true);return}
   const c=bCost(0,type);if(!canAfford(0,c)){notify('Not enough '+missing(0,c)+'.',true);return}
   cancelModes(true);placing={type,ox:0,oz:0,ok:false,line:!!(d.wall||d.road),area:!!d.area,start:null};ghost=ghostOf(type);scene.add(ghost);
+  placeHint(d.area?'Tap one corner of the patch to plant':d.wall||d.road?'Tap where the '+(d.road?'road':'wall')+' starts':'Tap a clear spot to build the '+bName(0,type));
   if(mouse.x!=null)updGhost(mouse.x,mouse.y);
-  notifyOnce('place'+(d.wall?'w':d.gate?'g':''),d.area?'Tap one corner of the patch, then the opposite corner.':d.road||d.wall?'Tap where it starts, then tap each corner. Tap the last point again, press Done, or right-click to finish.':d.gate?'Place the gate on one of your walls (or open ground).':'Click to place the '+d.name+'. Hold Shift to place several. Right-click to cancel.');renderPanel(true)}
+  notifyOnce('place'+(d.wall?'w':d.gate?'g':''),d.area?'Tap one corner of the patch, then the opposite corner.':d.road||d.wall?'Tap where it starts, then where it ends. Hold Shift to keep adding corners.':d.gate?'Place the gate on one of your walls (or open ground).':'Click to place the '+d.name+'. Hold Shift to place several. Right-click to cancel.');renderPanel(true)}
 function lineCells(a,b){const out=[];let x0=a[0],z0=a[1];const x1=b[0],z1=b[1],dx=Math.abs(x1-x0),dz=Math.abs(z1-z0),sx=x0<x1?1:-1,sz=z0<z1?1:-1;let err=dx-dz;
   for(let i=0;i<60;i++){out.push([x0,z0]);if(x0===x1&&z0===z1)break;const e2=2*err;
     if(e2>-dz&&e2<dx){err-=dz;x0+=sx;out.push([x0,z0]);err+=dx;z0+=sz}else if(e2>-dz){err-=dz;x0+=sx}else{err+=dx;z0+=sz}}
   const seen=new Set();return out.filter(([x,z])=>{const k=x+','+z;if(seen.has(k))return false;seen.add(k);return true})}
 function snapEnd(a,x,z){let dx=x-a[0],dz=z-a[1];const ax=Math.abs(dx),az=Math.abs(dz);if(ax>=2*az)dz=0;else if(az>=2*ax)dx=0;else{const m=Math.max(ax,az);dx=Math.sign(dx)*m;dz=Math.sign(dz)*m}return[a[0]+dx,a[1]+dz]}
-function placeHint(txt){const el=$('#placehint');if(!el)return;if(!txt){el.hidden=true;return}el.hidden=false;el.innerHTML=txt}
+function placeHint(txt){const el=$('#placehint');if(!el)return;if(!txt){el.hidden=true;return}el.hidden=false;el.innerHTML='<span>'+txt+'</span><button type="button" class="phx" data-phx>✕ Cancel</button>'}
+{const ph=document.getElementById('placehint');if(ph)ph.addEventListener('click',e=>{if(e.target.closest('[data-phx]'))cancelModes()})}
 function updGhost(sx,sy){if(!placing)return;const g=groundAt(sx,sy);if(!g)return;const s=BUILD[placing.type].s;
   placing.ox=Math.round(g.x+HALF-s/2);placing.oz=Math.round(g.z+HALF-s/2);
   if(placing.line&&placing.start){const e=snapEnd(placing.start,placing.ox,placing.oz);placing.ox=e[0];placing.oz=e[1]}
@@ -3611,7 +3614,7 @@ function updGhost(sx,sy){if(!placing)return;const g=groundAt(sx,sy);if(!g)return
     for(const[x,z]of cells){const ok=validPlace(placing.type,x,z,0,0);const gm=ghostOf(placing.type);gm.traverse(o=>{if(o.isMesh)o.material=ok?GHOSTOK:GHOSTBAD});
       const wx=x-HALF+.5,wz=z-HALF+.5;gm.position.set(wx,heightAt(wx,wz),wz);scene.add(gm);lineGhosts.push(gm)}
     const nOk=cells.filter(([x,z])=>validPlace(placing.type,x,z,0,0)).length,c=bCost(0,placing.type),tot={};for(const k in c)tot[k]=c[k]*nOk;
-    placeHint(nOk+' tile'+(nOk===1?'':'s')+' · '+costHTML(tot)+' · tap to add a corner · tap the same spot again or <b>Done</b> to finish');return}
+    placeHint(nOk+' tile'+(nOk===1?'':'s')+' · '+costHTML(tot)+' · tap where it ends');return}
   if(placing.line)placeHint('Tap where the '+(BUILD[placing.type].road?'road':'wall')+' starts');
   placing.ok=validPlace(placing.type,placing.ox,placing.oz,0,0);
   const x=placing.ox-HALF+s/2,z=placing.oz-HALF+s/2;ghost.position.set(x,BUILD[placing.type].water?WATER:heightAt(x,z),z);
@@ -3629,7 +3632,7 @@ function tryPlace(shiftKey){
     const cells=placing.cells||[placing.start];let first=null,n=0;
     for(const[x,z]of cells){if(!validPlace(type,x,z,0,0))continue;if(!canAfford(0,c)){notify('Ran out of '+missing(0,c)+'.',true);break}pay(0,c);const b=placeBld(type,0,x,z,false);n++;if(!first)first=b}
     if(first){sfxUI('place');vil.forEach(u=>{if(u.task.t==='build'&&u.task.target&&!u.task.target.built)return;orderBuild(u,first)})}
-    if(!canAfford(0,c)){cancelModes();return}placing.start=[placing.ox,placing.oz];placing.cells=null;renderPanel(true);updGhost(mouse.x!=null?mouse.x:W/2,mouse.y!=null?mouse.y:H/2);return}
+    if(!canAfford(0,c)||!shiftKey){cancelModes();return}placing.start=[placing.ox,placing.oz];placing.cells=null;renderPanel(true);updGhost(mouse.x!=null?mouse.x:W/2,mouse.y!=null?mouse.y:H/2);return}
   if(!placing.ok){notify("Can't build there.",true);return}
   if(!canAfford(0,c)){notify('Not enough '+missing(0,c)+'.',true);cancelModes();return}
   let rot=0;if(BUILD[type].gate){const w=wallAt(placing.ox,placing.oz);rot=gateRot(placing.ox,placing.oz);if(w&&w.def.wall)kill(w,true)}
@@ -3671,7 +3674,7 @@ canvas.addEventListener('dblclick',e=>{if(state!=='play'||placing)return;const t
   if(t.kind==='unit'){for(const u of units){if(u.dead||u.inside||u.team!==0||u.type!==t.type)continue;const p=proj(u.x,uY(u)+.8,u.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(u)}}
   else if(t.kind==='bld'){for(const b of blds){if(b.dead||b.team!==0||b.type!==t.type)continue;const p=proj(b.x,b.y,b.z);if(p.x>0&&p.x<W&&p.y>0&&p.y<H)out.push(b)}}setSel(out,false)});
 let lastTapU={u:null,t:0};
-function tap(x,y){if(placing){updGhost(x,y);tryPlace(false);return}if(spyMode){spyOrder(pick(x,y,1.5));return}if(plantMode){plantOrder(groundAt(x,y));return}const t=pick(x,y,1.5),gp=groundAt(x,y);
+function tap(x,y){mouse.x=x;mouse.y=y;if(placing){const t0=pick(x,y,1.5);if(t0&&t0.kind==='unit'&&t0.team===0){cancelModes(true);setSel([t0],false);return}updGhost(x,y);tryPlace(false);return}if(spyMode){spyOrder(pick(x,y,1.5));return}if(plantMode){plantOrder(groundAt(x,y));return}const t=pick(x,y,1.5),gp=groundAt(x,y);
   if(!amoveMode&&t&&t.kind==='unit'&&t.team===0){const now=performance.now();if(lastTapU.u===t&&now-lastTapU.t<420&&sel.length===1&&sel[0]===t){lastTapU.u=null;selectSame();return}lastTapU={u:t,t:now}}
   if(amoveMode){command(t&&foe(t.team,0)?t:null,gp,true);amoveMode=false;renderPanel(true);return}
   const ownU=ownUnitsSel().length,own=ownU||sel.some(e=>e.kind==='bld'&&e.team===0&&e.def.trains);
