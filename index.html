@@ -3562,7 +3562,7 @@ function unitLook(u){const t=u.type,d=u.def,nm=(d.name||'');if(d.gun||u.def.nava
 function unitMake(u,look){const tpl=UCH[look.ch];if(!tpl)return null;const g=new T.Group(),inner=T.SkeletonUtils.clone(tpl);inner.scale.setScalar(tpl.userData.sc);g.add(inner);
   const tc=col(TEAMHEX[u.team%TEAMHEX.length]);inner.traverse(o=>{if(o.name==='u_team'){o.material=o.material.clone();o.material.color.copy(tc);o.material.map=null;o.material.needsUpdate=true}});
   const slot=n=>{let s=null;inner.traverse(o=>{if(!s&&o.name&&o.name.replace(/[^a-z]/gi,'').toLowerCase()===n)s=o});return s};
-  const ud={uk:look.ch,mixer:new T.AnimationMixer(inner),acts:{},cur:null,legs:[],flags:[],props:{}};
+  const ud={uk:look.ch,h:1.75,mixer:new T.AnimationMixer(inner),acts:{},cur:null,legs:[],flags:[],props:{}};
   for(const side of['r','l']){const pn=look[side];const hs=slot('handslot'+side);if(pn&&UPROP[pn]&&hs){const p=UPROP[pn].clone();hs.add(p);ud.props[side]=p}}
   if(look.work){const hs=slot('handslotr');if(hs&&UPROP.axe_1handed){const p=UPROP.axe_1handed.clone();p.visible=false;hs.add(p);ud.tool=p}}
   const sh=GFX.lvl!=='low';inner.traverse(o=>{if(o.isMesh)o.castShadow=sh});ud.sh=sh;
@@ -3687,7 +3687,7 @@ function groundAt(sx,sy){ndc.set(sx/W*2-1,-(sy/H)*2+1);ray.setFromCamera(ndc,cam
 const pv=new T.Vector3();
 function proj(x,y,z){pv.set(x,y,z).project(camera);return{x:(pv.x+1)/2*W,y:(1-pv.y)/2*H,z:pv.z}}
 function pick(sx,sy,tm){const k=clamp(36/cam.dist,.5,2)*(tm||1);let best=null,bd=1e9;
-  for(const u of units){if(u.dead||u.inside||!unitSeen(u))continue;const p=proj(u.x,uY(u)+u.mesh.userData.h*.5,u.z);if(p.z>1)continue;const d=Math.hypot(p.x-sx,p.y-sy),th=(u.def.r>.55?30:22)*k;if(d<th&&d<bd){bd=d;best=u}}
+  for(const u of units){if(u.dead||u.inside||!unitSeen(u))continue;const p=proj(u.x,uY(u)+(u.mesh.userData.h||1.6)*.5,u.z);if(p.z>1)continue;const d=Math.hypot(p.x-sx,p.y-sy),th=(u.def.r>.55?30:22)*k;if(d<th&&d<bd){bd=d;best=u}}
   if(best)return best;
   for(const b of blds){if(b.dead||!bldSeen(b))continue;const h=b.mesh.userData.h*(b.built?1:Math.max(.2,b.progress)),s=b.s/2;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
     for(const cx of[-s,s])for(const cz of[-s,s])for(const cy_ of[0,h]){const p=proj(b.x+cx,b.y+cy_,b.z+cz);x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)}
