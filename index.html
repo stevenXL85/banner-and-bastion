@@ -808,7 +808,7 @@ function gfxHTML(){const cur=gfxLevel();return'<div class="sndrow"><label>Qualit
 function bindGfx(){const ms=document.getElementById('mdl-sel');if(ms)ms.onclick=e=>{const b=e.target.closest('button[data-m]');if(!b)return;setModels(b.dataset.m==='on');for(const x of ms.querySelectorAll('button'))x.setAttribute('aria-checked',String(x===b))};const el=document.getElementById('gfx-sel');if(!el)return;el.onclick=e=>{const b=e.target.closest('button[data-g]');if(!b)return;gfxSet(b.dataset.g);
   const wrap=el.closest('.sndrow');if(wrap&&wrap.parentNode){const tmp=document.createElement('div');tmp.innerHTML=gfxHTML();let nx=wrap.nextElementSibling;while(nx&&(nx.classList.contains('hint')||nx.querySelector&&nx.querySelector('#mdl-sel'))){const n2=nx.nextElementSibling;nx.remove();nx=n2}wrap.replaceWith(...tmp.childNodes);bindGfx()}}}
 /* if Auto is on and play is choppy, step down once */
-function gfxFps(dt){if(GFX.pref!=='auto'||GFX.dropped||state!=='play'||GFX.lvl==='low')return;GFX.fpsAcc+=dt;GFX.fpsN++;
+function gfxFps(dt){if(GFX.pref!=='auto'||state!=='play')return;if(GFX.lvl==='low'){if(GFX.unitsDropped||!MODELS_ON||!UNITS_READY)return;GFX.fpsAcc+=dt;GFX.fpsN++;if(GFX.fpsAcc>=8){const fps=GFX.fpsN/GFX.fpsAcc;GFX.fpsAcc=0;GFX.fpsN=0;if(fps<24){GFX.fpsT++;if(GFX.fpsT>=2){GFX.unitsDropped=true;notify('Animated units switched to the simple style to keep the game smooth on this device.')}}else GFX.fpsT=0}return}if(GFX.dropped)return;GFX.fpsAcc+=dt;GFX.fpsN++;
   if(GFX.fpsAcc>=8){const fps=GFX.fpsN/GFX.fpsAcc;GFX.fpsAcc=0;GFX.fpsN=0;if(fps<26){GFX.fpsT++;if(GFX.fpsT>=2){GFX.dropped=true;GFX.auto=GFX.lvl==='high'?'medium':'low';gfxApply();notify('Graphics lowered to '+GFXL[GFX.auto].name+' to keep the game smooth. You can change this in the menu.')}}else GFX.fpsT=0}}
 /* ================= GROUND, WATER AND GRASS ================= */
 const SKYU={zen:{value:new T.Color(0x5f93d4)},hor:{value:new T.Color(0xb3c6d2)},sunDir:{value:new T.Vector3(.4,.8,.3).normalize()},sunCol:{value:new T.Color(0xfff0d4)}};
@@ -1835,7 +1835,8 @@ function animalModel(kind){const g=new T.Group();const L=(c,w,h,x,y,z)=>['leg0',
 let ANIMGLTF={};
 /* model data lives in models.js next to the game, so the game starts quickly and still works without it */
 function modelsArrived(){const D=window.BB_MODELS;if(!D||modelsArrived.done)return;modelsArrived.done=true;BMDATA=D.BMDATA||{};TDATA=D.TDATA||{};TTEX=D.TTEX||{};ANIMGLTF=D.ANIMGLTF||{};
-  try{animGLLoad()}catch(e){console.warn(e)}try{setModels(MODELS_ON)}catch(e){console.warn(e)}}
+  try{animGLLoad()}catch(e){console.warn(e)}try{setModels(MODELS_ON)}catch(e){console.warn(e)}loadUnits()}
+function loadUnits(){window.BB_UNITS_READY=unitsArrived;if(window.BB_UNITS){unitsArrived();return}try{const sc=document.createElement('script');sc.src='units.js';sc.async=true;sc.onerror=()=>console.warn('units.js could not be loaded');document.head.appendChild(sc)}catch(e){}}
 function loadModels(){window.BB_MODELS_READY=modelsArrived;if(window.BB_MODELS){modelsArrived();return}try{const sc=document.createElement('script');sc.src='models.js';sc.async=true;sc.onerror=()=>console.warn('models.js could not be loaded: using simple models');document.head.appendChild(sc)}catch(e){}}
 /* ================= ANIMATED ANIMALS (Ultimate Animated Animals by Quaternius, CC0) ================= */
 const ANIMG={},ANIMLEN={Deer:1.55,Stag:1.75,Cow:1.9,Wolf:1.35};let ANIMG_N=0;
@@ -3527,7 +3528,66 @@ const rally=new T.Group();{const p=mk(G.cyl,0x5a4632);p.scale.set(.06,1.4,.06);p
 scene.add(rally);rally.visible=false;
 
 /* ================= ANIMATION ================= */
-function animUnit(u,dt){
+/* ================= ANIMATED UNITS (KayKit Adventurers + Character Animations by Kay Lousberg, CC0) ================= */
+const UCH={},UPROP={};let UCLIPS=null,UNITS_READY=false;
+function unitsArrived(){const D=window.BB_UNITS;if(!D||unitsArrived.done||!T.GLTFLoader)return;unitsArrived.done=true;const L=new T.GLTFLoader();let pend=0;const done=()=>{if(--pend===0)UNITS_READY=true};
+  const b64=s=>{const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer};
+  pend++;L.parse(JSON.stringify(D.anims),'',g=>{UCLIPS={};for(const c of g.animations)UCLIPS[c.name]=c;done()},e=>{console.warn('unit anims',e)});
+  for(const k in D.chars){pend++;L.parse(b64(D.chars[k]),'',g=>{UCH[k]=unitPrep(k,g.scene);done()},e=>console.warn('unit',k,e))}
+  for(const k in D.props){pend++;L.parse(JSON.stringify(D.props[k]),'',g=>{const s=g.scene;s.traverse(o=>{if(o.isMesh){o.castShadow=true;o.material=fogify(o.material.clone(),{})}});UPROP[k]=s;done()},e=>{console.warn('prop',k,e);done()})}}
+/* merge the body parts into one skinned mesh (and the cape/hat into a second one for team colour) to keep draw calls low */
+function unitPrep(name,scene){const parts=[];scene.traverse(o=>{if(o.isSkinnedMesh)parts.push(o)});if(!parts.length)return null;const sk=parts[0].skeleton;
+  const groups={body:[],team:[]};for(const p of parts){const tm=/_Cape$|_BearHat$|_Hat$/.test(p.name)?'team':'body';groups[tm].push(p)}
+  const merge=list=>{const geos=list.map(p=>p.geometry);const attrs=['position','normal','uv','skinIndex','skinWeight'],out=new T.BufferGeometry();let vtot=0,itot=0;for(const g of geos){vtot+=g.attributes.position.count;itot+=g.index?g.index.count:g.attributes.position.count}
+    for(const a of attrs){const g0=geos[0].attributes[a];if(!g0)continue;const Arr=g0.array.constructor,arr=new Arr(vtot*g0.itemSize);let off=0;for(const g of geos){const src=g.attributes[a];if(src)arr.set(src.array,off);off+=g.attributes.position.count*g0.itemSize}out.setAttribute(a,new T.BufferAttribute(arr,g0.itemSize,g0.normalized))}
+    const idx=new (vtot>65535?Uint32Array:Uint16Array)(itot);let io=0,vo=0;for(const g of geos){const n=g.attributes.position.count;if(g.index){for(let i=0;i<g.index.count;i++)idx[io++]=g.index.array[i]+vo}else for(let i=0;i<n;i++)idx[io++]=i+vo;vo+=n}out.setIndex(new T.BufferAttribute(idx,1));return out};
+  const root=new T.Group();root.name='uroot';const rig=scene.getObjectByName('Rig_Medium')||sk.bones[0].parent;
+  const holder=new T.Group();holder.add(rig);root.add(holder);
+  for(const gk of['body','team']){const list=groups[gk];if(!list.length)continue;const mat=fogify(list[0].material.clone(),{});mat.roughness=.8;mat.metalness=0;
+    const m=new T.SkinnedMesh(merge(list),mat);m.name='u_'+gk;m.castShadow=true;m.receiveShadow=false;m.frustumCulled=false;holder.add(m);m.bind(sk,list[0].bindMatrix)}
+  root.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(root);const h=Math.max(.1,bb.max.y-bb.min.y);
+  root.userData.sc=1.75/h;return root}
+/* which model, weapons and moves each unit uses */
+function unitLook(u){const t=u.type,d=u.def,nm=(d.name||'');if(d.gun||u.def.naval||u.def.air||GFX.unitsDropped)return null;
+  if(t==='villager')return{ch:'Rogue',work:1};if(t==='monk')return{ch:'Mage',r:'staff',atk:'Ranged_Magic_Spellcasting'};if(t==='envoy')return{ch:'Mage',l:'spellbook_closed'};
+  if(t==='spy'||t==='informer')return{ch:'Rogue_Hooded',r:'dagger',atk:'Melee_1H_Attack_Stab'};
+  if(t==='slinger')return{ch:'Ranger',atk:'Throw'};
+  if(d.cls==='arch')return /cross|arbal/i.test(nm)?{ch:'Ranger',r:'crossbow_2handed',atk:'Ranged_2H_Shoot'}:{ch:'Ranger',l:'bow_withString',atk:'Ranged_Bow_Release'};
+  if(d.cls==='inf'){if(t==='runner')return{ch:'Rogue',r:'dagger',atk:'Melee_1H_Attack_Stab'};
+    if(['clubman','barbarian','painted'].includes(t))return{ch:'Barbarian',r:'axe_1handed',atk:'Melee_1H_Attack_Chop'};
+    if(t==='berserker')return{ch:'Barbarian',r:'axe_2handed',atk:'Melee_2H_Attack_Chop'};if(t==='highlander')return{ch:'Barbarian',r:'sword_2handed',atk:'Melee_2H_Attack_Chop'};
+    if(t==='spearman'||t==='landsknecht')return{ch:'Knight',r:'sword_2handed',atk:'Melee_2H_Attack_Chop'};if(t==='bspear')return{ch:'Barbarian',r:'sword_1handed',l:'shield_round_color',atk:'Melee_1H_Attack_Stab'};
+    return{ch:'Knight',r:'sword_1handed',l:'shield_badge_color',atk:'Melee_1H_Attack_Chop'}}
+  return null}
+function unitMake(u,look){const tpl=UCH[look.ch];if(!tpl)return null;const g=new T.Group(),inner=T.SkeletonUtils.clone(tpl);inner.scale.setScalar(tpl.userData.sc);g.add(inner);
+  const tc=col(TEAMHEX[u.team%TEAMHEX.length]);inner.traverse(o=>{if(o.name==='u_team'){o.material=o.material.clone();o.material.color.copy(tc);o.material.map=null;o.material.needsUpdate=true}});
+  const slot=n=>{let s=null;inner.traverse(o=>{if(!s&&o.name&&o.name.replace(/[^a-z]/gi,'').toLowerCase()===n)s=o});return s};
+  const ud={uk:look.ch,mixer:new T.AnimationMixer(inner),acts:{},cur:null,legs:[],flags:[],props:{}};
+  for(const side of['r','l']){const pn=look[side];const hs=slot('handslot'+side);if(pn&&UPROP[pn]&&hs){const p=UPROP[pn].clone();hs.add(p);ud.props[side]=p}}
+  if(look.work){const hs=slot('handslotr');if(hs&&UPROP.axe_1handed){const p=UPROP.axe_1handed.clone();p.visible=false;hs.add(p);ud.tool=p}}
+  const sh=GFX.lvl!=='low';inner.traverse(o=>{if(o.isMesh)o.castShadow=sh});ud.sh=sh;
+  g.add(aoBlob((u.def.r||.4)*2.2,(u.def.r||.4)*2.2));g.userData=ud;ud.look=look;return g}
+function uPlay(ud,name,fade,once,ts){if(!UCLIPS)return;const c=UCLIPS[name]||UCLIPS.Idle_A;if(!c)return;let a=ud.acts[name];if(!a)a=ud.acts[name]=ud.mixer.clipAction(c);
+  if(ud.cur===name&&!once){if(ts)a.setEffectiveTimeScale(ts);return}const prev=ud.cur&&ud.acts[ud.cur];a.reset();a.setEffectiveWeight(1);a.setEffectiveTimeScale(ts||1);
+  if(once){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(T.LoopRepeat,Infinity);a.play();if(prev&&prev!==a)prev.crossFadeTo(a,fade==null?.2:fade,false);ud.cur=name}
+function unitGLFrame(u,dt){let m=u.mesh,ud=m.userData;const look=MODELS_ON&&UNITS_READY?unitLook(u):null;
+  if(look&&(!ud.uk||ud.uk!==look.ch||ud.lookKey!==JSON.stringify(look))){const nm=unitMake(u,look);if(nm){nm.position.copy(m.position);nm.rotation.y=m.rotation.y;nm.visible=m.visible;world.remove(m);world.add(nm);u.mesh=m=nm;ud=nm.userData;ud.lookKey=JSON.stringify(look)}}
+  else if(!look&&ud.uk){const tpl=getUnitMesh(u.type,u.team,u.id%3);tpl.position.copy(m.position);tpl.rotation.y=m.rotation.y;world.remove(m);world.add(tpl);u.mesh=tpl;return false}
+  if(!ud.uk)return false;
+  if(u.inside){m.visible=false;return true}let y=uY(u);m.visible=unitSeen(u);
+  let da=u.face-m.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));m.rotation.y+=da*Math.min(1,dt*12);m.position.set(u.x,y,u.z);
+  const L=ud.look;
+  if(u.dead){u.deadT+=dt;uPlay(ud,'Death_A',.15,true);if(u.deadT>1.8)m.position.y=y-(u.deadT-1.8)*.5}
+  else{const sw=u.swing||0;if(sw>(ud.lastSw||0)+.05&&L.atk){ud.atkT=.7;uPlay(ud,L.atk,.08,true,1.3)}ud.lastSw=sw;
+    if(ud.atkT>0){ud.atkT-=dt}
+    else if(u.moving){uPlay(ud,'Walking_A',.2,false,Math.min(1.8,.6+u.def.speed*.45));marchDust(u,dt,y)}
+    else if(u.working&&L.work){const ws=workStyle(u);uPlay(ud,ws==='chop'?'Chopping':ws==='mine'?'Pickaxing':ws==='build'?'Hammering':ws==='farm'?'Digging':'Interact',.25)}
+    else if(u.working&&u.type==='monk')uPlay(ud,'Ranged_Magic_Spellcasting',.25);
+    else uPlay(ud,'Idle_A',.3)}
+  if(ud.tool){const ws=u.working&&!u.moving?workStyle(u):'';ud.tool.visible=ws==='chop'||ws==='mine'||ws==='build'}
+  if(ud.sh!==(GFX.lvl!=='low')){ud.sh=GFX.lvl!=='low';m.traverse(o=>{if(o.isSkinnedMesh||o.parent&&o.parent.name&&/handslot/.test(o.parent.name))o.castShadow=ud.sh})}
+  if(m.visible&&nearCam(u.x,u.z,1.15)){ud.acc=(ud.acc||0)+dt;const far=Math.hypot(u.x-cam.x,u.z-cam.z)>cam.dist*.55;if(!far||frame%2===u.id%2){ud.mixer.update(ud.acc);ud.acc=0}}return true}
+function animUnit(u,dt){if(unitGLFrame(u,dt))return;
   if(u.inside)return;const m=u.mesh,ud=m.userData;let y=uY(u);m.visible=unitSeen(u);if(!ud.fx)gfxUnitInit(u);
   if(u.def.naval){let da=u.face-m.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));m.rotation.y+=da*Math.min(1,dt*2.5);
     if(u.dead){u.deadT+=dt;m.position.set(u.x,WATER-u.deadT*.6,u.z);m.rotation.z=Math.min(.6,u.deadT*.35);return}
@@ -4627,7 +4687,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();loadModels();showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={get ANIMG(){return ANIMG},setModels,get MODELS_ON(){return MODELS_ON},get GFX(){return GFX},gfxSet,gfxApply,get TUFT(){return TUFT},get FXL(){return FXL},boom,conBld,upgStart,upgInfo,get NUKE(){return NUKE},nukeStart,nukeTick,get DEPS(){return DEPS},get SHAFTS(){return SHAFTS},get FISHGONE(){return FISHGONE},ecoTick,wildTick,fishTick,findTick,discTick,reopenShafts,plantOrder,get ecoT(){return ecoT},get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={get UNITS_READY(){return UNITS_READY},unitLook,get ANIMG(){return ANIMG},setModels,get MODELS_ON(){return MODELS_ON},get GFX(){return GFX},gfxSet,gfxApply,get TUFT(){return TUFT},get FXL(){return FXL},boom,conBld,upgStart,upgInfo,get NUKE(){return NUKE},nukeStart,nukeTick,get DEPS(){return DEPS},get SHAFTS(){return SHAFTS},get FISHGONE(){return FISHGONE},ecoTick,wildTick,fishTick,findTick,discTick,reopenShafts,plantOrder,get ecoT(){return ecoT},get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
