@@ -1762,7 +1762,9 @@ const BMAP={tc:['Wonder_FirstAge_Level2','Wonder_FirstAge_Level3','Wonder_Second
   barracks:['Barracks_FirstAge_Level1','Barracks_FirstAge_Level3','Barracks_SecondAge_Level1','Barracks_SecondAge_Level2','Barracks_SecondAge_Level3'],
   house:[['Houses_FirstAge_1_Level3','Houses_FirstAge_2_Level3'],['Houses_SecondAge_3_Level1','Houses_SecondAge_1_Level1','V_House_2'],['Houses_SecondAge_1_Level1','Houses_SecondAge_2_Level1','Houses_SecondAge_3_Level1','V_House_1','V_House_2'],
     ['Houses_SecondAge_1_Level2','Houses_SecondAge_2_Level1','Houses_SecondAge_1_Level3','V_House_1','V_House_2'],['Houses_SecondAge_1_Level2','Houses_SecondAge_2_Level1','Houses_SecondAge_1_Level3','V_House_1','V_House_2']]};
-{const v=k=>[null,k,k,k,k];Object.assign(BMAP,{blacksmith:v('V_Blacksmith'),mill:v('V_Mill'),lumber:v('V_Sawmill'),stable:v('V_Stable'),market:v('V_Market'),monastery:v('V_Bell_Tower'),mining:v('V_House_4')})}
+{const v=k=>[null,k,k,k,k];Object.assign(BMAP,{blacksmith:v('V_Blacksmith'),mill:['Windmill_FirstAge','V_Mill','V_Mill','V_Mill','V_Mill'],lumber:['Storage_FirstAge_Level1','V_Sawmill','V_Sawmill','V_Sawmill','V_Sawmill'],stable:v('V_Stable'),market:v('V_Market'),monastery:v('V_Bell_Tower'),mining:['Mine','Mine','Mine','Mine','Mine'],
+  range:[null,'Archery_FirstAge_Level2','Archery_SecondAge_Level1','Archery_SecondAge_Level2','Archery_SecondAge_Level3'],dock:['Port_FirstAge_Level1','Port_FirstAge_Level2','Port_FirstAge_Level3','Port_SecondAge_Level2','Port_SecondAge_Level3'],
+  lookout:Array(5).fill('WatchTower_FirstAge_Level2'),tower:['WatchTower_SecondAge_Level1','WatchTower_SecondAge_Level1','WatchTower_SecondAge_Level1','WatchTower_SecondAge_Level2','WatchTower_SecondAge_Level2'],btower:Array(5).fill('WatchTower_SecondAge_Level3')})}
 const BCOMP={V_Market:[['V_Inn',.8,-.12,-.12,0],['V_MarketStand_1',.34,.36,.36,-Math.PI/2],['V_MarketStand_2',.3,.38,-.3,-Math.PI/2]]},BSCALE={V_Bell_Tower:.82,V_House_4:1.05},BCHIM=['house','blacksmith'];
 const TCPROPS=[['V_Well',.22,.62,.5,0],['V_Cart',.24,-.62,.42,Math.PI/2.4]];
 let MODELS_ON=true;try{MODELS_ON=localStorage.getItem('bb-models')!=='off'}catch(e){}
@@ -1775,13 +1777,16 @@ function bmMix(a,b,k){const A=new T.Color(a),B=new T.Color(b);return A.lerp(B,k)
 function bmPiece(g,key,type,team,sc,ox,oz,rot){const m=BMDATA[key],tc=TEAMHEX[team%TEAMHEX.length],grp=new T.Group();grp.position.set(ox,0,oz);grp.rotation.y=rot||0;
   m.parts.forEach((p,i)=>{let hex=p.c;if((p.n==='Main'||p.n==='Red')&&(type==='tc'||p.v<700)&&!/^V_/.test(key))hex=tc;const me=new T.Mesh(bmGeo(key,i),M(hex));me.castShadow=true;me.receiveShadow=true;me.scale.setScalar(sc);grp.add(me)});g.add(grp);return grp}
 function bmModel(key,type,team,s){const g=new T.Group();let sc=s*.96*(BSCALE[key]||1),mh;
-  if(BCOMP[key]){mh=0;for(const[k,f,ox,oz,r]of BCOMP[key]){bmPiece(g,k,type,team,s*f,ox*s,oz*s,r);mh=Math.max(mh,BMDATA[k].h*s*f)}}else{bmPiece(g,key,type,team,sc,0,0,0);mh=BMDATA[key].h*sc}
+  if(BCOMP[key]){mh=0;for(const[k,f,ox,oz,r]of BCOMP[key]){bmPiece(g,k,type,team,s*f,ox*s,oz*s,r);mh=Math.max(mh,BMDATA[k].h*s*f)}}else{const pc=bmPiece(g,key,type,team,sc,0,0,0);mh=BMDATA[key].h*sc;if(/^Port_|^Dock_/.test(key)){pc.position.y=-mh*.38;mh*=.62}}
   if(type==='tc')for(const[k,f,ox,oz,r]of TCPROPS)if(BMDATA[k])bmPiece(g,k,type,team,s*f,Math.sign(ox)*(s/2+.45),oz*s,r);
   /* chimney smoke from the highest point of houses and smithies */
   if(BCHIM.includes(type)&&!BCOMP[key]){const m=BMDATA[key];let best=-1,bp=null;for(let i=0;i<m.parts.length;i++){const a=bmGeo(key,i).attributes.position.array;for(let j=0;j<a.length;j+=3)if(a[j+1]>best){best=a[j+1];bp=[a[j]*sc,a[j+1]*sc,a[j+2]*sc]}}g.userData.chimL=bp}
   if(type!=='house')flag(g,team,-s*.38,Math.min(mh*.55,2.4),-s*.38,1.2);else{const f=flag(g,team,s*.4,0,s*.4,1.1);f.scale.setScalar(.6)}
   g.userData.h=mh;g.userData.model=key;return g}
-function setModels(on){MODELS_ON=!!on;try{localStorage.setItem('bb-models',on?'on':'off')}catch(e){}if(typeof blds!=='undefined'&&blds)for(const b of blds)if(!b.dead&&b.mesh&&BMAP[b.type])setBldMesh(b);if(typeof rebuildTrees==='function')rebuildTrees()}
+function resSkin(r){if(!r||r.dead||!r.mesh||(r.rtype!=='gold'&&r.rtype!=='stone')||r.animal||r.fish)return;const want=MODELS_ON&&BMDATA.Resource_Gold_1;const cur=!!r.mesh.userData.rm;if(!!want===cur)return;
+  const old=r.mesh;let m;if(want){r.meshB=r.meshB||old;m=new T.Group();const key=(r.rtype==='gold'?'Resource_Gold_':'Resource_Rock_')+(1+r.id%3);bmPiece(m,key,'res',0,1.25,0,0,0);m.userData.rm=1;m.userData.h=BMDATA[key].h*1.25}else{m=r.meshB||old}
+  m.position.copy(old.position);m.rotation.y=old.rotation.y;m.visible=old.visible;m.scale.copy(old.scale);world.remove(old);world.add(m);r.mesh=m}
+function setModels(on){MODELS_ON=!!on;try{localStorage.setItem('bb-models',on?'on':'off')}catch(e){}if(typeof blds!=='undefined'&&blds)for(const b of blds)if(!b.dead&&b.mesh&&BMAP[b.type])setBldMesh(b);if(typeof ress!=='undefined'&&ress)for(const r of ress)resSkin(r);if(typeof rebuildTrees==='function')rebuildTrees()}
 function getBldMesh(type,team,b){const st=styleFor(type,team),mk=modelKey(type,st,b?b.id:0);if(mk){const k2='m'+mk+type+team;if(!tplCache[k2])tplCache[k2]=bmModel(mk,type,team,BUILD[type].s);const m=collectParts(tplCache[k2].clone());m.userData.st=st;m.userData.chimL=tplCache[k2].userData.chimL;return m}const k='b'+type+team+CIVKEY[team]+st;if(!tplCache[k])tplCache[k]=bldModel(type,team,st);const m=collectParts(tplCache[k].clone());m.userData.st=st;return m}
 function getUnitMesh(type,team,v){const U=UNITS[type],sv=type==='villager'?v:((U.anc||U.mstage)&&U.line?unitStage(team,type):0),k='u'+type+team+CIVKEY[team]+sv;if(!tplCache[k])tplCache[k]=unitModel(type,team,sv);const m=collectParts(tplCache[k].clone());m.userData.sv=sv;return m}
 function remesh(u){const vis=u.mesh.visible,ry=u.mesh.rotation.y;world.remove(u.mesh);if(u.ring){world.remove(u.ring);u.ring=null}u.mesh=getUnitMesh(u.type,u.team,u.id%3);u.mesh.position.set(u.x,uY(u),u.z);u.mesh.rotation.y=ry;u.mesh.visible=vis&&!u.inside;world.add(u.mesh)}
@@ -2086,7 +2091,7 @@ function addTree(cx,cz){const c=cz*N+cx;if(!inb(cx,cz)||grid[c]||occ[c]||(RESV&&
   const r={kind:'res',rtype:'wood',amt:100,max:100,cx,cz,x:cx-HALF+.5,z:cz-HALF+.5,tree:s,id:nid++};ress.push(r);grid[c]++;resCell[c]=r;return r}
 function addNode(rt,cx,cz){const c=cz*N+cx;if(!inb(cx,cz)||grid[c]||occ[c]||(TER&&TER[c]))return null;
   const amt=rt==='food'?125:rt==='gold'?450:rt==='oil'?600:rt==='uranium'?300:rt==='ore'||rt==='cuore'||rt==='coal'?400:rt==='flint'?300:350;const r={kind:'res',rtype:rt,amt,max:amt,cx,cz,x:cx-HALF+.5,z:cz-HALF+.5,id:nid++};
-  r.mesh=resModel(rt);r.mesh.position.set(r.x,heightAt(r.x,r.z),r.z);r.mesh.rotation.y=R()*TAU;world.add(r.mesh);ress.push(r);if(rt==='uranium')urGlow(r);grid[c]++;resCell[c]=r;return r}
+  r.mesh=resModel(rt);r.mesh.position.set(r.x,heightAt(r.x,r.z),r.z);r.mesh.rotation.y=R()*TAU;world.add(r.mesh);ress.push(r);if(rt==='uranium')urGlow(r);if(MODELS_ON&&BMDATA.Resource_Gold_1)resSkin(r);grid[c]++;resCell[c]=r;return r}
 const SPIRAL=[];for(let i=-9;i<=9;i++)for(let j=-9;j<=9;j++)SPIRAL.push([i,j,i*i+j*j]);SPIRAL.sort((a,b)=>a[2]-b[2]);
 function cluster(rt,wx,wz,n){let p=0;const cx=cellX(wx),cz=cellX(wz);for(const[i,j]of SPIRAL){if(p>=n)break;if(rt==='wood'?addTree(cx+i,cz+j):addNode(rt,cx+i,cz+j))p++}}
 function blob(wx,wz,r,p){const cx=cellX(wx),cz=cellX(wz);for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(i*i+j*j>r*r+R()*3||R()>p)continue;
@@ -3529,10 +3534,12 @@ scene.add(rally);rally.visible=false;
 
 /* ================= ANIMATION ================= */
 /* ================= ANIMATED UNITS (KayKit Adventurers + Character Animations by Kay Lousberg, CC0) ================= */
-const UCH={},UPROP={};let UCLIPS=null,UNITS_READY=false;
+const UCH={},UPROP={},UHORSE={};let UCLIPS=null,UNITS_READY=false;
 function unitsArrived(){const D=window.BB_UNITS;if(!D||unitsArrived.done||!T.GLTFLoader)return;unitsArrived.done=true;const L=new T.GLTFLoader();let pend=0;const done=()=>{if(--pend===0)UNITS_READY=true};
   const b64=s=>{const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer};
   pend++;L.parse(JSON.stringify(D.anims),'',g=>{UCLIPS={};for(const c of g.animations)UCLIPS[c.name]=c;done()},e=>{console.warn('unit anims',e)});
+  for(const k in (D.horses||{})){pend++;L.parse(JSON.stringify(D.horses[k]),'',g=>{const root=g.scene;root.traverse(o=>{if(o.isMesh){const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){m.roughness=.85;m.metalness=0;fogify(m,{})}o.castShadow=true;o.frustumCulled=false}});
+      root.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(root),sz=bb.getSize(new T.Vector3());const len=Math.max(sz.x,sz.z);UHORSE[k]={scene:root,clips:g.animations,sc:2.3/len,ry:sz.x>sz.z?-Math.PI/2:0,y0:-bb.min.y,cx:(bb.min.x+bb.max.x)/2,cz:(bb.min.z+bb.max.z)/2,h:sz.y*2.3/len};done()},e=>{console.warn('horse',k,e);done()})}
   for(const k in D.chars){pend++;L.parse(b64(D.chars[k]),'',g=>{UCH[k]=unitPrep(k,g.scene);done()},e=>console.warn('unit',k,e))}
   for(const k in D.props){pend++;L.parse(JSON.stringify(D.props[k]),'',g=>{const s=g.scene;s.traverse(o=>{if(o.isMesh){o.castShadow=true;o.material=fogify(o.material.clone(),{})}});UPROP[k]=s;done()},e=>{console.warn('prop',k,e);done()})}}
 /* merge the body parts into one skinned mesh (and the cape/hat into a second one for team colour) to keep draw calls low */
@@ -3553,20 +3560,24 @@ function unitLook(u){const t=u.type,d=u.def,nm=(d.name||'');if(d.gun||u.def.nava
   if(t==='spy'||t==='informer')return{ch:'Rogue_Hooded',r:'dagger',atk:'Melee_1H_Attack_Stab'};
   if(t==='slinger')return{ch:'Ranger',atk:'Throw'};
   if(d.cls==='arch')return /cross|arbal/i.test(nm)?{ch:'Ranger',r:'crossbow_2handed',atk:'Ranged_2H_Shoot'}:{ch:'Ranger',l:'bow_withString',atk:'Ranged_Bow_Release'};
+  if(d.cls==='cav'&&!d.gun&&t!=='chariot'&&t!=='tradecart'){const hw=t==='knight'||t==='chevalier'?'Horse_White':'Horse';if(t==='scout')return{ch:'Rogue',horse:hw,r:'dagger',atk:1};if(t==='horseman')return{ch:'Barbarian',horse:hw,r:'axe_1handed',atk:1};if(t==='jinete'||d.ranged)return{ch:'Ranger',horse:hw,l:'bow_withString',atk:1};return{ch:'Knight',horse:hw,r:'sword_1handed',l:'shield_badge_color',atk:1}}
   if(d.cls==='inf'){if(t==='runner')return{ch:'Rogue',r:'dagger',atk:'Melee_1H_Attack_Stab'};
     if(['clubman','barbarian','painted'].includes(t))return{ch:'Barbarian',r:'axe_1handed',atk:'Melee_1H_Attack_Chop'};
     if(t==='berserker')return{ch:'Barbarian',r:'axe_2handed',atk:'Melee_2H_Attack_Chop'};if(t==='highlander')return{ch:'Barbarian',r:'sword_2handed',atk:'Melee_2H_Attack_Chop'};
     if(t==='spearman'||t==='landsknecht')return{ch:'Knight',r:'sword_2handed',atk:'Melee_2H_Attack_Chop'};if(t==='bspear')return{ch:'Barbarian',r:'sword_1handed',l:'shield_round_color',atk:'Melee_1H_Attack_Stab'};
     return{ch:'Knight',r:'sword_1handed',l:'shield_badge_color',atk:'Melee_1H_Attack_Chop'}}
   return null}
-function unitMake(u,look){const tpl=UCH[look.ch];if(!tpl)return null;const g=new T.Group(),inner=T.SkeletonUtils.clone(tpl);inner.scale.setScalar(tpl.userData.sc);g.add(inner);
+function unitMake(u,look){const tpl=UCH[look.ch];if(!tpl)return null;if(look.horse&&!UHORSE[look.horse])return null;const g=new T.Group(),inner=T.SkeletonUtils.clone(tpl);inner.scale.setScalar(tpl.userData.sc*(look.horse?.92:1));g.add(inner);
   const tc=col(TEAMHEX[u.team%TEAMHEX.length]);inner.traverse(o=>{if(o.name==='u_team'){o.material=o.material.clone();o.material.color.copy(tc);o.material.map=null;o.material.needsUpdate=true}});
   const slot=n=>{let s=null;inner.traverse(o=>{if(!s&&o.name&&o.name.replace(/[^a-z]/gi,'').toLowerCase()===n)s=o});return s};
   const ud={uk:look.ch,h:1.75,mixer:new T.AnimationMixer(inner),acts:{},cur:null,legs:[],flags:[],props:{}};
   for(const side of['r','l']){const pn=look[side];const hs=slot('handslot'+side);if(pn&&UPROP[pn]&&hs){const p=UPROP[pn].clone();hs.add(p);ud.props[side]=p}}
   if(look.work){const hs=slot('handslotr');if(hs&&UPROP.axe_1handed){const p=UPROP.axe_1handed.clone();p.visible=false;hs.add(p);ud.tool=p}}
   const sh=GFX.lvl!=='low';inner.traverse(o=>{if(o.isMesh)o.castShadow=sh});ud.sh=sh;
-  g.add(aoBlob((u.def.r||.4)*2.2,(u.def.r||.4)*2.2));g.userData=ud;ud.look=look;return g}
+  if(look.horse){const H=UHORSE[look.horse],hr=T.SkeletonUtils.clone(H.scene),hi=new T.Group();hr.position.set(-H.cx,H.y0,-H.cz);hi.add(hr);hi.scale.setScalar(H.sc);hi.rotation.y=H.ry;g.add(hi);hr.traverse(o=>{if(o.isMesh)o.castShadow=sh});
+    ud.hmix=new T.AnimationMixer(hr);ud.hacts={};for(const c of H.clips)ud.hacts[c.name]=ud.hmix.clipAction(c);ud.hcur=null;inner.position.set(0,H.h*.5,-.08);ud.seatY=H.h*.5;ud.h=H.h+1.1;
+    let ua=null;inner.traverse(o=>{if(!ua&&o.isBone&&/upperarm.?r$/i.test(o.name))ua=o});ud.uarm=ua;ud.uarm0=ua?ua.quaternion.clone():null}
+  g.add(aoBlob((u.def.r||.4)*(look.horse?3:2.2),(u.def.r||.4)*(look.horse?4.2:2.2)));g.userData=ud;ud.look=look;return g}
 function uPlay(ud,name,fade,once,ts){if(!UCLIPS)return;const c=UCLIPS[name]||UCLIPS.Idle_A;if(!c)return;let a=ud.acts[name];if(!a)a=ud.acts[name]=ud.mixer.clipAction(c);
   if(ud.cur===name&&!once){if(ts)a.setEffectiveTimeScale(ts);return}const prev=ud.cur&&ud.acts[ud.cur];a.reset();a.setEffectiveWeight(1);a.setEffectiveTimeScale(ts||1);
   if(once){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(T.LoopRepeat,Infinity);a.play();if(prev&&prev!==a)prev.crossFadeTo(a,fade==null?.2:fade,false);ud.cur=name}
@@ -3577,6 +3588,12 @@ function unitGLFrame(u,dt){let m=u.mesh,ud=m.userData;const look=MODELS_ON&&UNIT
   if(u.inside){m.visible=false;return true}let y=uY(u);m.visible=unitSeen(u);
   let da=u.face-m.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));m.rotation.y+=da*Math.min(1,dt*12);m.position.set(u.x,y,u.z);
   const L=ud.look;
+  if(L.horse){const hp=(n,once)=>{if(ud.hcur===n)return;const a=ud.hacts[n]||ud.hacts.Idle;if(!a)return;const pv=ud.hcur&&ud.hacts[ud.hcur];a.reset();if(once){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}else a.setLoop(T.LoopRepeat,Infinity);a.play();if(pv&&pv!==a)pv.crossFadeTo(a,.25,false);ud.hcur=n};
+    if(u.dead){u.deadT+=dt;hp('Death',true);uPlay(ud,'Death_A',.15,true);if(u.deadT>1.8)m.position.y=y-(u.deadT-1.8)*.5}
+    else{const sw=u.swing||0;if(sw>(ud.lastSw||0)+.05)ud.atkT=.5;ud.lastSw=sw;if(ud.atkT>0)ud.atkT-=dt;
+      if(u.moving){hp(u.def.speed>1.35?'Gallop':'Walk');marchDust(u,dt,y)}else hp('Idle');uPlay(ud,'Sit_Chair_Idle',.2)}
+    if(m.visible&&nearCam(u.x,u.z,1.15)){ud.mixer.update(dt);ud.hmix.update(dt);if(ud.uarm&&ud.atkT>0){const k=Math.sin((1-ud.atkT/.5)*Math.PI);ud.uarm.quaternion.copy(ud.uarm0).multiply(new T.Quaternion().setFromEuler(new T.Euler(-2.2*k,0,.4*k)))}}
+    return true}
   if(u.dead){u.deadT+=dt;uPlay(ud,'Death_A',.15,true);if(u.deadT>1.8)m.position.y=y-(u.deadT-1.8)*.5}
   else{const sw=u.swing||0;if(sw>(ud.lastSw||0)+.05&&L.atk){ud.atkT=.7;uPlay(ud,L.atk,.08,true,1.3)}ud.lastSw=sw;
     if(ud.atkT>0){ud.atkT-=dt}
