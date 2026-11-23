@@ -704,6 +704,7 @@ const UNITS={
   monk:{name:'Monk',l:'Mk',cls:'monk',hp:30,atk:0,range:9,rate:1,speed:3.3,cost:{gold:100},time:20,r:.36,arm:[0,0],sight:11,age:2,desc:'Heals your units and converts enemy units'},
   envoy:{name:'Envoy',l:'En',cls:'envoy',hp:35,atk:0,range:.6,rate:1,speed:4.8,cost:{food:60,gold:60},time:18,r:.38,arm:[0,1],sight:9,age:1,desc:'Diplomat. Right-click another people\'s Town Center to pay a visit: they warm to you and you learn their temperament'},
   barbarian:{name:'Barbarian',l:'Bb',cls:'inf',hp:55,atk:7,range:.7,rate:1.6,speed:4.0,cost:{food:60},time:12,r:.42,arm:[0,1],sight:7,age:9,desc:'Wild raider from the hills'},
+  terminator:{name:'Terminator',l:'Tm',cls:'inf',hp:1400,atk:18,range:.9,rate:2.2,speed:2.6,cost:{},time:1,r:.6,arm:[1,6],sight:9,age:9,bonus:{bld:4},desc:'A machine from the future. Arrows barely scratch it, and its power is slowly draining'},
   tradecart:{name:'Trade Cart',l:'Tr',cls:'trade',hp:70,atk:0,range:.5,rate:1,speed:4.6,cost:{food:100,gold:50},time:25,r:.6,arm:[0,1],sight:6,age:1,desc:'Earns gold travelling between two of your markets'},
 };
 const isMil=d=>d.cls==='inf'||d.cls==='arch'||d.cls==='cav'||d.cls==='siege'||d.cls==='ship'||d.cls==='air';
@@ -2350,7 +2351,82 @@ function pmPlane(team,bomber){const g=new T.Group(),b=new T.Group(),tc=TEAMHEX[t
   for(const x of eng){const pg=new T.Group();pg.name='prop'+(x+2);pg.position.set(x,0,bomber?.9:L/2+.42);g.add(pg);sp(pg,0x2e3034,.14,.14,.16,0,0,0);for(let k=0;k<3;k++){const bl=bx(pg,0x2e3034,.09,.5,.03,0,.25,0);const piv=new T.Group();piv.rotation.z=k*Math.PI*2/3;piv.add(bl);pg.add(piv)}}
   g.userData.h=1.2;return g}
 const PUNIT={arquebus:null,tank:(t,v)=>pmTank(t,v),acar:t=>pmCar(t),fighter:t=>pmPlane(t,false),bomber:t=>pmPlane(t,true)};
-function getUnitMesh(type,team,v){const U=UNITS[type],sv=type==='villager'?v:((U.anc||U.mstage)&&U.line?unitStage(team,type):0);if(MODELS_ON&&PUNIT[type]){const kp='pu'+type+team+sv;if(!tplCache[kp])tplCache[kp]=PUNIT[type](team,sv);const m=collectParts(tplCache[kp].clone());m.userData.sv=sv;m.userData.h=tplCache[kp].userData.h;return m}const k='u'+type+team+CIVKEY[team]+sv;if(!tplCache[k])tplCache[k]=unitModel(type,team,sv);const m=collectParts(tplCache[k].clone());m.userData.sv=sv;return m}
+/* ================= RANDOM EVENTS (incl. the Terminator) ================= */
+let REV={next:0,mods:[],term:0,n:0};const REVFX=[];
+const EVGAP={off:0,rare:600,normal:330,frequent:180};
+function evInit(){REV={next:gameT+(EVGAP[evLevel()]||330)*.75+120,mods:[],term:0,n:0};return REV}
+function evLevel(){return(OPTS&&OPTS.events)||'normal'}
+function evMul(team,farm){let m=1;if(!REV||!REV.mods.length)return m;for(const x of REV.mods){if(x.until<gameT)continue;if(x.team>=0&&x.team!==team)continue;if(x.k==='farm'&&!farm)continue;m*=x.mul}return m}
+function evAlive(){const out=[];for(let t=0;t<NP;t++)if(!ELIM[t]&&blds.some(b=>!b.dead&&b.team===t))out.push(t);return out}
+function evWho(t){return t===0?'You':'The '+cname(t)}
+function evTC(t){return blds.find(b=>!b.dead&&b.team===t&&b.type==='tc')||blds.find(b=>!b.dead&&b.team===t&&b.built)}
+function evSay(t,msg,bad){if(t===0||t<0)notify(msg,!!bad);else if(!FOGON||MET[t])notify('News: '+msg)}
+/* a land spot about d tiles from (x,z), reachable on foot from it */
+function evSpot(x,z,d){const comp=compAt(x,z);for(let k=0;k<40;k++){const a=Math.random()*TAU,dd=d*(.8+Math.random()*.4);const px=clamp(x+Math.cos(a)*dd,-HALF+4,HALF-4),pz=clamp(z+Math.sin(a)*dd,-HALF+4,HALF-4);
+  if(compAt(px,pz)!==comp)continue;const f=freeNear(clamp(cellX(px),0,N-1),clamp(cellX(pz),0,N-1));if(f){const sx=f[0]-HALF+.5,sz=f[1]-HALF+.5;if(compAt(sx,sz)===comp)return{x:sx,z:sz}}}return null}
+function evAsk(msg,btns){if(document.getElementById('evask'))document.getElementById('evask').remove();const d=document.createElement('div');d.id='evask';
+  d.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 92px);transform:translateX(-50%);z-index:60;max-width:min(92vw,440px);background:rgba(28,22,16,.95);color:#f2e8d2;border:1px solid #8a6a3a;border-radius:10px;padding:12px 14px;font:14px/1.4 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45);text-align:center';
+  d.innerHTML='<div>'+msg+'</div><div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+btns.map((b,i)=>'<button data-i="'+i+'" style="padding:8px 14px;border-radius:8px;border:1px solid '+(i?'#6a5a44':'#c9a26a')+';background:'+(i?'#2e261c':'#5a4426')+';color:#f2e8d2;font:inherit">'+b.label+'</button>').join('')+'</div>';
+  d.addEventListener('pointerdown',e=>e.stopPropagation());d.addEventListener('click',e=>{const i=e.target.dataset&&e.target.dataset.i;if(i==null)return;d.remove();const b=btns[+i];if(b&&b.fn)b.fn()});document.body.appendChild(d);
+  const id=setTimeout(()=>{if(d.parentNode){d.remove();const b=btns[btns.length-1];if(b&&b.fn)b.fn()}},30000);}
+function evScale(t){const a=age[t]||0;return 1+Math.max(0,a-MED)*.35+(a<MED?a*.1:0)}
+const EVENTS={
+ harvest:{w:3,ok:()=>blds.some(b=>!b.dead&&b.def.crop),run:()=>{REV.mods.push({team:-1,k:'farm',mul:1.5,until:gameT+180});notify('A bumper harvest! Every farm yields 50% more for 3 minutes.')}},
+ drought:{w:2,ok:()=>blds.some(b=>!b.dead&&b.def.crop)&&!(SEAS.on&&SEAS.idx===3),run:()=>{REV.mods.push({team:-1,k:'farm',mul:.6,until:gameT+150});notify('Drought! Farms yield 40% less for the next 2½ minutes.',true)}},
+ herd:{w:3,ok:()=>true,run:()=>{const s=evSpot(0,0,HALF*.35*Math.random());if(!s)return false;for(let i=0;i<8;i++)spawnAnimal('deer',s.x+(Math.random()-.5)*6,s.z+(Math.random()-.5)*6);notify('A great herd of deer is crossing the land. Free food for whoever hunts it first!')}},
+ strike:{w:2,ok:()=>true,run:()=>{const rt=WAGE<MED?'cuore':'gold';const s=evSpot(0,0,HALF*.55*Math.random());if(!s)return false;let n=0;for(const[i,j]of[[0,0],[1,0],[0,1],[1,1],[-1,0]]){const r=addNode(rt,cellX(s.x)+i,cellX(s.z)+j);if(r){r.extra=true;n++}}if(!n)return false;
+   flash(s.x,heightAt(s.x,s.z)+1,s.z,0xffd36a,3,.6);notify((rt==='gold'?'Gold':'Copper')+' strike! A rich new seam has been found. Look for the shimmer on the map.');REV.lastStrike={x:s.x,z:s.z}}},
+ fire:{w:2,ok:()=>true,run:()=>{const t=evPick();if(t==null)return false;const c=blds.filter(b=>!b.dead&&b.team===t&&b.built&&!b.def.wall&&!b.def.road&&!b.def.crop&&b.type!=='tc'&&!(b.burn>gameT));if(!c.length)return false;const b=c[(Math.random()*c.length)|0];b.burn=gameT+40;
+   evSay(t,t===0?'Fire! Your '+b.name+' is burning. Send villagers to repair it.':'Fire has broken out in the '+cname(t)+' town.',true)}},
+ bandits:{w:2,ok:()=>gameT>420,run:()=>{const t=evPick();if(t==null)return false;const tc=evTC(t);if(!tc)return false;const s=evSpot(tc.x,tc.z,22);if(!s)return false;const n=diffKey==='hard'?6:diffKey==='easy'?3:4,grp=[];
+   for(let i=0;i<n;i++){const u=makeUnit('barbarian',BARB,s.x+(Math.random()-.5)*2,s.z+(Math.random()-.5)*2);u.raid=true;grp.push(u)}formation(grp,{x:tc.x,z:tc.z},true);evSay(t,t===0?'Bandits! A war band is marching on your town.':'Bandits are raiding the '+cname(t)+'.',t===0)}},
+ refugees:{w:2,ok:()=>true,run:()=>{const t=evPick();if(t==null)return false;const tc=evTC(t);if(!tc)return false;for(let i=0;i<3;i++){const p=spawnPoint(tc,null);makeUnit('villager',t,p.x,p.z)}evSay(t,t===0?'Refugees have arrived at your Town Center. Three new villagers join you.':'Refugees have joined the '+cname(t)+'.')}},
+ plague:{w:1.5,ok:()=>WAGE<MED+4,run:()=>{const t=evPick();if(t==null)return false;const safe=has(t,'medicine')||blds.some(b=>!b.dead&&b.team===t&&b.built&&(b.type==='monastery'||b.type==='temple'));
+   if(safe){evSay(t,t===0?'Sickness swept the land, but your healers kept your people safe.':'Sickness swept the land; the '+cname(t)+' were spared.');return}const v=units.filter(u=>!u.dead&&!u.inside&&u.team===t&&u.type==='villager');if(v.length<6)return false;const k=Math.min(3,Math.floor(v.length/8)+1);
+   for(let i=0;i<k;i++){const u=v.splice((Math.random()*v.length)|0,1)[0];puff(u.x,uY(u)+1,u.z,0x8a9a6a,3,.2,.6,.7,1);kill(u)}evSay(t,t===0?'Plague! '+k+' of your villagers have died. A monastery, temple or Medicine would protect your people.':'Plague has struck the '+cname(t)+'.',t===0)}},
+ treasure:{w:2,ok:()=>true,run:()=>{const t=evPick();if(t==null)return false;const k=evScale(t),g=Math.round(220*k),w=Math.round(150*k);res[t].gold+=g;res[t].wood+=w;if(t===0)stats.gathered+=g+w;
+   evSay(t,t===0?'Treasure! A buried hoard was dug up: +'+g+' gold, +'+w+' wood.':'The '+cname(t)+' found buried treasure.')}},
+ festival:{w:2,ok:()=>true,run:()=>{const t=evPick();if(t==null)return false;const k=evScale(t),cost=Math.round(180*k);const go=()=>{if(res[t].food<cost){if(t===0)notify('Not enough food for the festival.');return}res[t].food-=cost;REV.mods.push({team:t,k:'all',mul:1.2,until:gameT+120});evSay(t,t===0?'The festival lifts spirits: your villagers work 20% faster for 2 minutes.':'The '+cname(t)+' are holding a festival.')};
+   if(t===0)evAsk('Your people ask for a festival. Spend <b>'+cost+' food</b> so your villagers work 20% faster for 2 minutes?',[{label:'Hold the festival',fn:go},{label:'Not now'}]);else if(res[t].food>cost*2)go()}},
+ merchants:{w:1.5,ok:()=>true,run:()=>{const t=evPick();if(t==null)return false;const k=evScale(t),pay=Math.round(200*k),get=Math.round(230*k);const go=()=>{if(res[t].wood<pay){if(t===0)notify('Not enough wood for the trade.');return}res[t].wood-=pay;res[t].gold+=get;if(t===0)notify('The merchants leave happy: +'+get+' gold.')};
+   if(t===0)evAsk('Travelling merchants offer <b>'+get+' gold</b> for <b>'+pay+' wood</b>. Trade?',[{label:'Trade',fn:go},{label:'Send them away'}]);else if(res[t].wood>pay*2)go()}},
+ terminator:{w:1.2,ok:()=>!REV.term&&gameT>360&&WAGE<=MED+3,run:()=>termArrive()}};
+function evPick(){const a=evAlive();return a.length?a[(Math.random()*a.length)|0]:null}
+function evTick(dt){if(!REV)evInit();for(let i=REV.mods.length-1;i>=0;i--)if(REV.mods[i].until<gameT)REV.mods.splice(i,1);termTick(dt);
+  for(let i=REVFX.length-1;i>=0;i--){const f=REVFX[i];if(gameT>f.t){world.remove(f.m);REVFX.splice(i,1)}}
+  const gap=EVGAP[evLevel()];if(!gap||gameT<REV.next)return;REV.next=gameT+gap*(.7+Math.random()*.6);
+  const keys=Object.keys(EVENTS).filter(k=>k!==REV.last&&EVENTS[k].ok());let tot=0;for(const k of keys)tot+=EVENTS[k].w;let r=Math.random()*tot;
+  for(const k of keys){r-=EVENTS[k].w;if(r<=0){let ok=true;try{ok=EVENTS[k].run()!==false}catch(e){console.warn('event',k,e);ok=false}if(ok){REV.last=k;REV.n++}else REV.next=gameT+30;return}}}
+/* ---- the Terminator: a machine from the future ---- */
+function termArrive(){const t=evPick();if(t==null)return false;const tc=evTC(t);if(!tc)return false;const s=evSpot(tc.x,tc.z,20);if(!s)return false;const y=heightAt(s.x,s.z);
+  const u=makeUnit('terminator',BARB,s.x,s.z);u.raid=true;u.termTeam=t;REV.term=u.id;
+  flash(s.x,y+1.5,s.z,0x9fe0ff,7,.7);flash(s.x,y+1,s.z,0xffffff,3,.35);boom(s.x,y,s.z,1.6);for(let i=0;i<10;i++)puff(s.x+(Math.random()-.5)*2,y+.3,s.z+(Math.random()-.5)*2,i%2?0x9fe0ff:0x3a3632,2,.4,1,1,2);
+  const sc=new T.Mesh(G.cyl16,M(0x1c1814));sc.scale.set(3.6,.02,3.6);sc.position.set(s.x,y+.03,s.z);sc.receiveShadow=true;world.add(sc);REVFX.push({m:sc,t:gameT+120});
+  sfxAt('boom',s.x,s.z);termGo(u);
+  notify(t===0?'A Terminator has arrived from the future, and it is heading for your Town Center! Arrows barely scratch it: fight it up close with a big group, or hold out while its power drains.':'A Terminator has arrived from the future! It is marching on the '+cname(t)+'.',true);return true}
+function termGo(u){let tg=null,bd=1e9;const pref=u.termTeam;for(const b of blds){if(b.dead||b.team>=NP||b.def.wall||b.def.road)continue;if(compAt(b.x,b.z)!==compAt(u.x,u.z))continue;const d=Math.hypot(b.x-u.x,b.z-u.z)*(b.team===pref?(b.type==='tc'?.3:.6):1);if(d<bd){bd=d;tg=b}}if(tg)formation([u],{x:tg.x,z:tg.z},true)}
+function termTick(dt){if(!REV.term)return;const u=units.find(x=>x.id===REV.term);if(!u||u.dead){if(u&&u.dead&&!REV.termDone)termDown(u);REV.term=0;return}
+  u.hp-=u.maxhp*.0075*dt;if(u.hp<=0){u.drained=true;u.hp=0;kill(u);return}REV.tt=(REV.tt||0)-dt;if(REV.tt<=0){REV.tt=2;if(u.task.t==='idle')termGo(u)}
+  if(Math.random()<dt*1.5&&nearCam(u.x,u.z))puff(u.x+(Math.random()-.5)*.6,uY(u)+1.6,u.z+(Math.random()-.5)*.6,0x9fe0ff,1,.12,.6,.5,.6)}
+function termDown(u){REV.termDone=true;const y=heightAt(u.x,u.z);boom(u.x,y,u.z,1.4);let t=u.lastHitT;if(u.drained){t=null;let best=u.maxhp*.2;for(const k in(u.dmgBy||{}))if(u.dmgBy[k]>best){best=u.dmgBy[k];t=+k}}
+  if(t==null||t>=NP){notify('The Terminator has shut down, its power spent. It leaves only scrap.');return}
+  const ids=Object.keys(TECHS).filter(id=>{const x=TECHS[id];return !x.ageUp&&id!=='nukeproj'&&!x.nuke&&techShown(t,id)&&x.age>=age[t]&&x.age<=age[t]+1});ids.sort((a,b)=>TECHS[b].age-TECHS[a].age);
+  const pick=ids.length?ids[(Math.random()*Math.min(ids.length,6))|0]:null;
+  if(pick){applyTech(t,pick);recompute(t);evSay(t,t===0?'You destroyed the Terminator! Your engineers studied the wreck and learned '+TECHS[pick].name+'.':'The '+cname(t)+' destroyed the Terminator and salvaged its secrets.')}
+  else{const k=evScale(t);res[t].gold+=Math.round(500*k);res[t].stone+=Math.round(300*k);evSay(t,t===0?'You destroyed the Terminator! Its wreck was worth '+Math.round(500*k)+' gold and '+Math.round(300*k)+' stone.':'The '+cname(t)+' destroyed the Terminator.')}}
+/* its look: our own chunky machine in the pack style */
+function pmTerm(team){const g=new T.Group(),p=new T.Group(),D=0x3e434b,M2=0x5a616c,L2=0x7a828e,tc=TEAMHEX[team%TEAMHEX.length],glow={emissive:col(0x5ad8ff),emissiveIntensity:1.6},eye={emissive:col(0xff8a20),emissiveIntensity:2};
+  bx(p,D,.72,.26,.42,0,1.12,0);bx(p,M2,1.0,.8,.6,0,1.62,0);bx(p,L2,.86,.52,.08,0,1.66,.31);cy(p,0x2a6a8a,.14,.06,0,1.66,.36,glow,G.cyl16).rotation.x=Math.PI/2;
+  for(const sx of[-1,1]){bx(p,D,.44,.26,.56,sx*.66,2.0,0);bx(p,tc,.4,.05,.5,sx*.66,2.15,0)}bx(p,D,.7,.62,.28,0,1.66,-.42);for(let i=0;i<3;i++)bx(p,0x2a6a8a,.5,.04,.03,0,1.48+i*.16,-.57,glow);
+  bx(p,D,.2,.14,.2,0,2.08,0);bx(p,M2,.46,.38,.42,0,2.33,0);bx(p,0x1a1c20,.38,.1,.05,0,2.36,.21);bx(p,0xff8a20,.34,.06,.06,0,2.36,.22,eye);cy(p,D,.02,.35,.2,2.62,-.08,null,G.cyl7);bx(p,L2,.5,.06,.46,0,2.53,0);
+  g.add(bakeGroup(p));
+  const leg=(sx,n)=>{const q=new T.Group();q.name=n;q.position.set(sx*.28,1.1,0);const pp=new T.Group();bx(pp,M2,.28,.55,.32,0,-.28,0);cy(pp,D,.13,.3,0,-.56,0,null,G.cyl7).rotation.z=Math.PI/2;bx(pp,M2,.32,.5,.36,0,-.8,0);bx(pp,D,.4,.14,.58,0,-1.02,.06);q.add(bakeGroup(pp));g.add(q)};leg(-1,'legL');leg(1,'legR');
+  const arm=(sx,n,gun)=>{const q=new T.Group();q.name=n;q.position.set(sx*.66,1.86,0);const pp=new T.Group();bx(pp,D,.24,.52,.26,0,-.28,0);if(gun){cy(pp,M2,.14,.6,0,-.78,.06,null,G.cyl16);cy(pp,0xff8a20,.08,.04,0,-1.09,.06,eye,G.cyl7)}else{bx(pp,M2,.26,.46,.28,0,-.76,0);for(const k of[-1,0,1])bx(pp,D,.06,.18,.08,k*.08,-1.06,.08)}q.add(bakeGroup(pp));g.add(q)};
+  arm(1,'armR',true);arm(-1,'armL',false);g.userData.h=2.75;return g}
+
+PUNIT.terminator=t=>pmTerm(t);
+
+function getUnitMesh(type,team,v){const U=UNITS[type],sv=type==='villager'?v:((U.anc||U.mstage)&&U.line?unitStage(team,type):0);if((MODELS_ON||type==='terminator')&&PUNIT[type]){const kp='pu'+type+team+sv;if(!tplCache[kp])tplCache[kp]=PUNIT[type](team,sv);const m=collectParts(tplCache[kp].clone());m.userData.sv=sv;m.userData.h=tplCache[kp].userData.h;return m}const k='u'+type+team+CIVKEY[team]+sv;if(!tplCache[k])tplCache[k]=unitModel(type,team,sv);const m=collectParts(tplCache[k].clone());m.userData.sv=sv;return m}
 function remesh(u){const vis=u.mesh.visible,ry=u.mesh.rotation.y;world.remove(u.mesh);if(u.ring){world.remove(u.ring);u.ring=null}u.mesh=getUnitMesh(u.type,u.team,u.id%3);u.mesh.position.set(u.x,uY(u),u.z);u.mesh.rotation.y=ry;u.mesh.visible=vis&&!u.inside;world.add(u.mesh)}
 function morphAll(team){const a=age[team];let n=0;
   for(const u of units){if(u.dead||u.team!==team)continue;let ch=false;for(let g=0;g<3;g++){const bc=UNITS[u.type].becomes;if(bc&&a>=bc[1]){u.type=bc[0];ch=true}else break}
@@ -2511,7 +2587,7 @@ function computeDef(team,type){
 }
 function getDef(team,type){return DEFC[team][type]||(DEFC[team][type]=computeDef(team,type))}
 function gatherRate(team,rt,farm,hunt,fish){
-  const H=k=>has(team,k),civ=CIVKEY[team];let m=farm?BASERATE.farm:hunt?BASERATE.hunt:fish?BASERATE.fish:BASERATE[rt];if(fish){if(H('gillnets'))m*=1.25;if(MERRY[team])m*=1.1;if(team!==0)m*=DIFF[diffKey].mul;return m}
+  const H=k=>has(team,k),civ=CIVKEY[team];let m=farm?BASERATE.farm:hunt?BASERATE.hunt:fish?BASERATE.fish:BASERATE[rt];if(fish){if(H('gillnets'))m*=1.25;if(MERRY[team])m*=1.1;if(team!==0)m*=DIFF[diffKey].mul;return m*evMul(team,false)}
   if(hunt&&H('spears'))m*=1.25;if(hunt&&H('domestic'))m*=1.15;
   if(farm){if(H('fertiliser'))m*=1.25;if(H('seeddrill'))m*=1.25;if(H('irrigation'))m*=1.15;if(H('oxplough'))m*=1.15;if(H('ironplough'))m*=1.1;if(H('croprot'))m*=1.1}if((farm||(rt==='food'&&!hunt))&&H('storage'))m*=1.1;
   if(rt==='wood'){if(H('flintaxe'))m*=1.15;if(H('coppertools'))m*=1.1;if(H('irontools'))m*=1.1}if(rt==='gold'&&H('coinage'))m*=1.15;
@@ -2522,7 +2598,7 @@ function gatherRate(team,rt,farm,hunt,fish){
   else if(rt==='stone'){if(H('picks'))m*=1.1;if(H('stonem'))m*=1.15;if(H('quarry'))m*=1.15;if(civ==='welsh')m*=1.1;if(civ==='scots')m*=1.15}
   if(rt==='grapes'&&civ==='french')m*=1.25;if(rt==='ore'&&civ==='germans')m*=1.2;
   if(farm||rt==='hemp'||rt==='grapes')m*=seaMul('crop');
-  if(MERRY[team])m*=1.1;if(team!==0)m*=DIFF[diffKey].mul;return m;
+  if(MERRY[team])m*=1.1;if(team!==0)m*=DIFF[diffKey].mul;return m*evMul(team,!!farm);
 }
 function bStats(team,type){
   const d=BUILD[type],H=k=>has(team,k),civ=CIVKEY[team];let hp=d.hp,arm=d.arm.slice(),name=d.name;
@@ -2856,7 +2932,7 @@ function shoot(src,sx,sy,sz,tg,dmg,kind,splash){const gun=kind==='shot'||kind===
   const d=Math.hypot(tg.x-sx,tg.z-sz),slow=kind==='stone'||kind==='boulder';
   projs.push({m,src,kind,sx,sy,sz,tx:tg.x,tz:tg.z,ty:uY(tg)+1,tg,dmg,t:0,dur:Math.max(gun?.12:.25,d/(gun?38:slow?13:20)),arc:gun?Math.min(.5,d*.03):Math.min(slow?5:2.2,d*(slow?.3:.12)),splash,spin:slow,team:src.team})}
 function hit(tg,dmg,src){
-  if(!tg||tg.dead)return;if(tg.animal){animalHit(tg,dmg,src);return}if(tg.inside)return;tg.hp-=dmg;
+  if(!tg||tg.dead)return;if(tg.animal){animalHit(tg,dmg,src);return}if(tg.inside)return;tg.hp-=dmg;if(src){if(tg.type==='terminator'&&src.team<NP){tg.lastHitT=src.team;tg.dmgBy=tg.dmgBy||{};tg.dmgBy[src.team]=(tg.dmgBy[src.team]||0)+dmg}if(src.type==='terminator'&&tg.kind==='bld'&&tg.type!=='tc')tg.burn=Math.max(tg.burn||0,gameT+5)}
   if(tg.kind==='unit'&&R()<.5)puff(tg.x,uY(tg)+1,tg.z,0x8a2a22,1,.12,.3,.6,.4);
   if(tg.kind==='bld'&&R()<.3)puff(tg.x+(R()-.5)*tg.s,tg.y+R()*2,tg.z+(R()-.5)*tg.s,0x8a7a62,1,.3,.5,.5,1);
   if(tg.team===0||(src&&src.team===0))musHeat(.25);
@@ -2867,7 +2943,7 @@ function hit(tg,dmg,src){
   if(tg.kind==='unit'&&src&&src.kind==='unit'&&!src.dead&&!tg.def.bldOnly&&foe(tg.team,src.team)){
     if(isMil(tg.def)&&canHitU(tg,src)&&(tg.task.t==='idle'||tg.task.t==='amove'||(tg.task.t==='attack'&&tg.task.target.kind==='bld'))&&!(tg.team===0&&tg.stance===2&&tg.task.t==='idle'&&!inRange(tg,src,tg.def.range)))tg.task={t:'attack',target:src,prev:tg.task.t==='amove'?tg.task:null,org:tg.team===0&&tg.stance&&tg.task.t==='idle'?{x:tg.x,z:tg.z}:null};
   }}
-function kill(e,silent){if(e.kind==='bld')WALLV++;
+function kill(e,silent){if(e.kind==='bld')WALLV++;if(e.kind==='unit'&&e.type==='terminator'&&!e.dead&&!REV.termDone)setTimeout(()=>termDown(e),0);
   e.dead=true;e.deadT=0;if(e.kind==='unit'&&isSpy(e)&&!e.caught&&e.exposed>gameT&&e.exposedBy!=null){e.caught=true;const o=e.team,T=e.exposedBy;setTimeout(()=>spyIncident(o,T),0)}if(selSet.has(e)){sel=sel.filter(s=>s!==e);selSet.delete(e)}if(e.ring)e.ring.visible=false;
   if(e.kind==='unit'){if(foe(e.team,0))stats.killed++;else if(e.team===0)stats.lost++;sfxAt(e.def.naval?'splash':'death',e.x,e.z);
     if(e.gar&&e.gar.length){const ps=e.gar;e.gar=[];for(const p of ps){p.inside=null;kill(p);p.deadT=99}if(e.team===0)notify('Your transport sank with '+ps.length+' aboard!',true)}}
@@ -3049,7 +3125,7 @@ function doConvert(u,dt){const tg=u.task.target;
     if(R()<dt*3)puff(tg.x,uY(tg)+2.1,tg.z,0xfff2a0,1,.12,.3,.6,.8);
     if(u.conv>=u.convNeed){u.conv=0;u.convNeed=0;u.faith=0;convert(tg,u.team);setIdle(u)}}
   else approach(u,tg,dt)}
-function convert(tg,team){const old=tg.team;world.remove(tg.mesh);if(tg.ring){world.remove(tg.ring);tg.ring=null}
+function convert(tg,team){if(tg.type==='terminator'){notify('The Terminator cannot be converted. It has no soul.');return}const old=tg.team;world.remove(tg.mesh);if(tg.ring){world.remove(tg.ring);tg.ring=null}
   if(selSet.has(tg)){sel=sel.filter(x=>x!==tg);selSet.delete(tg);renderPanel(true)}
   tg.team=team;const fr=tg.hp/tg.maxhp;tg.def=getDef(team,tg.type);tg.maxhp=tg.def.hp;tg.hp=Math.max(1,fr*tg.maxhp);
   tg.mesh=getUnitMesh(tg.type,team,tg.id%3);tg.mesh.position.set(tg.x,uY(tg),tg.z);world.add(tg.mesh);tg.raid=false;tg.post=null;tg.carryAmt=0;tg.homeMarket=null;setIdle(tg);
@@ -4138,7 +4214,7 @@ const ULOD=new Map();function ulodBuild(){const MS=window.MeshoptSimplifier;if(!
 function ulodPick(u,ud){if(!ud.bodies){ud.bodies=[];u.mesh.traverse(o=>{if(o.isSkinnedMesh&&o.name==='u_body')ud.bodies.push({m:o,lv:ULOD.get(o.geometry)})});ud.lod=0}if(!ud.bodies.length)return;
   const d=Math.hypot(u.x-cam.x,u.z-cam.z)*.6+cam.dist,want=d<17?0:d<30?1:2;if(want===ud.lod)return;ud.lod=want;for(const b of ud.bodies){if(!b.lv)b.lv=ULOD.get(b.m.geometry);if(b.lv)b.m.geometry=b.lv[want]}}
 /* which model, weapons and moves each unit uses */
-function unitLook(u){const t=u.type,d=u.def,nm=(d.name||'');if(GFX.unitsDropped||u.def.naval||u.def.air)return null;if(d.gun&&d.cls==='arch'){const mod=/infantry|assault/i.test(nm);return{ch:mod?'Rogue':'Ranger',r:mod?'rifle':'musket',atk:'Ranged_2H_Shoot',mv:'Running_HoldingRifle',idle:'Ranged_2H_Aiming'}}if(d.gun)return null;
+function unitLook(u){const t=u.type,d=u.def,nm=(d.name||'');if(t==='terminator')return null;if(GFX.unitsDropped||u.def.naval||u.def.air)return null;if(d.gun&&d.cls==='arch'){const mod=/infantry|assault/i.test(nm);return{ch:mod?'Rogue':'Ranger',r:mod?'rifle':'musket',atk:'Ranged_2H_Shoot',mv:'Running_HoldingRifle',idle:'Ranged_2H_Aiming'}}if(d.gun)return null;
   if(t==='tradecart')return{cart:'trade',horse:'Donkey'};if(t==='chariot')return{cart:'chariot',horse:'Horse',ch:'Barbarian',l:'bow_withString',atk:'Ranged_Bow_Release'};
   if(t==='villager')return{ch:'Rogue',work:1};if(t==='monk')return{ch:'Mage',r:'staff',atk:'Ranged_Magic_Spellcasting'};if(t==='envoy')return{ch:'Mage',l:'spellbook_closed'};
   if(t==='spy'||t==='informer')return{ch:'Rogue_Hooded',r:'dagger',atk:'Melee_1H_Attack_Stab'};
@@ -4248,7 +4324,7 @@ function animUnit(u,dt){if(unitGLFrame(u,dt))return;
 /* ================= TICK ================= */
 let endChk=0;
 function tick(dt){
-  gameT+=dt;dipT-=dt;if(dipT<=0){dipT=5;dipTick()}dipFrame();vilTick(dt);seasonTick(dt);wearTick(dt);
+  gameT+=dt;dipT-=dt;if(dipT<=0){dipT=5;dipTick()}dipFrame();vilTick(dt);seasonTick(dt);evTick(dt);wearTick(dt);
   for(const u of units)if(!u.dead)updUnit(u,dt);
   for(const r of ress)if(r.animal&&r.hp>0&&!r.dead)updAnimal(r,dt);
   const L=units.length;
@@ -4695,7 +4771,7 @@ function rle(a){const out=[];let cur=0,n=0;for(let i=0;i<a.length;i++){if(a[i]==
 function unrle(r,len){const a=new Uint8Array(len);let i=0,cur=0;for(const n of r){if(cur)a.fill(1,i,i+n);i+=n;cur^=1}return a}
 function snapshot(){
   const alive=new Set(ress.map(r=>r.id));
-  return{v:4,when:Date.now(),seed:WSEED,opts:OPTS,gameT,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
+  return{v:4,when:Date.now(),seed:WSEED,opts:OPTS,gameT,rev:REV,stats,res,age,tech:TECH.map(s=>[...s]),pend:PEND.map(s=>[...s]),mkt:MKT,merry:MERRY,ration:RATION,rationT,elim:ELIM,met:MET,
     exp:FOGON?rle(EXP):null,seen:blds.filter(b=>b.seen).map(b=>b.id),
     planted:ress.filter(r=>r.planted&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt),r.tree.kind,r.felled?1:0]),
     eco:{shafts:SHAFTS.map(x=>[x.rt,x.cx,x.cz,x.max,x.n,Math.round(x.t)]),fg:FISHGONE,deps:DEPS,t:ecoT,extra:ress.filter(r=>r.extra&&!r.dead).map(r=>[r.rtype,r.cx,r.cz,Math.round(r.amt),r.max,r.dep||0,r.hidden?1:0,r.found|0,r.shaftN|0]),fish2:ress.filter(r=>r.extraF&&!r.dead).map(r=>[r.cx,r.cz,Math.round(r.amt)])},
@@ -4754,7 +4830,7 @@ function loadGame(d){
   for(let t=0;t<NP;t++)recompute(t);for(const u of units){u.hp=Math.min(u.hp,u.maxhp)}
   if(d.ai)d.ai.forEach((a,i)=>{if(a&&AIS[i])Object.assign(AIS[i],a)});
   for(let t=0;t<NT;t++){if(age[t]==null)age[t]=0;if(!TECH[t])TECH[t]=new Set();if(!PEND[t])PEND[t]=new Set();if(!DEFC[t])DEFC[t]={};if(!res[t]){res[t]={food:0,wood:0,gold:0,stone:0};for(const k of GOODS)res[t][k]=0}if(ELIM[t]==null)ELIM[t]=t>=NP&&t<VT0;if(!MKT[t])MKT[t]=Object.assign({},MKTBASE)}
-  if(d.vil){VILS=d.vil.vils.map(v=>Object.assign({},v,{hall:byId.get(v.hall)})).filter(V=>V.hall);HOST=d.vil.host||{};CAMPS=d.vil.camps.map(c=>({id:c.id,cap:c.cap,b:byId.get(c.b)})).filter(C=>C.b);BARBS=d.vil.barbs||{nextRaid:0,spawnT:0}}else{VILS=[];CAMPS=[];HOST={}}
+  REV=d.rev&&d.rev.mods?d.rev:{next:(d.gameT||0)+240,mods:[],term:0,n:0};if(d.vil){VILS=d.vil.vils.map(v=>Object.assign({},v,{hall:byId.get(v.hall)})).filter(V=>V.hall);HOST=d.vil.host||{};CAMPS=d.vil.camps.map(c=>({id:c.id,cap:c.cap,b:byId.get(c.b)})).filter(C=>C.b);BARBS=d.vil.barbs||{nextRaid:0,spawnT:0}}else{VILS=[];CAMPS=[];HOST={}}
   if(d.dip){REL=d.dip.rel;OPIN=d.dip.opin;METP=d.dip.metp;PERS=d.dip.pers;VISITT=d.dip.visit;KNOWP=d.dip.know;treatyT=d.dip.treaty;LOSS=d.dip.loss;MEM=d.dip.mem||[];FLT=d.dip.flt||[];MREF=d.dip.mref||[];REP=d.dip.rep==null?50:d.dip.rep;DEAL=d.dip.deal||[];INTEL=d.dip.intel||[];MAPT=d.dip.mapt||[];NEWST=d.dip.newst||[];GOSS=d.dip.goss||[];for(let t=0;t<NP;t++)MET[t]=METP[0][t]}
   DIPQ=[];EVTS=[];renderDip();lastPSig='';if(d.sea)Object.assign(SEAS,d.sea);seaApply(1,true);if(d.wear)wearLoad(d.wear);
   nid=Math.max(nid,d.nid||0);Object.assign(cam,d.cam);if(!d.eco)depInit();RESTORING=false;
@@ -4855,7 +4931,8 @@ function showStart(){state='menu';screen.hidden=false;
    '<label for="s-start">Start age<select id="s-start">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.startAge|0)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
    '<label for="s-end">Final age<select id="s-end">'+ERAS.map((e,i)=>'<option value="'+i+'"'+((SETUP.endAge==null?ERAS.length-1:SETUP.endAge)===i?' selected':'')+'>'+e.name+'</option>').join('')+'</select></label>'+
    '<label for="s-seas">Seasons &amp; weather<select id="s-seas"><option value="1"'+(SETUP.seasons!==false?' selected':'')+'>On</option><option value="0"'+(SETUP.seasons===false?' selected':'')+'>Off</option></select></label>'+
-   '<label for="s-nuke">Nuclear Option<select id="s-nuke"><option value="1"'+(SETUP.nuke!==false?' selected':'')+'>On: the bomb can win</option><option value="0"'+(SETUP.nuke===false?' selected':'')+'>Off</option></select></label>'+
+   '<label for="s-evt">Random events<select id="s-evt">'+[['off','Off'],['rare','Rare'],['normal','Normal'],['frequent','Frequent']].map(([k,n])=>'<option value="'+k+'"'+((SETUP.events||'normal')===k?' selected':'')+'>'+n+'</option>').join('')+'</select></label>'+
+    '<label for="s-nuke">Nuclear Option<select id="s-nuke"><option value="1"'+(SETUP.nuke!==false?' selected':'')+'>On: the bomb can win</option><option value="0"'+(SETUP.nuke===false?' selected':'')+'>Off</option></select></label>'+
    '<label for="s-guide">Guided start<select id="s-guide"><option value="1"'+(SETUP.guide!==false?' selected':'')+'>On: show me what to do</option><option value="0"'+(SETUP.guide===false?' selected':'')+'>Off</option></select></label>'+
    '<label for="s-fog">Fog of war<select id="s-fog"><option value="1"'+(SETUP.fog?' selected':'')+'>On</option><option value="0"'+(!SETUP.fog?' selected':'')+'>Off</option></select></label>'+
    '<label>Difficulty<div class="diff" role="radiogroup">'+['easy','normal','hard'].map(d=>'<button role="radio" aria-checked="'+(d===SETUP.diff)+'" data-d="'+d+'">'+d[0].toUpperCase()+d.slice(1)+'</button>').join('')+'</div></label>'+
@@ -4873,14 +4950,14 @@ function showStart(){state='menu';screen.hidden=false;
   $('#s-map').onchange=e=>{SETUP.map=e.target.value;refresh()};$('#s-size').onchange=e=>{SETUP.size=e.target.value;refresh()};
   $('#s-np').onchange=e=>{SETUP.np=+e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
   $('#s-mode').onchange=e=>{SETUP.mode=e.target.value;if(SETUP.mode==='teams')for(let i=0;i<SETUP.np;i++)SETUP.team[i]=i<Math.ceil(SETUP.np/2)?1:2;refresh()};
-  $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-guide').onchange=e=>{SETUP.guide=e.target.value==='1';saveSetup()};$('#s-nuke').onchange=e=>{SETUP.nuke=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};
+  $('#s-fog').onchange=e=>{SETUP.fog=e.target.value==='1';saveSetup()};$('#s-guide').onchange=e=>{SETUP.guide=e.target.value==='1';saveSetup()};$('#s-nuke').onchange=e=>{SETUP.nuke=e.target.value==='1';saveSetup()};$('#s-seas').onchange=e=>{SETUP.seasons=e.target.value==='1';saveSetup()};$('#s-evt').onchange=e=>{SETUP.events=e.target.value;saveSetup()};
   $('#s-start').onchange=e=>{SETUP.startAge=+e.target.value;if(SETUP.endAge<SETUP.startAge){SETUP.endAge=SETUP.startAge;$('#s-end').value=SETUP.endAge}saveSetup();$('#s-warn').textContent=setupWarn()};
   $('#s-end').onchange=e=>{SETUP.endAge=+e.target.value;if(SETUP.startAge>SETUP.endAge){SETUP.startAge=SETUP.endAge;$('#s-start').value=SETUP.startAge}saveSetup();$('#s-warn').textContent=setupWarn()};
   $('#ld').onclick=()=>showSaves('load',showStart);if($('#cont'))$('#cont').onclick=()=>{const d=readSave('auto');if(d)try{loadGame(d)}catch(e){console.error(e);notify('The autosave could not be loaded.',true)}};
   $('#go').onclick=()=>{if(SETUP.mode==='teams'&&setupWarn().startsWith('Everyone'))return;
     const civs=[SETUP.civ];for(let i=1;i<SETUP.np;i++){let c=SETUP.opp[i-1]||'random';if(c==='random'){const pool=CIVKEYS.filter(k=>!civs.includes(k));const src=pool.length?pool:CIVKEYS;c=src[(Math.random()*src.length)|0]}civs.push(c)}
     const teams=[];for(let i=0;i<SETUP.np;i++)teams.push(SETUP.mode==='teams'?SETUP.team[i]:0);
-    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false,guide:SETUP.guide!==false,nuke:SETUP.nuke!==false,startAge:SETUP.startAge|0,endAge:SETUP.endAge==null?ERAS.length-1:SETUP.endAge});screen.hidden=true;state='play';autoT=0;canvas.focus();
+    newWorld({diff:SETUP.diff,civs,teams,map:SETUP.map,size:SETUP.size,fog:SETUP.fog,mode:SETUP.mode,seasons:SETUP.seasons!==false,events:SETUP.events||'normal',guide:SETUP.guide!==false,nuke:SETUP.nuke!==false,startAge:SETUP.startAge|0,endAge:SETUP.endAge==null?ERAS.length-1:SETUP.endAge});screen.hidden=true;state='play';autoT=0;canvas.focus();
     const foes=civs.filter((c,i)=>i&&foe(i,0)).length;
     if(ANCIENT)setTimeout(()=>{if(state==='play')notify(AGEMIN===0?'Stone Age: hunt and forage, then research Farming at the Granary. Dig clay and flint (see Goods).':'Check the Goods panel for your flint, clay, pottery and metals.')},7000);
     if(SETUP.mode==='open')notify('You lead the '+CIVS[civs[0]].name+'. '+(civs.length-1)+' other '+(civs.length>2?'peoples share':'people shares')+' this land. Find them, then choose friendship or war.');else notify('You lead the '+CIVS[civs[0]].name+' against '+foes+' rival'+(foes>1?'s':'')+(teams[0]&&civs.some((c,i)=>i&&ally(i,0))?', with allies at your side':'')+'. Select your Town Center (H) and train villagers.');
@@ -5073,7 +5150,7 @@ function newWorld(opts,seed){
   GENRES=ress.map(r=>r.id);
   for(let t=0;t<NP;t++){const b=BASES[t];const tc=placeBld('tc',t,cellX(b.x)-2,cellX(b.z)-2,true);
     const to=localPt(b,6,6);for(let i=0;i<4;i++){const p=spawnPoint(tc,to);makeUnit('villager',t,p.x,p.z)}const p=spawnPoint(tc,to);makeUnit(AGEMIN<=MED&&ANCIENT?'runner':'scout',t,p.x,p.z)}
-  SHAFTS=[];FISHGONE=[];depInit();applyStartAge();histReset();guideStart(OPTS.guide);WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
+  SHAFTS=[];FISHGONE=[];depInit();applyStartAge();histReset();guideStart(OPTS.guide);WEAR=new Float32Array(N*N);seasonInit(OPTS.seasons!==false);evInit();persInit();aiInit();fogInit();fogT=0;updFog();gpaused=false;gspeed=1;if(typeof spdUI==='function'&&$('#btn-pause'))spdUI();
   const b0=BASES[0],l0=Math.hypot(b0.x,b0.z)||1;cam.x=b0.x+b0.x/l0*-1.5;cam.z=b0.z+b0.z/l0*-1.5;cam.dist=36;cam.yaw=Math.atan2(b0.x,b0.z);
   $('#age-emb').src=embURL(CIVKEY[0],0);
   buildMiniBase();lastSig='';renderPanel(true);
@@ -5335,7 +5412,7 @@ function loop(now){requestAnimationFrame(loop);if(OPT_CAP&&now-last<30)return;co
   if(frame%4===0&&state==='play'&&mouse.inside&&!placing&&!amoveMode&&mouse.x!=null){const t2=pick(mouse.x,mouse.y);canvas.style.cursor=t2&&foe(t2.team,0)&&ownUnitsSel().length?'crosshair':t2?'pointer':''}}
 newWorld({diff:'normal',civs:['scots','vikings'],teams:[0,0],map:'lowlands',size:'medium',fog:false,mode:'ffa'});cam.x=-20;cam.z=-20;cam.dist=44;
 seaParticles();loadModels();askPersist();if(OPT_PERF)perfShow(true);showStart();updTop();sndIcon();$('#btn-snd').onclick=sndToggle;$('#btn-pause').onclick=()=>{if(state==='play')setPaused(!gpaused)};$('#btn-speed').onclick=()=>{if(state==='play')cycleSpeed()};spdUI();requestAnimationFrame(loop);
-window.__game={perfAsk,get camera(){return camera},get renderer(){return renderer},get scene(){return scene},get UNITS_READY(){return UNITS_READY},unitLook,get ANIMG(){return ANIMG},setModels,get MODELS_ON(){return MODELS_ON},get GFX(){return GFX},gfxSet,gfxApply,get TUFT(){return TUFT},get FXL(){return FXL},boom,conBld,upgStart,upgInfo,get NUKE(){return NUKE},nukeStart,nukeTick,get DEPS(){return DEPS},get SHAFTS(){return SHAFTS},get FISHGONE(){return FISHGONE},ecoTick,wildTick,fishTick,findTick,discTick,reopenShafts,plantOrder,get ecoT(){return ecoT},get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
+window.__game={perfAsk,get REV(){return REV},EVENTS,termArrive,evMul,get camera(){return camera},get renderer(){return renderer},get scene(){return scene},get UNITS_READY(){return UNITS_READY},unitLook,get ANIMG(){return ANIMG},setModels,get MODELS_ON(){return MODELS_ON},get GFX(){return GFX},gfxSet,gfxApply,get TUFT(){return TUFT},get FXL(){return FXL},boom,conBld,upgStart,upgInfo,get NUKE(){return NUKE},nukeStart,nukeTick,get DEPS(){return DEPS},get SHAFTS(){return SHAFTS},get FISHGONE(){return FISHGONE},ecoTick,wildTick,fishTick,findTick,discTick,reopenShafts,plantOrder,get ecoT(){return ecoT},get REP(){return REP},set REP(v){REP=v},get DEAL(){return DEAL},get INTEL(){return INTEL},dealTick,dipChatter,spyArrive,spyExpose,audAgree,audTopics,joinWilling,get spyMode(){return spyMode},get REL(){return REL},setRel,makeContact,declareWar,audience,audPick,dipAnswer,get AUD(){return AUD},get DIPQ(){return DIPQ},get MEM(){return MEM},get OPIN(){return OPIN},get PERS(){return PERS},demand,askHuman,portraitSVG,get GUIDE(){return GUIDE},get HIST(){return HIST},endGame,get GROUPS(){return GROUPS},get FORMK(){return FORMK},grpSet,grpSel,selectSame,formation,get units(){return units},get blds(){return blds},get res(){return res},get age(){return age},get TECH(){return TECH},tick,command,setSel,train,research,startPlacing,tryPlace,
   get sel(){return sel},newWorld,get state(){return state},set state(v){state=v},showTree,placeBld,get AIS(){return AIS},get NP(){return NP},cam,connCheck:()=>{const out=[];for(let t=1;t<NP;t++){const b0=BASES[0],b=BASES[t];const gx=cellX(b.x),gz=cellX(b.z);const r=astar(cellX(b0.x+3),cellX(b0.z+3),(x,z)=>Math.abs(x-gx)<=3&&Math.abs(z-gz)<=3,gx,gz,0);out.push(r.found)}return out},get ELIM(){return ELIM},get MAP(){return MAP},get BASES(){return BASES},snapshot,loadGame,saveGame,readSave,get ress(){return ress},applyTech,makeUnit,get TER(){return TER},get ngrid(){return ngrid},get WCOMP(){return WCOMP},get WSIZE(){return WSIZE},get COMP(){return COMP},get N(){return N},get HALF(){return HALF},shoreNear,unloadShip,boardShip,orderUnload,findDockSpot,validPlace,compAt,wcAt,get gameT(){return gameT},set gameT(v){gameT=v},plantTree,saplingRate,get AGEMAX(){return AGEMAX},get AGEMIN(){return AGEMIN},kill,SEAS,seaApply,seaParticleFrame,proj,updGhost,get placing(){return placing},mouse,get WEAR(){return WEAR},wearPaint,demolish,demolishLine,seaMul,restyle,styleFor,get VILS(){return VILS},get CAMPS(){return CAMPS},get HOST(){return HOST},get ROAD(){return ROAD},vilGift,vilBuy,vilHostile,spdMul,dip:{get REL(){return REL},get OPIN(){return OPIN},get METP(){return METP},get PERS(){return PERS},get DIPQ(){return DIPQ},get KNOWP(){return KNOWP},setRel,declareWar,tribute,makeContact,humanDip,aiConsider,orderEnvoy,strength,get EVTS(){return EVTS}}};
 })();
 </script>
